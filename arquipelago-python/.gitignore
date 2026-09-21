@@ -1,0 +1,28 @@
+# Dependencias e artefatos de build
+node_modules/
+dist/
+*.local
+.vite/
+
+# Cobertura de testes
+coverage/
+
+# ---------------------------------------------------------------
+# Material com direitos autorais ou de terceiros - NUNCA versionar.
+# Ver docs/DECISIONS.md (D-003) e docs/ART_DIRECTION.md (secao Direitos).
+#
+# O repositorio e PUBLICO (verificado com `gh repo view`). Por isso:
+#  - o PDF (ou epub) do livro nao entra no Git;
+#  - as imagens de referencia de terceiros nao entram no Git.
+# Ambos ficam apenas nesta maquina, fora de `public/`, para nunca
+# serem copiados para `dist/` nem publicados por um deploy.
+# ---------------------------------------------------------------
+livro-local/
+referencias-locais/
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

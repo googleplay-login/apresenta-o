@@ -1,0 +1,344 @@
+/*
+ * Estilos da aplicacao.
+ *
+ * REGRA: nenhuma cor literal neste arquivo. Toda cor vem de uma variavel CSS
+ * gerada por `src/ui/theme/tokens.ts`, que e a fonte unica de verdade e esta
+ * coberta por teste de contraste.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:focus-visible {
+  outline: 3px solid var(--acento-vermelho);
+  outline-offset: 2px;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  color: var(--texto-principal);
+  font-family: var(--fonte);
+  font-size: var(--fonte-corpo);
+  line-height: 1.6;
+
+  /* Ceu lavanda palido sobre mar turquesa, com o horizonte marcado - a
+     composicao das imagens de referencia (docs/ART_DIRECTION.md). */
+  background-image: linear-gradient(
+    180deg,
+    var(--ceu-alto) 0%,
+    var(--ceu-medio) 24%,
+    var(--ceu-horizonte) 43%,
+    var(--nevoa) 46%,
+    var(--mar-claro) 46.4%,
+    var(--mar-medio) 72%,
+    var(--mar-fundo) 100%
+  );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* ---------- Letreiro (faixa escura no topo, como nas referencias) ---------- */
+
+.letreiro {
+  background-color: var(--chrome-fundo);
+  color: var(--texto-sobre-escuro);
+  padding: var(--espaco-lg) var(--espaco-md);
+}
+
+.letreiro__conteudo {
+  max-width: var(--largura-conteudo);
+  margin: 0 auto;
+}
+
+.letreiro__titulo {
+  margin: 0;
+  font-size: var(--fonte-titulo);
+  letter-spacing: 0.02em;
+  color: var(--texto-sobre-escuro);
+}
+
+.letreiro__subtitulo {
+  margin: var(--espaco-sm) 0 0;
+  max-width: 60ch;
+  color: var(--texto-sobre-escuro);
+}
+
+.letreiro__subtitulo cite {
+  font-style: italic;
+}
+
+.letreiro__etapa {
+  margin: var(--espaco-md) 0 0;
+  padding-top: var(--espaco-md);
+  border-top: 1px solid var(--chrome-borda);
+  font-size: var(--fonte-legenda);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--texto-sobre-escuro);
+}
+
+/* ---------- Conteudo ---------- */
+
+.conteudo {
+  flex: 1;
+  width: 100%;
+  max-width: var(--largura-conteudo);
+  margin: 0 auto;
+  padding: var(--espaco-xl) var(--espaco-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-lg);
+}
+
+/* ---------- Cartao (painel creme de leitura) ---------- */
+
+.cartao {
+  background-color: var(--painel-fundo);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-painel);
+  box-shadow: 0 6px 24px var(--painel-sombra);
+  padding: var(--espaco-lg);
+}
+
+.cartao__sobretitulo {
+  margin: 0;
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--texto-secundario);
+}
+
+.cartao__titulo {
+  margin: var(--espaco-xs) 0 var(--espaco-md);
+  font-size: var(--fonte-subtitulo);
+  color: var(--texto-principal);
+}
+
+.cartao__entrada {
+  margin: 0 0 var(--espaco-md);
+  max-width: 72ch;
+  color: var(--texto-secundario);
+}
+
+.cartao__rodape {
+  margin: var(--espaco-md) 0 0;
+  padding-top: var(--espaco-md);
+  border-top: 1px solid var(--painel-borda);
+  max-width: 72ch;
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+/* ---------- Listas ---------- */
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-md);
+}
+
+.lista__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--espaco-sm);
+}
+
+.lista__texto {
+  flex: 1 1 22rem;
+}
+
+.lista__comando {
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-legenda);
+  background-color: var(--painel-fundo-elevado);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  padding: 2px var(--espaco-sm);
+  white-space: nowrap;
+}
+
+.lista--ausente .lista__item {
+  color: var(--texto-secundario);
+}
+
+.marca-ausente {
+  flex: 0 0 auto;
+  color: var(--acento-vermelho);
+  font-weight: 700;
+}
+
+/* ---------- Nota em destaque ---------- */
+
+.nota {
+  margin-top: var(--espaco-md);
+  padding: var(--espaco-md);
+  background-color: var(--painel-fundo-elevado);
+  border-left: 4px solid var(--acento-vermelho);
+  border-radius: var(--raio-linha);
+}
+
+.nota p {
+  margin: 0 0 var(--espaco-sm);
+  max-width: 72ch;
+}
+
+.nota p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Chips de estado ---------- */
+
+.chip {
+  display: inline-block;
+  padding: 2px var(--espaco-sm);
+  border-radius: var(--raio-chip);
+  font-size: var(--fonte-chip);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.chip--planejada {
+  background-color: var(--estado-planejada);
+  color: var(--texto-estado-planejada);
+}
+
+.chip--em-construcao {
+  background-color: var(--estado-em-construcao);
+  color: var(--texto-estado-em-construcao);
+}
+
+.chip--pronta {
+  background-color: var(--estado-pronta);
+  color: var(--texto-estado-pronta);
+}
+
+/* ---------- Tabela ---------- */
+
+.tabela-rolagem {
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  min-width: 48rem;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.tabela__legenda {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: var(--espaco-sm);
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--espaco-sm) var(--espaco-md) var(--espaco-sm) 0;
+  border-bottom: 1px solid var(--painel-borda);
+  vertical-align: top;
+}
+
+.tabela thead th {
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}
+
+.tabela__numero {
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-secundario);
+}
+
+.tabela__titulo {
+  font-weight: 600;
+}
+
+.tabela__referencia {
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+/* ---------- Lista de comandos ---------- */
+
+.comandos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--espaco-sm) var(--espaco-md);
+  align-items: baseline;
+}
+
+.comandos dt code {
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-legenda);
+  background-color: var(--painel-fundo-elevado);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  padding: 2px var(--espaco-sm);
+  white-space: nowrap;
+}
+
+.comandos dd {
+  margin: 0;
+  color: var(--texto-secundario);
+}
+
+/* ---------- Rodape (faixa escura, como nas referencias) ---------- */
+
+.rodape {
+  background-color: var(--chrome-fundo);
+  color: var(--texto-sobre-escuro);
+  padding: var(--espaco-lg) var(--espaco-md);
+  font-size: var(--fonte-legenda);
+}
+
+.rodape__conteudo {
+  max-width: var(--largura-conteudo);
+  margin: 0 auto;
+}
+
+.rodape p {
+  margin: 0 0 var(--espaco-sm);
+  max-width: 80ch;
+}
+
+.rodape p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- Telas estreitas ---------- */
+
+@media (max-width: 640px) {
+  .conteudo {
+    padding: var(--espaco-lg) var(--espaco-md);
+  }
+
+  .cartao {
+    padding: var(--espaco-md);
+  }
+
+  .comandos {
+    grid-template-columns: 1fr;
+  }
+
+  .comandos dd {
+    margin-bottom: var(--espaco-sm);
+  }
+}
