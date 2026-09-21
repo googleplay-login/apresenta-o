@@ -1,28 +1,31 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final das Etapas 1.1, 1.2 e 2.
+Atualizado em **21/09/2026**, ao final da **Etapa 3**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 2 concluída; 3 proposta, **não autorizada** |
-| Código de aplicação | fundação, tema visual, guia de estilo e regras de progressão |
-| Mundo 3D | **não existe** |
-| Conteúdo pedagógico | **não existe** (apenas o plano das 4 primeiras unidades) |
-| Perguntas de avaliação | **não existem** (as regras existem e são testadas) |
-| Telas do ciclo de estudo | **não existem** |
-| Persistência | **não existe** |
-| Pyodide | **não existe** |
+| Etapa atual | 3 concluída; 4 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Código de aplicação | mundo 3D, ciclo de estudo completo e persistência local |
+| Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar e câmera livre |
+| Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura, explicação, 3 exercícios e 5 perguntas cada |
+| Telas do ciclo de estudo | **existem**: missão, estudo, prática, avaliação e resultado |
+| Persistência | **existe**: `localStorage`, versionada, com aviso honesto de falha |
+| Execução de código (Pyodide) | **não existe** — Etapa 9 |
+| Avatar | **não existe** — Etapa 5 |
+| Livro na tela | **não existe** — Etapa 6 |
+| Testes de navegador | **não executados** — não há navegador neste ambiente |
 
-Badge honesto: **o projeto hoje tem alicerce sólido, não é um jogo e não é um curso.**
+Badge honesto: **o protótipo já ensina e já avalia, com o mundo desenhado — mas ninguém viu o
+desenho, porque não há navegador aqui.**
 
 ## Como rodar
 
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 122 testes, em 9 arquivos
+    npm test             # 398 testes, em 25 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -30,8 +33,13 @@ Páginas:
 
 | Rota | O que é |
 |---|---|
-| `#/` | Painel do projeto: estado real, unidades planejadas, como verificar |
+| `#/` | **O mundo**: arquipélago 3D, HUD, e a trilha em texto com o painel do ciclo de estudo |
+| `#/painel` | Painel do projeto: estado real, unidades planejadas, como verificar |
 | `#/tema` | Guia de estilo: paleta, tipografia, espécimes e contraste medido |
+
+Como usar o mundo, em uma linha: `W A S D` (ou setas) para andar, `Q`/`E` para subir e descer,
+`Shift` para acelerar, arrastar o mouse para olhar, clique numa ilha liberada para abrir a missão.
+Com o painel aberto, as teclas de movimento ficam desligadas e `Esc` fecha o painel (D-012).
 
 ## O que foi entregue
 
@@ -41,7 +49,6 @@ Páginas:
 - `src/ui/theme/tokens.ts`: fonte única das cores, com teste de contraste WCAG AA.
 - `src/content/`: as 4 primeiras unidades e a regra de referência ao livro, com página `null` +
   `referencia-pendente`.
-- `src/app/`: painel do projeto, sem nenhum botão.
 - `src/`: esqueleto das pastas, cada uma com `README.md` dizendo sua responsabilidade e limites.
 - `docs/`: os documentos de continuidade.
 
@@ -51,12 +58,11 @@ Páginas:
 - Paleta **lida dos tokens**, não redigitada: se um token mudar, a página muda junto.
 - Tabela de contraste medida na hora, com os mesmos pares que o teste verifica.
 - Navegação por hash, sem dependência nova (D-016).
-- **Correção de acentuação** em todo o código e a trava `qa/acentuacao.test.ts` (D-015), para o
-  defeito não voltar.
+- **Correção de acentuação** em todo o código e a trava `qa/acentuacao.test.ts` (D-015).
 
 ### Etapa 2 — domínio e progressão
 
-`src/learning/`, funções puras, 42 testes só neste módulo:
+`src/learning/`, funções puras:
 
 - aprovado com **80% reais**, em aritmética inteira (`acertos * 5 >= total * 4`);
 - percentual exibido **sempre para baixo** — quem faz 79% lê 79%;
@@ -65,7 +71,34 @@ Páginas:
 - uma unidade por vez: só a anterior aprovada abre a próxima;
 - **registrar resultado em unidade bloqueada é recusado** (D-017);
 - nenhuma função aceita rota, hash, clique ou URL;
-- progresso versionado e serializável, testado com ida e volta por JSON.
+- progresso versionado e serializável.
+
+### Etapa 3 — o mundo e o ciclo na tela
+
+Camada pura:
+
+- `world/geometria/`: gerador determinístico, rocha e topo da ilha, sólidos com **faces para
+  fora**, pintura por altura, árvores, pedras, mesa, placa, biblioteca, farol;
+- `world/mapaDoMundo.ts`: posição das ilhas, vão das pontes, enquadramento e espalhamento;
+- `world/mundoVisivel.ts`: o **único** elo progresso ↔ cena. As ilhas chegam com situação e
+  acessibilidade resolvidas, as pontes com "liberada" decidido. A cena não aprova nada (D-004);
+- `world/camera/movimento.ts` e `world/teclas.ts`: câmera com limites, interpolação, teclas por
+  `code` sem tecla presa.
+
+Camada visual:
+
+- `world/Cena.tsx` e companhia: célula de céu, mar, nuvens com semente fixa, ilha com estruturas e
+  farol girando, pontes inteiras ou pela metade conforme a liberação, destaque no mouse;
+- `ui/paineis/`: os cinco passos do ciclo, com abas, foco ao abrir e `Esc` fechando;
+- `app/paginas/Mundo.tsx`: HUD (modo de câmera, placar, ajuda de teclas, avisos), trilha em texto
+  equivalente ao mundo, e a ligação com a persistência;
+- importação sob demanda da cena (D-022): o pacote principal ficou em 88 kB comprimidos.
+
+Verificação:
+
+- `jsdom` + Testing Library nos testes de interação (D-020): o ciclo inteiro é percorrido com
+  cliques, teclado e `localStorage` de verdade. Dois defeitos reais apareceram na primeira
+  execução e foram corrigidos no código, não no teste.
 
 ## Arquivos de referência rápida
 
@@ -85,33 +118,24 @@ Páginas:
 
 | Pendência | Efeito | Bloqueia o que |
 |---|---|---|
-| PDF do livro ausente | Toda página continua `null` | Etapas 6 e 7 |
-| Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Nada funciona mal; impede refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado | Registrado em `TEST_REPORT.md` como não executado |
+| PDF do livro ausente | Toda página continua `null` | Etapas 6 e 7 (conferir página) |
+| Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 15 itens |
+| Pyodide ausente | Sem execução de código | Etapa 9 |
 
 ## Decisões que ainda precisam do usuário
 
 1. **Enviar o PDF** e as imagens de referência, ou confirmar que não serão enviados.
-2. **Autorizar a Etapa 3** — a primeira ilha 3D, com Three.js.
-3. Reavaliar a densidade do capítulo 2 quando o PDF chegar (D-001 pode mudar para a opção A).
-4. Definir se o modo apresentação (letreiro, faixa de teclas, pílula de navegação, inspirado nas
-   referências) entra no protótipo ou fica para a Etapa 13.
+2. Reavaliar a densidade do capítulo 2 quando o PDF chegar (D-001 pode mudar para a opção A).
+3. Definir se o **modo apresentação** (letreiro, faixa de teclas, pílula de navegação, inspirado
+   nas referências) entra no protótipo ou fica para a Etapa 13.
 
-## Próximo passo proposto (não iniciado)
+## Próximo passo (em execução, sem parada)
 
-**Etapa 3 — a primeira ilha 3D, com o ciclo completo ponta a ponta.** Uma ilha só, com missão,
-leitura recomendada, explicação, prática, avaliação de 5 perguntas, aprovação e ponte liberada —
-usando as regras que já existem e já são testadas.
-
-Já decidido para essa etapa:
-
-- Three.js via React Three Fiber e Drei — a primeira dependência de 3D;
-- câmera com rotação limitada, mouse e teclado, e a **máquina de foco** de D-012;
-- alternativa acessível em lista, com o mesmo ciclo e as mesmas regras;
-- tela de fallback funcional quando WebGL não estiver disponível.
-
-Por que a Etapa 3 é grande e precisa de cuidado: ela junta 3D, conteúdo e interface de avaliação
-pela primeira vez. Se ela for mal dividida, o risco é entregar uma ilha bonita e vazia.
+**Etapa 4 — três ilhas e as pontes.** O mundo já desenha as quatro ilhas e as pontes; o que falta
+é fazer a ponte e o desbloqueio mudarem de estado **na frente do usuário**, com a cena lendo a
+decisão de `src/learning/` (que já existe e já é testada) e a travessia levando a câmera ou o
+estudante à ilha seguinte.
 
 ## Como continuar sem mim
 

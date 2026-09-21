@@ -1,12 +1,13 @@
 # MÁQUINA DE ESTADOS DO CICLO DE ESTUDO
 
-> **Estado: as regras estão implementadas e testadas; a tela, não.**
-> `src/learning/avaliacao.ts` e `src/learning/percurso.ts` existem desde a Etapa 2, com 100
-> testes. O que ainda não existe é a interface: missão, leitura, prática e perguntas (Etapas 6 e
-> 7) e o progresso salvo (Etapa 8).
+> **Estado: as regras e a tela estão implementadas e testadas.**
+> `src/learning/` (as regras), `src/state/sessao.ts` (onde elas encontram a interface),
+> `src/ui/paineis/` (a tela do ciclo) e `src/persistence/` (o que fica guardado) existem desde a
+> Etapa 3.
 >
-> Este documento registra as regras **antes** de existir tela, para que elas não sejam inventadas
-> no meio da interface — que é exatamente como esse tipo de regra acaba duplicada.
+> Este documento registra as regras **antes** de existir tela, para que elas não fossem inventadas
+> no meio da interface — que é exatamente como esse tipo de regra acaba duplicada. A regra foi
+> escrita primeiro; a tela veio depois e consulta exatamente estas funções.
 
 ## O ciclo
 
@@ -50,11 +51,15 @@
 | `aprovada` | `registrarResultado()` — só marca quando `foiAprovado()` é verdadeiro |
 | Tentativas | `ProgressoDaUnidade.tentativas` |
 | Melhor nota | `ProgressoDaUnidade.melhorNota`, que só melhora |
-| `missaoExibida`, `emEstudo`, `emPratica`, `avaliacaoAberta` | **Ainda não existem.** São estados de tela, e a tela não foi construída |
+| `missaoExibida`, `emEstudo`, `emPratica`, `avaliacaoAberta` | `src/state/sessao.ts`, no campo `sessao.passo`: `'missao' \| 'estudo' \| 'pratica' \| 'avaliacao' \| 'resultado'` |
+| Foco do teclado (`mundo` x `painel`) | `sessao.foco`, com `podeMoverCamera()`; ver D-012 |
+| Aprovação anterior à tentativa atual | `sessao.aprovadaAntes`, fotografada **ao abrir** a ilha |
 
-Os quatro últimos estados serão de `src/state/`, não de `src/learning/`: eles descrevem **onde o
+Os estados de tela ficam em `src/state/`, e não em `src/learning/`: eles descrevem **onde o
 estudante está na interface**, e não mudam nenhuma regra de aprovação. Nenhum deles desbloqueia
-nada.
+nada. `sessao.aprovadaAntes` é o único campo que copia um dado do domínio — e é uma cópia
+deliberada, porque a pergunta "isto já estava aprovado antes desta tentativa?" precisa de uma
+resposta que não mude quando a aprovação acontece (D-023).
 
 ## Regras fixadas e implementadas
 
@@ -92,6 +97,8 @@ nada.
 | Bloquear a unidade atual após reprovar | Pune o erro, que é parte de aprender |
 | Anunciar "teste inviolável" | Mentira sobre a própria robustez |
 | Criar progresso para unidade fora do percurso | Abriria caminho para unidade inventada |
+| Ler o progresso ao vivo para dizer "você já havia aprovado" | Faria a tela mentir logo depois da primeira aprovação |
+| Botão de controle de câmera em máquina sem WebGL | Seria controle sem efeito (D-009) |
 
 ## O que ainda precisa de decisão
 

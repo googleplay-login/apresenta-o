@@ -7,18 +7,23 @@ Cada ilha suspensa é uma unidade de aprendizagem: entra-se na ilha, consulta-se
 estuda-se a parte correspondente do livro, lê-se uma explicação original, pratica-se, faz-se a
 avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
-## Estado atual: fundação e regras
+## Estado atual: o protótipo já ensina e já avalia
 
-> **Este projeto ainda não é um jogo e não é um curso.** Hoje existe o alicerce: projeto, tema
-> visual, guia de estilo, plano das quatro primeiras unidades, regras de progressão testadas e
-> documentação.
+> **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, o ciclo de estudo
+> completo das quatro primeiras unidades (missão, estudo, prática, avaliação e resultado), 5
+> perguntas por ilha, aprovação com 80% e progresso salvo no próprio navegador.
 >
-> **Não existe** 3D, aula, missão, pergunta de avaliação, tela do ciclo de estudo, progresso
-> salvo nem execução de Python.
+> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), avatar (Etapa 5), leitura
+> do livro na tela (Etapa 6) e som.
+>
+> **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
+> desenvolvimento — a cena compila, monta e é testada com a cena trocada por marcador, mas os
+> pixels continuam **não verificados**. O roteiro manual de 15 itens está em
+> `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
-`docs/TEST_REPORT.md`. O próprio site lista, em texto, o que existe e o que ainda não existe — e
-**não tem nenhum botão**, de propósito (decisão D-009).
+`docs/TEST_REPORT.md`. O site não mostra nenhum controle sem efeito (decisão D-009): o que não
+funciona, não aparece como botão.
 
 ## Começar
 
@@ -27,7 +32,7 @@ Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md`
 
 Outros comandos:
 
-    npm test         # testes das regras, do tema, do plano de unidades e da acentuação
+    npm test         # 398 testes: regras, geometria, conteúdo, interface e acentuação
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 
@@ -35,8 +40,13 @@ Páginas:
 
 | Rota | O que é |
 |---|---|
-| `#/` | Painel do projeto: estado real, unidades planejadas, como verificar |
+| `#/` | O mundo: arquipélago 3D, trilha das ilhas e painel do ciclo de estudo |
+| `#/painel` | Painel do projeto: estado real, unidades planejadas, como verificar |
 | `#/tema` | Guia de estilo: paleta, tipografia, espécimes e contraste medido |
+
+Dentro do mundo: `W A S D` (ou setas) anda, `Q`/`E` sobe e desce, `Shift` acelera, arrastar o
+mouse olha em volta, e clicar numa ilha liberada abre a missão. Com o painel aberto, as teclas de
+movimento param de mover a câmera, e `Esc` fecha o painel.
 
 ## Documentação
 

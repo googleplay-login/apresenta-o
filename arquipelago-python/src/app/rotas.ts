@@ -3,27 +3,31 @@
  *
  * Por que hash e não caminho: funciona igual em desenvolvimento, no build de
  * produção e em qualquer hospedagem estática, sem precisar de regra de reescrita
- * no servidor. Quando o mundo 3D existir, o hash continua servindo.
+ * no servidor.
  *
  * Importante: a rota **não** carrega estado de progresso. Nenhuma função de
  * `src/learning/` aceita rota, hash ou parâmetro de URL como entrada — é o que
- * impede alguém de desbloquear uma unidade pela barra de endereços.
+ * impede alguém de desbloquear uma unidade pela barra de endereços. As rotas
+ * trocam o que está na tela, e só.
  */
 
 export const ROTAS = {
-  painel: '#/',
+  mundo: '#/',
+  painel: '#/painel',
   tema: '#/tema',
 } as const
 
 export type Rota = keyof typeof ROTAS
 
 /** Rota usada quando o hash está vazio ou não corresponde a nada conhecido. */
-export const ROTA_PADRAO: Rota = 'painel'
+export const ROTA_PADRAO: Rota = 'mundo'
 
 const POR_HASH: ReadonlyMap<string, Rota> = new Map([
-  ['', 'painel'],
-  ['#', 'painel'],
-  ['#/', 'painel'],
+  ['', 'mundo'],
+  ['#', 'mundo'],
+  ['#/', 'mundo'],
+  ['#/mundo', 'mundo'],
+  ['#/painel', 'painel'],
   ['#/tema', 'tema'],
 ])
 

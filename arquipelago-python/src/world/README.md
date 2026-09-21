@@ -1,7 +1,8 @@
 # `src/world` — o mundo 3D
 
-Onde vai viver a cena: ilhas suspensas, pontes, céu, água, névoa, câmera e avatar,
-com Three.js via React Three Fiber e Drei.
+A cena: ilhas suspensas, pontes, céu, névoa, câmera, e a geometria pura que a alimenta, com
+Three.js via React Three Fiber. Sem Drei (D-021): o que faltava foi resolvido com geometria
+própria.
 
 ## Regra que define este diretório
 
@@ -19,5 +20,16 @@ Isso existe para impedir três coisas concretas:
 
 ## Estado
 
-**Não implementado.** Etapa 3 (primeira ilha) e Etapa 4 (três ilhas e pontes).
-Previsto: geometria própria e materiais simples, sem asset externo.
+**Implementado na Etapa 3.** Sem avatar (Etapa 5) e sem som.
+
+| Arquivo | O que faz |
+|---|---|
+| `geometria/` | Rocha, topo, sólidos (mesa, placa, biblioteca, árvore, pedra), pintura por altura, gerador determinístico |
+| `mapaDoMundo.ts` | Onde cada ilha fica, onde cada ponte vai, enquadramento e espalhamento |
+| `mundoVisivel.ts` | O **único** elo entre progresso e cena: traduz a decisão do domínio em algo desenhável |
+| `camera/movimento.ts`, `teclas.ts` | Câmera com limites e interpolação; teclas por `code`, sem tecla presa |
+| `Cena.tsx`, `Ilha.tsx`, `Ponte.tsx`, `Ceu.tsx`, `CameraLivre.tsx` | A cena em si |
+| `suporteWebgl.ts` | Pergunta ao navegador se há WebGL **antes** de montar a cena |
+
+Geometria própria, materiais simples, **nenhum asset externo** — e nenhuma regra de aprovação:
+`mundoVisivel.ts` recebe situação e acessibilidade já resolvidas pela camada de regras.

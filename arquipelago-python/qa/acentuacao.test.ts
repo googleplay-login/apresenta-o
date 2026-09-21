@@ -147,6 +147,8 @@ function lerArquivos(): readonly Arquivo[] {
 function semCodigo(trecho: string): string {
   return trecho
     .replace(/`[^`]*`/g, ' ')
+    // Interpolação dentro de template literal é código, não texto.
+    .replace(/\$\{[^}]*\}/g, ' ')
     .replace(/\b[\w-]+(?:\/[\w.-]+)+\b/g, ' ')
     .replace(/\b\w+\.(?:ts|tsx|js|jsx|md|css|json|html|py)\b/g, ' ')
     .replace(/\b\w+\.\w+\b/g, ' ')
@@ -158,6 +160,14 @@ function semCodigo(trecho: string): string {
 /** Strings que são frase. Valor de dado e caminho de módulo ficam de fora. */
 function ehFrase(texto: string): boolean {
   return /\s/.test(texto.trim()) || /[À-ÿ]/.test(texto)
+}
+
+/** Marcas de código que não aparecem em texto de tela. */
+const MARCAS_DE_CODIGO = /['"():;,=]|=>|\bcase\b|\breturn\b|\bfunction\b/
+
+/** Verdadeiro quando o trecho entre `>` e `<` é texto de tela, e não código. */
+function ehTextoDeTela(trecho: string): boolean {
+  return /[A-Za-zÀ-ÿ]/.test(trecho) && !MARCAS_DE_CODIGO.test(trecho)
 }
 
 /** Extrai os trechos de texto humano de um arquivo. */
@@ -186,7 +196,14 @@ function extrairTexto(arquivo: Arquivo): readonly string[] {
   }
 
   for (const achado of conteudo.matchAll(/>([^<>{}]+)</g)) {
-    trechos.push(achado[1] ?? '')
+    const possivelTexto = achado[1] ?? ''
+    // Entre dois `>` e `<` pode haver código, e não texto: uma função que
+    // devolve JSX, um `case 'codigo':`, uma condição. O filtro abaixo exige que
+    // o trecho pareça mesmo frase de tela — sem aspas, parênteses, dois-pontos
+    // ou sinal de igual, que são marcas de código.
+    if (ehTextoDeTela(possivelTexto)) {
+      trechos.push(possivelTexto)
+    }
   }
 
   return trechos
@@ -250,6 +267,16 @@ describe('acentuação do português no código e na documentação', () => {
     }).join(' ')
 
     expect(semDefeito).not.toContain('referencia')
+
+    // O filtro novo não pode virar esconderijo: texto de tela continua sendo
+    // olhado, e código entre `>` e `<` continua sendo ignorado.
+    const comJsxEComCodigo = extrairTexto({
+      caminho: 'falso.tsx',
+      conteudo: "return (\n  <p>Falta acento aqui</p>\n)\n\n    case 'codigo':\n",
+    }).join(' ')
+
+    expect(comJsxEComCodigo).toContain('Falta acento aqui')
+    expect(comJsxEComCodigo).not.toContain("case 'codigo'")
   })
 
   it('não encontra palavra sem acento em texto humano', () => {

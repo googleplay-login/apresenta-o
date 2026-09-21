@@ -26,14 +26,14 @@ Consequências práticas, e o motivo de cada uma:
 
 | Pasta | Responsabilidade | Estado |
 |---|---|---|
-| `src/app/` | Casca da aplicação, rotas por hash e as duas páginas atuais | Existe |
-| `src/world/` | Cena 3D: ilhas, pontes, câmera, céu, água, névoa. **Sem regra de aprovação** | Vazio |
+| `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
+| `src/world/` | Cena 3D: ilhas, pontes, câmera, céu, névoa, e a geometria pura que a alimenta. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação | Existe e testado |
-| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes | Iniciado |
-| `src/state/` | Estado em memória da sessão | Vazio |
-| `src/persistence/` | Gravação e leitura do progresso, versionado | Vazio |
+| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes | Existe para 4 unidades |
+| `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
+| `src/persistence/` | Gravação e leitura do progresso, versionado, com aviso honesto de falha | Existe e testado |
 | `src/python/` | Pyodide em Web Worker, sob demanda | Vazio |
-| `src/ui/` | Componentes, tema, tokens visuais e mostruário de cores | Existe |
+| `src/ui/` | Componentes, painéis do ciclo, tema, tokens visuais e mostruário de cores | Existe |
 | `src/types/` | Apenas tipos transversais | Vazio |
 | `src/utils/` | Apenas auxiliares genéricos sem domínio | Vazio |
 | `qa/` | Verificações do projeto (não da aplicação), como a trava de acentuação | Existe |
@@ -42,21 +42,42 @@ Consequências práticas, e o motivo de cada uma:
 Cada pasta vazia tem um `README.md` explicando sua responsabilidade e seus limites. Quem
 continuar o trabalho abre a pasta e encontra a regra ali, onde ela importa.
 
-## As duas páginas de hoje
+## As três páginas de hoje
 
 | Rota | Página | Para quê |
 |---|---|---|
-| `#/` | Painel do projeto | Dizer o estado real: o que existe, o que não existe, o que está planejado |
-| `#/tema` | Guia de estilo | Mostrar a linguagem visual em espécimes, antes de existir cena 3D |
+| `#/` | O mundo | Estudar: arquipélago 3D, trilha das ilhas e painel do ciclo de estudo |
+| `#/painel` | Painel do projeto | Dizer o estado real: o que existe, o que não existe, o que está planejado |
+| `#/tema` | Guia de estilo | Mostrar a linguagem visual em espécimes |
 
-Nenhuma das duas tem botão. Elas têm **links** de navegação, e links funcionam de verdade — a
-regra do projeto proíbe apenas alvo clicável **sem efeito**.
+A regra do projeto proíbe alvo clicável **sem efeito** (D-009). É por isso que, numa máquina sem
+WebGL, os botões de câmera e o de ligar o 3D **não aparecem**: eles não teriam o que fazer.
+
+## O caminho do dado, do armazenamento até o pixel
+
+```
+localStorage ──lerProgresso──► useProgressoPersistido ──► estado.progresso
+                                                              │
+                                          ┌───────────────────┴────────────────────┐
+                                          ▼                                        ▼
+                                learning/percurso (decide)                state/sessao (redutor)
+                                          │                                        │
+                                          ▼                                        ▼
+                              world/mundoVisivel (traduz)              ui/paineis (mostra o passo)
+                                          │
+                                          ▼
+                              world/Cena (desenha, sem decidir)
+```
+
+Nenhuma seta aponta para trás: a cena não escreve em `learning/`, e o painel não calcula nota. O
+único lugar que grava progresso é o redutor, e ele só grava o que `registrarResultado` devolveu.
 
 ## Piso técnico
 
-Vite + React + TypeScript. Three.js via React Three Fiber e Drei entra na Etapa 3. CSS
-responsivo sem framework. `localStorage` na Etapa 8 (IndexedDB só se o volume exigir, e com
-autorização). Vitest para lógica e render; Playwright para teste de navegador.
+Vite + React + TypeScript. Three.js via React Three Fiber (sem Drei, D-021). CSS responsivo sem
+framework. `localStorage` para o progresso (IndexedDB só se o volume exigir, e com autorização).
+Vitest para lógica, render e interação em jsdom (D-020); Playwright para teste de navegador, ainda
+não instalado.
 
 ### Versões resolvidas em 21/09/2026
 
@@ -64,12 +85,16 @@ autorização). Vitest para lógica e render; Playwright para teste de navegador
 |---|---|---|
 | node | 22.22.3 | ambiente de desenvolvimento |
 | npm | 10.9.8 | |
-| react / react-dom | 19.3.0 | |
+| react / react-dom | 19.2.1 | 19.3.0 não é aceito pelo par de dependências do fiber 9.7.0 |
 | vite | 8.3.0 | |
 | @vitejs/plugin-react | 6.1.1 | |
 | typescript | 7.0.2 | |
 | vitest | 5.0.1 | |
-| @types/react / @types/react-dom | 19.3.0 | |
+| @types/react / @types/react-dom | 19.2.18 / 19.2.7 | |
+| three / @react-three/fiber | 0.186.0 / 9.7.0 | a cena entra por importação sob demanda (D-022) |
+| @types/three | 0.186.0 | apenas tipos |
+| jsdom / @testing-library/react | 30.1.0 / 16.3.3 | desenvolvimento; `@testing-library/dom` 10.4.2 e `user-event` 14.6.7 junto |
+| pyodide | 314.0.7 | instalado, ainda **não usado** (Etapa 9) |
 | @types/node | 26.6.2 | apenas tipos, para a verificação de qualidade em `qa/` |
 
 Versões fixadas **exatas** (sem `^`) e `package-lock.json` versionado, para que outra pessoa, em
@@ -93,7 +118,10 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Verificação | Onde | O que impede |
 |---|---|---|
 | Contraste dos pares de cor | `src/ui/theme/contraste.test.ts` | Texto ilegível por escolha de cor |
-| Nenhum botão na página | `src/app/App.test.tsx` | Controle sem efeito (D-009) |
+| Todo botão tem rótulo e nenhum controle sem efeito | `src/app/App.test.tsx`, `Mundo.test.tsx` | Controle sem efeito (D-009) |
+| Nenhuma resposta corrigida antes do envio | `src/app/paginas/Mundo.interacao.test.tsx` | Correção fora de hora, dica de gabarito |
+| Aprovar não pode ser confundido com "já estava aprovada" | `src/state/sessao.test.ts` | Mensagem que mente sobre o histórico |
+| Faces de todas as malhas para fora | `src/world/geometria/orientacao.test.ts` | Mundo invisível de fora |
 | Nenhuma página inventada | `src/content/planoDeUnidades.test.ts` | Referência de página não verificada (D-010) |
 | Aprovação só com 80% reais | `src/learning/avaliacao.test.ts` | Exibição que contradiz a decisão |
 | Nenhum atalho de desbloqueio | `src/learning/percurso.test.ts` | Pular portão por rota, clique ou ordem |

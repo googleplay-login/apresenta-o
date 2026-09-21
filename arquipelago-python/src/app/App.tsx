@@ -1,12 +1,14 @@
 import { ETAPA_ATUAL, NOME, VERSAO } from './identidade'
 import { ROTAS, type Rota } from './rotas'
 import { useRota } from './useRota'
+import { Mundo } from './paginas/Mundo'
 import { PainelDoProjeto } from './paginas/PainelDoProjeto'
 import { VitrineDoTema } from './paginas/VitrineDoTema'
 import { tokensComoVariaveisCss } from '../ui/theme/tokens'
 import './app.css'
 
 const ABAS: readonly { readonly rota: Rota; readonly rotulo: string }[] = [
+  { rota: 'mundo', rotulo: 'Mundo' },
   { rota: 'painel', rotulo: 'Painel do projeto' },
   { rota: 'tema', rotulo: 'Guia de estilo' },
 ]
@@ -54,18 +56,22 @@ export function App() {
         </div>
       </nav>
 
-      <main className="conteudo">{rota === 'tema' ? <VitrineDoTema /> : <PainelDoProjeto />}</main>
+      <main className="conteudo">
+        {rota === 'mundo' ? <Mundo /> : null}
+        {rota === 'painel' ? <PainelDoProjeto /> : null}
+        {rota === 'tema' ? <VitrineDoTema /> : null}
+      </main>
 
       <footer className="rodape">
         <div className="rodape__conteudo">
           <p>
             <strong>Aviso de integridade.</strong> O conteúdo das aulas, das missões e das
-            perguntas será original. O livro é usado como fonte de estudo e como mapa, nunca
+            perguntas é original. O livro é usado como fonte de estudo e como mapa, nunca
             reproduzido: nenhum capítulo, exercício ou página do livro entra neste repositório.
           </p>
           <p>
-            As explicações, os exemplos e as perguntas do Arquipélago são escritos por nós. As
-            referências de página ficam nulas até que o livro possa ser conferido.
+            As referências de página ficam marcadas como pendentes até que o livro possa ser
+            conferido — e a numeração impressa não é a mesma do arquivo digital.
           </p>
         </div>
       </footer>

@@ -16,5 +16,14 @@ volume exigir, e com autorização).
 
 ## Estado
 
-**Não implementado.** Etapa 8. O formato do dado já existe e é testado (inclusive a
-ida e volta por JSON), mas ninguém grava nada ainda.
+**Implementado na Etapa 3**, antes do previsto (a Etapa 8 pedia o protótipo jogável; guardar o
+progresso passou a fazer falta assim que o ciclo teve tela).
+
+| Arquivo | O que faz |
+|---|---|
+| `progressoSalvo.ts` | Ler, gravar, validar formato e versão, apagar só as chaves da aplicação |
+| `useProgressoPersistido.ts` | Liga o estado ao armazenamento: lê **uma vez, antes de gravar**, e mostra o aviso quando falha |
+
+Regras que valem na prática: um progresso sem nenhuma unidade **não é gravado** (a chave é
+removida, em vez de guardar o nada); falha de escrita vira aviso visível, nunca silêncio;
+`apagarProgresso` percorre as chaves com o prefixo da aplicação e não toca em mais nada.

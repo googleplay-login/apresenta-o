@@ -304,3 +304,76 @@ envelheceria em silêncio; a página lê os tokens de verdade, então não pode 
 **Consequência:** se um token mudar, a página muda junto. Se uma cor for acrescentada, um teste
 avisa que ela não apareceu no mostruário. O que a página **não** faz: medir os pixels na tela —
 isso continua registrado como não executado em `TEST_REPORT.md`.
+
+---
+
+## D-020 — Testes de interação com DOM de verdade, e não só com HTML estático
+**21/09/2026** — decisão de verificação, na Etapa 3.
+
+**Decisão:** acrescentar `jsdom`, `@testing-library/react`, `@testing-library/dom` e
+`@testing-library/user-event` (todas de desenvolvimento, versões fixas) e rodar os testes de
+interação **por arquivo**, com `// @vitest-environment jsdom` na primeira linha. A configuração
+global continua em `node`.
+
+**Contexto:** até aqui a suíte provava funções puras e HTML gerado por `renderToStaticMarkup`.
+Isso não prova que clicar leva a algum lugar — e boa parte das regras deste projeto é sobre não
+poder ser contornada pela interface. Sem navegador neste ambiente, o DOM simulado é o mais perto
+que dá para chegar.
+
+**Consequência:** o ciclo inteiro (missão → estudo → prática → avaliação → resultado) é
+percorrido com cliques, teclado e `localStorage` de verdade. Dois defeitos reais apareceram no
+primeiro dia de uso desta suíte: a tela dizia "você já havia aprovado" logo depois da primeira
+aprovação, e "Seguir para a próxima ilha" não fazia nada visível na versão sem 3D. Os dois foram
+corrigidos no código.
+
+**Limite declarado:** `jsdom` não desenha nada. Aparência, contraste, layout, arrasto de mouse e
+WebGL continuam **não executados**, com roteiro manual em `TEST_REPORT.md`.
+
+---
+
+## D-021 — Sem `@react-three/drei` no protótipo
+**21/09/2026** — padrão adotado (reversível).
+
+**Decisão:** remover `@react-three/drei` das dependências. O mundo usa apenas `three` e
+`@react-three/fiber`.
+
+**Contexto:** a biblioteca foi instalada junto com as outras, na suposição de que os ajudantes de
+cena seriam usados. Não foram: nenhum componente do `drei` aparece em `src/`. Como o compilador de
+pacote não inclui o que ninguém importa, o arquivo final não mudou com a remoção — o que muda é a
+árvore de dependências instalada, a superfície para revisar e a mensagem: o projeto usa o que
+declara. Se algum ajudante fizer falta (controles de órbita, por exemplo), ele volta com
+justificativa escrita.
+
+---
+
+## D-022 — A cena 3D entra por importação sob demanda
+**21/09/2026** — decisão de desempenho, na Etapa 3.
+
+**Decisão:** `Cena` é carregada com `React.lazy` + `import()` dinâmico, com um aviso honesto
+enquanto o pacote chega.
+
+**Contexto:** o `three` responde pela maior parte do pacote final. A trilha em texto é a
+alternativa de quem não tem placa de vídeo — e também o caminho de quem tem uma conexão ruim.
+Não faz sentido obrigar essas pessoas a baixar o desenho do mundo.
+
+**Consequência medida:** o pacote principal caiu de **1.184 kB (329 kB gzip)** para
+**276 kB (88 kB gzip)**; a cena virou um segundo arquivo de 910 kB (242 kB gzip), buscado só
+quando há WebGL e o modo 3D está ligado.
+
+---
+
+## D-023 — A aprovação anterior é fotografada ao abrir a ilha
+**21/09/2026** — defeito encontrado por teste, na Etapa 3.
+
+**Decisão:** `sessao.aprovadaAntes` é gravado pela ação `abrirUnidade`, e não lido do progresso a
+cada desenho.
+
+**Contexto:** a tela de resultado tem duas mensagens: "a ponte para a próxima ilha está inteira" e
+"você já havia aprovado esta ilha — a nova tentativa não tirou nada do que já valia". A segunda
+dependia de `progresso.unidades[id].aprovada`, lido ao vivo. Como a própria aprovação muda esse
+campo, quem aprovava pela primeira vez lia **"você já havia aprovado"** — mentira, na cara de quem
+acabou de ver a nota.
+
+**Consequência:** a pergunta "isto já estava aprovado **antes** desta tentativa?" tem resposta
+estável durante toda a sessão da ilha. Um teste de interação cobre os dois casos, e um teste do
+redutor confirma que a aprovação conquistada agora **não** conta como anterior.

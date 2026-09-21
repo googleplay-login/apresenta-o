@@ -3,9 +3,11 @@ import { ROTA_PADRAO, ROTAS, enderecoDaRota, hashAtual, rotaDoHash } from './rot
 
 describe('tradução de hash em rota', () => {
   it('reconhece as rotas conhecidas', () => {
-    expect(rotaDoHash('')).toBe('painel')
-    expect(rotaDoHash('#')).toBe('painel')
-    expect(rotaDoHash('#/')).toBe('painel')
+    expect(rotaDoHash('')).toBe('mundo')
+    expect(rotaDoHash('#')).toBe('mundo')
+    expect(rotaDoHash('#/')).toBe('mundo')
+    expect(rotaDoHash('#/mundo')).toBe('mundo')
+    expect(rotaDoHash('#/painel')).toBe('painel')
     expect(rotaDoHash('#/tema')).toBe('tema')
   })
 
@@ -31,6 +33,7 @@ describe('tradução de hash em rota', () => {
       '#/tema#/painel',
       '#/desbloquear',
       '#/u04-listas-do-mercado',
+      '#/mundo?unidade=u04&passo=avaliacao',
     ]
 
     for (const hash of tentativas) {
@@ -38,8 +41,17 @@ describe('tradução de hash em rota', () => {
     }
   })
 
+  it('a rota não carrega parâmetro nenhum', () => {
+    // A rota padrão abre o mundo no estado em que o progresso guardado deixou.
+    // Se algum dia existir rota com parte variável, este teste cai — e cair aqui
+    // obriga a rever a decisão D-012 (a URL nunca decide progresso).
+    expect(ROTAS.mundo).toBe('#/')
+    expect(new Set(Object.values(ROTAS)).size).toBe(Object.keys(ROTAS).length)
+  })
+
   it('gera endereço a partir da rota', () => {
-    expect(enderecoDaRota('painel')).toBe('#/')
+    expect(enderecoDaRota('mundo')).toBe('#/')
+    expect(enderecoDaRota('painel')).toBe('#/painel')
     expect(enderecoDaRota('tema')).toBe('#/tema')
   })
 })
@@ -48,6 +60,6 @@ describe('hash atual fora do navegador', () => {
   it('devolve texto vazio quando não existe window', () => {
     // É o que permite renderizar a aplicação em teste sem navegador.
     expect(hashAtual()).toBe('')
-    expect(rotaDoHash(hashAtual())).toBe('painel')
+    expect(rotaDoHash(hashAtual())).toBe('mundo')
   })
 })

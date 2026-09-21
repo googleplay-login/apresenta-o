@@ -1,0 +1,155 @@
+import { describe, expect, it } from 'vitest'
+import { CONTEUDO_DAS_UNIDADES, conteudoDaUnidade } from './unidades'
+import { gabaritoDaUnidade, problemasNoConteudo } from './validadorDeConteudo'
+import { PLANO_DE_UNIDADES } from './planoDeUnidades'
+import { PERGUNTAS_POR_UNIDADE, foiAprovado } from '../learning/avaliacao'
+
+describe('conteúdo das unidades', () => {
+  it('tem conteúdo escrito para as quatro unidades planejadas', () => {
+    expect(CONTEUDO_DAS_UNIDADES.length).toBe(PLANO_DE_UNIDADES.length)
+  })
+
+  it('cobre exatamente as unidades do plano, na mesma ordem', () => {
+    // Este teste amarra conteúdo e plano. Sem ele, escrever o conteúdo da
+    // unidade 5 e esquecer de registrá-la no plano (ou o contrário) passaria
+    // silenciosamente, e a ilha apareceria sem aula dentro.
+    const idsDoPlano = [...PLANO_DE_UNIDADES].sort((a, b) => a.ordem - b.ordem).map((u) => u.id)
+    const idsDoConteudo = CONTEUDO_DAS_UNIDADES.map((unidade) => unidade.id)
+    expect(idsDoConteudo).toEqual(idsDoPlano)
+  })
+
+  it('não tem problema de conteúdo em nenhuma unidade', () => {
+    const problemas = CONTEUDO_DAS_UNIDADES.flatMap(problemasNoConteudo)
+    expect(problemas, `Problemas encontrados:\n${problemas.join('\n')}`).toEqual([])
+  })
+
+  it('tem cinco perguntas por unidade, com quatro alternativas cada', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      expect(unidade.perguntas.length).toBe(PERGUNTAS_POR_UNIDADE)
+      for (const pergunta of unidade.perguntas) {
+        expect(pergunta.alternativas.length).toBe(4)
+      }
+    }
+  })
+
+  it('tem gabarito coerente com a quantidade de perguntas', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const gabarito = gabaritoDaUnidade(unidade)
+      expect(gabarito.length).toBe(PERGUNTAS_POR_UNIDADE)
+      for (const indice of gabarito) {
+        expect(indice).toBeGreaterThanOrEqual(0)
+        expect(indice).toBeLessThan(4)
+      }
+    }
+  })
+
+  it('não distribui a resposta correta sempre no mesmo lugar', () => {
+    // Se todas as corretas estivessem na alternativa A, o estudante aprenderia
+    // a chutar em vez de aprender o conteúdo. A checagem é grosseira de
+    // propósito: exige apenas que haja variedade.
+    const posicoes = CONTEUDO_DAS_UNIDADES.flatMap((unidade) =>
+      unidade.perguntas.map((pergunta) => pergunta.correta),
+    )
+    expect(new Set(posicoes).size).toBeGreaterThanOrEqual(3)
+  })
+
+  it('permite aprovar cada unidade com 4 acertos e reprovar com 3', () => {
+    // Confere que a regra de aprovação funciona com o conteúdo real, e não
+    // apenas com números inventados no teste do domínio.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const total = unidade.perguntas.length
+      expect(foiAprovado({ acertos: 4, total }), `${unidade.id} não aprova com 4 acertos`).toBe(true)
+      expect(foiAprovado({ acertos: 3, total }), `${unidade.id} aprova com 3 acertos`).toBe(false)
+    }
+  })
+
+  it('encontra o conteúdo por id e devolve nulo para unidade sem conteúdo', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      expect(conteudoDaUnidade(unidade.id)?.id).toBe(unidade.id)
+    }
+    expect(conteudoDaUnidade('u99-inexistente')).toBeNull()
+  })
+
+  it('não deixa texto com excesso de espaço em branco nas pontas', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      expect(unidade.missao).toBe(unidade.missao.trim())
+      expect(unidade.leitura.parte).toBe(unidade.leitura.parte.trim())
+      expect(unidade.leitura.porque).toBe(unidade.leitura.porque.trim())
+    }
+  })
+})
+
+describe('validador de conteúdo', () => {
+  const base = CONTEUDO_DAS_UNIDADES[0]
+
+  it('aprova um conteúdo correto', () => {
+    expect(problemasNoConteudo(base!)).toEqual([])
+  })
+
+  it('acusa pergunta apontando para alternativa inexistente', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0 ? { ...pergunta, correta: 9 } : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('alternativa inexistente')
+  })
+
+  it('acusa quantidade de alternativas fora do padrão', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0 ? { ...pergunta, alternativas: ['uma', 'duas'], correta: 0 } : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('alternativas, e o padrão é 4')
+  })
+
+  it('acusa alternativas repetidas', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0
+          ? { ...pergunta, alternativas: ['igual', 'igual', 'outra', 'mais uma'], correta: 0 }
+          : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('alternativas repetidas')
+  })
+
+  it('acusa exercício sem solução de referência', () => {
+    const comDefeito = {
+      ...base!,
+      pratica: base!.pratica.map((exercicio, indice) =>
+        indice === 0 ? { ...exercicio, solucao: '' } : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('sem solução de referência')
+  })
+
+  it('acusa explicação vazia', () => {
+    expect(problemasNoConteudo({ ...base!, explicacao: [] }).join(' ')).toContain(
+      'explicação vazia',
+    )
+  })
+
+  it('acusa número de perguntas diferente do declarado', () => {
+    const comDefeito = { ...base!, perguntas: base!.perguntas.slice(0, 3) }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('o mínimo declarado é 5')
+  })
+
+  it('acusa pergunta sem explicação para depois do envio', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0 ? { ...pergunta, explicacao: '' } : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('sem explicação')
+  })
+
+  it('acusa id de unidade vazio', () => {
+    expect(problemasNoConteudo({ ...base!, id: '' }).join(' ')).toContain('unidade sem id')
+  })
+})

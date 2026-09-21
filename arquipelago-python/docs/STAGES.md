@@ -11,7 +11,7 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 0 | Análise dos anexos, identificação do livro, plano das três primeiras ilhas | **concluída** |
 | 1 | Fundação: projeto, tema visual e documentação | **concluída** (1.1 e 1.2) |
 | 2 | Domínio e progressão, testados | **concluída** |
-| 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | não iniciada |
+| 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | **concluída** |
 | 4 | Três ilhas e as pontes | não iniciada |
 | 5 | Navegação e avatar | não iniciada |
 | 6 | Estudo e leitura do livro na tela | não iniciada |
@@ -82,18 +82,39 @@ Pyodide.
 
 **Nada disto tem tela ainda.** É proposital: as regras vêm antes da interface, e não no meio dela.
 
-## Etapa 3 — Primeira ilha 3D (proposta, não iniciada)
+## Etapa 3 — Primeira ilha 3D (concluída em 21/09/2026)
 
-Escopo proposto, a ser detalhado na autorização: **uma** ilha com o ciclo completo funcionando
-ponta a ponta — missão, leitura recomendada, explicação, prática, avaliação de 5 perguntas,
-aprovação e ponte liberada. Uma ilha só, com tudo funcionando, **antes** de existir a segunda.
+O escopo executado acabou sendo **maior** que o proposto numa coisa e menor em outra: o mundo já
+tem as **quatro** ilhas desenhadas e as pontes entre elas (a Etapa 4 pede três ilhas e as pontes),
+mas o **avatar** não existe (Etapa 5), nem o livro na tela (Etapa 6), nem Pyodide (Etapa 9). A
+divisão em subetapas foi decisão interna, e não uma parada para autorização.
 
-Já decidido para esta etapa:
+### 3.1 — Camada pura do mundo (concluída)
 
-- Three.js via React Three Fiber e Drei (primeira dependência de 3D a entrar);
-- câmera com rotação limitada, mouse e teclado, e a **máquina de foco** de D-012;
-- alternativa acessível em lista, com o mesmo ciclo e as mesmas regras;
-- tratamento de WebGL indisponível, com caminho alternativo funcional.
+- `world/geometria/`: gerador determinístico (`aleatorio.ts`), rocha e topo da ilha (`ilha.ts`),
+  sólidos com faces para fora (`solidos.ts`), pintura por altura (`pintura.ts`);
+- `world/mapaDoMundo.ts`: onde cada ilha fica, onde cada ponte vai, enquadramento e espalhamento;
+- `world/mundoVisivel.ts`: **o único elo** entre progresso e cena — as ilhas chegam com situação e
+  acessibilidade já resolvidas, e as pontes com "liberada" já decidido. A cena não decide nada
+  (D-004);
+- `world/camera/movimento.ts` e `world/teclas.ts`: limites de câmera, interpolação, teclas por
+  `code`, sem vazamento de tecla presa.
+
+### 3.2 — Camada visual e o ciclo na tela (concluída)
+
+- cena React Three Fiber (`Cena`, `Ilha`, `Ponte`, `Ceu`, `CameraLivre`), com importação sob
+  demanda (D-022);
+- painéis do ciclo: missão, estudo, prática, avaliação e resultado;
+- HUD com modo de câmera, resumo do placar e teclas; trilha em texto equivalente, com o mesmo
+  conteúdo e as mesmas regras — a alternativa acessível **e** a interface de quem está sem placa
+  de vídeo;
+- persistência ligada à tela (`useProgressoPersistido`), com aviso honesto de falha;
+- testes de interação com DOM de verdade (D-020), que acharam dois defeitos reais na primeira
+  execução.
+
+**Limite explícito desta etapa:** sem avatar, sem leitura do livro na tela, sem execução de
+código, sem som. E o desenho 3D em si continua **não verificado** — não há navegador neste
+ambiente (ver `TEST_REPORT.md`).
 
 ---
 

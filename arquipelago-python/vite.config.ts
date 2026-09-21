@@ -13,10 +13,12 @@ import react from '@vitejs/plugin-react'
  *                         (*.e2b.app). Sem isso o Vite recusa a requisição
  *                         ("Blocked request. This host is not allowed").
  *                         Restrito ao domínio do preview, não `true`.
- *  - `test.environment` → os testes atuais são de funções puras e de render
- *                         estático, sem DOM nem eventos, então rodam em Node.
- *                         `jsdom` será adicionado quando existir teste de
- *                         interação — não antes.
+ *  - `test.environment` → continua `node` por padrão: a maioria dos testes é de
+ *                         função pura e de render estático, e roda mais rápido
+ *                         sem DOM. Os testes de interação pedem jsdom no
+ *                         próprio arquivo, com `// @vitest-environment jsdom`
+ *                         na primeira linha. O ambiente vale por arquivo, não
+ *                         para a suíte inteira.
  */
 export default defineConfig({
   plugins: [react()],

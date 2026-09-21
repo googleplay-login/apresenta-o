@@ -11,6 +11,10 @@ Não grava nada permanentemente: persistir é responsabilidade de
 
 ## Estado
 
-**Não implementado.** Etapa 3, quando existir a primeira tela que muda de estado.
-Até agora, a única coisa que guarda estado é a rota atual (`src/app/useRota.ts`),
-e ela não influencia progresso nenhum.
+**Implementado na Etapa 3.** `sessao.ts` traz o redutor do ciclo: `criarRedutor(unidades)`,
+`estadoInicial()`, os cinco passos (`missao`, `estudo`, `pratica`, `avaliacao`, `resultado`), as
+ações e a máquina de foco do teclado (D-012).
+
+É aqui, e **só aqui**, que `registrarResultado` é chamado. Nenhum componente altera progresso:
+componentes despacham ações, e o redutor consulta o domínio. A rota (`src/app/useRota.ts`)
+continua fora disso — ela não influencia progresso nenhum.
