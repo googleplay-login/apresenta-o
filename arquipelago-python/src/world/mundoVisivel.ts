@@ -59,6 +59,53 @@ export function pontesVisiveis(
 }
 
 /**
+ * O que acontece quando alguém clica numa ponte.
+ *
+ * Existe como função pura, e não dentro da cena, por um motivo prático: a cena
+ * 3D não é testável neste ambiente, e a regra do projeto diz que clicar numa
+ * ponte **não pode** liberar nada. Aqui a decisão fica testável sem placa de
+ * vídeo — a ponte pela metade recusa a travessia e explica qual aprovação falta.
+ *
+ * Quem desenha só chama isto e mostra o resultado.
+ */
+export type DecisaoDaTravessia =
+  | {
+      readonly tipo: 'atravessar'
+      readonly unidadeId: string
+      readonly titulo: string
+    }
+  | { readonly tipo: 'recusar'; readonly motivo: string }
+
+/** Decide se a ponte leva a algum lugar, ou se explica o que falta. */
+export function decidirTravessia(
+  ponte: PonteVisivel,
+  ilhas: readonly IlhaVisivel[],
+): DecisaoDaTravessia {
+  const destino = ilhas.find((ilha) => ilha.id === ponte.para)
+  const origem = ilhas.find((ilha) => ilha.id === ponte.de)
+
+  if (destino === undefined) {
+    return { tipo: 'recusar', motivo: 'Esta ponte não leva a nenhuma ilha do percurso.' }
+  }
+
+  // Duas condições, e as duas vêm do domínio: a ponte está inteira e o destino
+  // aceita entrada. Se as duas não valerem, a travessia não acontece — clicar
+  // nunca substitui a aprovação.
+  if (!ponte.liberada || !destino.acessivel) {
+    return {
+      tipo: 'recusar',
+      motivo:
+        origem === undefined
+          ? `A ponte para «${destino.titulo}» ainda está pela metade.`
+          : `A ponte para «${destino.titulo}» fica inteira quando você aprovar «${origem.titulo}» ` +
+            'com 80% de acertos. Até lá, ela está pela metade de propósito.',
+    }
+  }
+
+  return { tipo: 'atravessar', unidadeId: destino.id, titulo: destino.titulo }
+}
+
+/**
  * A ilha onde o estudante deveria estar agora: a primeira ainda não aprovada.
  * Se todas foram aprovadas, é a última — não existe "nada para fazer".
  */

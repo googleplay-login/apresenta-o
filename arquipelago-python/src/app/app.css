@@ -1169,3 +1169,7 @@ kbd {
   color: var(--texto-sobre-escuro);
   font-weight: 600;
 }
+
+.cena--ponte {
+  cursor: pointer;
+}

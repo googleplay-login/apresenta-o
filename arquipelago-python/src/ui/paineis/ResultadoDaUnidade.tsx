@@ -49,7 +49,10 @@ export function ResultadoDaUnidade({
         {aprovado
           ? aprovadaAntes
             ? 'Você já havia aprovado esta ilha — a nova tentativa não tirou nada do que já valia.'
-            : 'A ponte para a próxima ilha está inteira. A ilha continua disponível para revisão.'
+            : temProxima
+              ? 'A ponte para a próxima ilha está inteira. A ilha continua disponível para revisão.'
+              : // A última ilha não tem ponte para lugar nenhum: prometer uma seria mentira.
+                'Esta é a última ilha escrita até agora, e não há ponte saindo dela. As próximas unidades entram conforme o conteúdo for escrito — e o que você já aprovou continua valendo.'
           : 'Nada foi bloqueado: a ilha continua aberta, o estudo segue à mão e você pode refazer a avaliação quantas vezes quiser.'}
       </p>
 

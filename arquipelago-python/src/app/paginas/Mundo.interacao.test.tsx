@@ -389,6 +389,75 @@ describe('progresso guardado no navegador', () => {
   })
 })
 
+describe('fim do percurso escrito', () => {
+  it('aprovar a última ilha não promete uma ponte que não existe', async () => {
+    const aprovadas = PLANO_DE_UNIDADES.slice(0, 3).map((unidade) => unidade.id)
+    window.localStorage.setItem(
+      CHAVE_DO_PROGRESSO,
+      JSON.stringify({
+        versao: 1,
+        unidades: Object.fromEntries(
+          aprovadas.map((id) => [id, { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 } }]),
+        ),
+      }),
+    )
+
+    const ultima = PLANO_DE_UNIDADES[PLANO_DE_UNIDADES.length - 1]
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+
+    await waitFor(() => {
+      expect(screen.getByText('3 de 4 ilhas aprovadas')).toBeTruthy()
+    })
+
+    await abrirIlha(usuario, ultima?.titulo ?? '')
+    await irParaAvaliacao(usuario)
+    await responderTudo(usuario, 0, ultima?.id ?? '')
+    await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+
+    expect(await screen.findByText('Aprovado nesta ilha')).toBeTruthy()
+    // Nada de "a ponte para a próxima ilha está inteira": não existe próxima.
+    expect(screen.queryByText(/A ponte para a próxima ilha está inteira/)).toBeNull()
+    expect(screen.getByText(/última ilha escrita até agora/)).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Seguir para a próxima ilha' })).toBeNull()
+
+    await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
+    await waitFor(() => {
+      expect(screen.getByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+    })
+  })
+
+  it('com todas aprovadas, o mundo diz que o percurso escrito acabou', async () => {
+    // Sem passar o mouse por cima de nada: o HUD mostra a mensagem padrão.
+    window.localStorage.setItem(
+      CHAVE_DO_PROGRESSO,
+      JSON.stringify({
+        versao: 1,
+        unidades: Object.fromEntries(
+          PLANO_DE_UNIDADES.map((unidade) => [
+            unidade.id,
+            { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 } },
+          ]),
+        ),
+      }),
+    )
+
+    render(<Mundo />)
+
+    await waitFor(() => {
+      expect(screen.getByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+    })
+    expect(screen.getByText(/Fim do percurso por enquanto/)).toBeTruthy()
+
+    // E nenhuma ilha fica fechada: revisar tudo continua possível.
+    for (const unidade of PLANO_DE_UNIDADES) {
+      const cartao = screen.getByRole('heading', { level: 3, name: unidade.titulo }).closest('li')
+      const botao = within(cartao as HTMLElement).getByRole('button', { name: /Entrar|Revisar/ })
+      expect((botao as HTMLButtonElement).disabled).toBe(false)
+    }
+  })
+})
+
 describe('alternativa sem 3D', () => {
   it('avisa que o 3D não está disponível e mantém a trilha inteira', async () => {
     render(<Mundo />)

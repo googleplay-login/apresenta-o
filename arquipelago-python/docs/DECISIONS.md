@@ -377,3 +377,23 @@ acabou de ver a nota.
 **Consequência:** a pergunta "isto já estava aprovado **antes** desta tentativa?" tem resposta
 estável durante toda a sessão da ilha. Um teste de interação cobre os dois casos, e um teste do
 redutor confirma que a aprovação conquistada agora **não** conta como anterior.
+
+---
+
+## D-024 — A travessia é decidida por função pura, e o clique nunca libera
+**21/09/2026** — decisão de arquitetura, na Etapa 4.
+
+**Decisão:** o que acontece ao clicar numa ponte é decidido por `decidirTravessia(ponte, ilhas)`,
+função pura em `src/world/mundoVisivel.ts`, que devolve `atravessar` ou `recusar` com o motivo
+escrito.
+
+**Contexto:** a regra do projeto proíbe que clicar numa ponte desbloqueie uma unidade. Se a decisão
+morasse dentro do componente da cena, ela seria **inverificável** neste ambiente — não há WebGL para
+testá-la — e ficaria fácil de quebrar sem ninguém notar. Como função pura, é testada exaustivamente:
+um teste percorre todos os progressos possíveis do começo até três aprovações e falha se a travessia
+acontecer sem o domínio ter liberado o destino.
+
+**Consequência:** a ponte pela metade **responde** ao clique — não fica em silêncio —, mas a
+resposta é uma explicação (`recusar`), e não uma passagem. O cursor de "mãozinha" é do CSS da cena,
+não escrito à mão no `<canvas>`: quem desenha avisa que o mouse está em cima, e o estilo continua na
+folha de estilo.

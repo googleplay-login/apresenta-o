@@ -29,6 +29,7 @@ Isso existe para impedir três coisas concretas:
 | `mundoVisivel.ts` | O **único** elo entre progresso e cena: traduz a decisão do domínio em algo desenhável |
 | `camera/movimento.ts`, `teclas.ts` | Câmera com limites e interpolação; teclas por `code`, sem tecla presa |
 | `Cena.tsx`, `Ilha.tsx`, `Ponte.tsx`, `Ceu.tsx`, `CameraLivre.tsx` | A cena em si |
+| Clique na ponte | `Ponte.tsx` chama `aoApontar` (cursor) e `aoEscolher` (travessia); **quem decide** é `decidirTravessia()`, em `mundoVisivel.ts` — clicar nunca libera ilha |
 | `suporteWebgl.ts` | Pergunta ao navegador se há WebGL **antes** de montar a cena |
 
 Geometria própria, materiais simples, **nenhum asset externo** — e nenhuma regra de aprovação:

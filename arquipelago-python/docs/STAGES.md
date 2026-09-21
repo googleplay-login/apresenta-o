@@ -12,7 +12,7 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 1 | Fundação: projeto, tema visual e documentação | **concluída** (1.1 e 1.2) |
 | 2 | Domínio e progressão, testados | **concluída** |
 | 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | **concluída** |
-| 4 | Três ilhas e as pontes | não iniciada |
+| 4 | Três ilhas e as pontes | **concluída** |
 | 5 | Navegação e avatar | não iniciada |
 | 6 | Estudo e leitura do livro na tela | não iniciada |
 | 7 | Avaliação | não iniciada |
@@ -118,11 +118,33 @@ ambiente (ver `TEST_REPORT.md`).
 
 ---
 
+## Etapa 4 — Três ilhas e as pontes (concluída em 21/09/2026)
+
+O mundo já desenhava quatro ilhas e três pontes desde a Etapa 3. O que faltava era a **travessia**:
+a ponte como caminho, e não como enfeite.
+
+- **A ponte responde ao clique.** Pela metade, ela recusa a travessia e diz o motivo, com o nome da
+  ilha que falta aprovar e a nota mínima. Inteira, ela leva o estudante adiante — com 3D, fechando
+  o painel e voando até lá; sem 3D, abrindo a missão da ilha de destino.
+- **A decisão é função pura.** `decidirTravessia()`, em `world/mundoVisivel.ts`, recebe a ponte e as
+  ilhas já resolvidas pelo domínio e devolve `atravessar` ou `recusar`. Está ali, e não dentro da
+  cena, porque a cena 3D não é testável neste ambiente — e porque a regra "clicar na ponte não
+  libera nada" precisa ser uma linha de código conferível, não uma promessa.
+- **A liberação é visível.** Quando a aprovação chega, as tábuas se estendem de 55% a 100% em meio
+  segundo. Uma ponte que já chega pronta na página não se apresenta de novo: a animação é do
+  acontecimento, não da montagem.
+- **A última ilha não promete o que não tem.** Com as quatro aprovadas, o resultado diz que é a
+  última ilha escrita até agora, o botão de seguir não aparece e o HUD anuncia o fim do percurso.
+
+**Limite explícito:** a travessia em 3D é um voo de câmera — não existe avatar que ande pela ponte
+(Etapa 5), nem avatar que atravesse sozinho.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **4** — três ilhas e as pontes, com a cena lendo a decisão de `src/learning/`.
 - **5** — navegação e avatar.
 - **6** — estudo: leitura recomendada, explicação original, diagrama do livro.
 - **7** — avaliação: as perguntas de verdade, exigir resposta em todas, corrigir após envio.

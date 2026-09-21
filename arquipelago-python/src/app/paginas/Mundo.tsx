@@ -9,11 +9,13 @@ import { criarRedutor, estadoInicial, podeMoverCamera, type Passo } from '../../
 import { useProgressoPersistido } from '../../persistence/useProgressoPersistido'
 import { useSuporteWebgl } from '../../world/suporteWebgl'
 import {
+  decidirTravessia,
   ilhaAtual,
   ilhasVisiveis,
   pontesVisiveis,
   resumoDoMundo,
   type IlhaVisivel,
+  type PonteVisivel,
 } from '../../world/mundoVisivel'
 
 /**
@@ -71,6 +73,7 @@ export function Mundo() {
   )
   const resumo = useMemo(() => resumoDoMundo(estado.progresso, UNIDADES), [estado.progresso])
   const unidadeDoMomento = useMemo(() => ilhaAtual(estado.progresso, UNIDADES), [estado.progresso])
+  const todasAprovadas = resumo.total > 0 && resumo.aprovadas === resumo.total
   const proxima = useMemo(() => proximaUnidade(estado.progresso, PERCURSO), [estado.progresso])
 
   const unidadeAbertaId = estado.sessao.unidadeId
@@ -115,6 +118,41 @@ export function Mundo() {
   }, [])
 
   /**
+   * Travessia: clique na ponte, ou o botão "Seguir para a próxima ilha".
+   *
+   * A decisão mora em `decidirTravessia()`, que é função pura e testada — porque
+   * a regra do projeto exige que clicar numa ponte **não** libere nada. Aqui só
+   * se executa a decisão: ou a câmera voa (com 3D), ou a missão do destino abre
+   * (sem 3D), ou aparece o motivo de a ponte estar pela metade.
+   */
+  const atravessarAte = useCallback(
+    (unidadeId: string) => {
+      if (com3d) {
+        despachar({ tipo: 'fecharUnidade' })
+        irParaIlha(unidadeId)
+        return
+      }
+      abrirUnidade(unidadeId)
+    },
+    [abrirUnidade, com3d, despachar, irParaIlha],
+  )
+
+  const escolherPonte = useCallback(
+    (ponte: PonteVisivel) => {
+      const decisao = decidirTravessia(ponte, ilhas)
+
+      if (decisao.tipo === 'recusar') {
+        setAvisoDoMundo(decisao.motivo)
+        return
+      }
+
+      setAvisoDoMundo(null)
+      atravessarAte(decisao.unidadeId)
+    },
+    [atravessarAte, ilhas],
+  )
+
+  /**
    * "Seguir para a próxima ilha": o que muda é o que existe para ver.
    *
    * Com 3D, o painel fecha e a câmera voa até a ilha recém-liberada — o
@@ -128,14 +166,8 @@ export function Mundo() {
       return
     }
 
-    if (com3d) {
-      despachar({ tipo: 'fecharUnidade' })
-      irParaIlha(proxima.id)
-      return
-    }
-
-    abrirUnidade(proxima.id)
-  }, [abrirUnidade, com3d, despachar, irParaIlha, proxima])
+    atravessarAte(proxima.id)
+  }, [atravessarAte, despachar, proxima])
 
   const zerarProgresso = useCallback(() => {
     const confirmado = window.confirm(
@@ -174,6 +206,7 @@ export function Mundo() {
                 tecladoAtivo={podeMoverCamera(estado.sessao.foco)}
                 focarEm={focarEm}
                 aoEscolher={abrirUnidade}
+                aoEscolherPonte={escolherPonte}
                 aoPassarPorCima={setSobreIlha}
               />
             </Suspense>
@@ -253,7 +286,9 @@ export function Mundo() {
             {nomeSobreIlha ??
               (estado.sessao.foco === 'painel'
                 ? 'Painel aberto: o teclado está com o estudo.'
-                : 'Passe o mouse sobre uma ilha para ver o nome dela.')}
+                : todasAprovadas
+                  ? 'Todas as ilhas escritas até agora foram aprovadas. Fim do percurso por enquanto.'
+                  : 'Passe o mouse sobre uma ilha para ver o nome dela.')}
           </p>
 
           {com3d && estado.sessao.foco === 'mundo' ? (
@@ -271,6 +306,10 @@ export function Mundo() {
                 </li>
                 <li>Arrastar com o mouse: olhar em volta</li>
                 <li>Clique numa ilha liberada: abrir a missão dela</li>
+                <li>
+                  Clique numa ponte inteira: atravessar até a ilha seguinte. Ponte pela metade
+                  explica o que falta para ela ficar inteira
+                </li>
               </ul>
             </details>
           ) : null}

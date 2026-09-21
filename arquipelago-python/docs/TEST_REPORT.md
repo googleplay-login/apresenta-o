@@ -6,6 +6,47 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 4 (as pontes como travessia)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+Sem erro. Um defeito de ordem de declaração foi pego na hora: `todasAprovadas` era calculado antes
+de `resumo` existir (`TS2448`); a linha subiu para depois do cálculo do resumo.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 406 testes, 25 arquivos, todos aprovados** (eram 398/25 antes desta etapa).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| Travessia decidida por função pura: recusa com motivo, libera depois da aprovação | `src/world/mundoVisivel.test.ts` (4 testes novos) |
+| Varredura de todos os progressos possíveis: nenhuma combinação permite atravessar sem liberação | `src/world/mundoVisivel.test.ts` |
+| Clique na ponte pela metade não abre nada e explica o que falta | `src/app/paginas/Mundo.3d.test.tsx` |
+| Clique na ponte inteira fecha o painel e leva adiante | `src/app/paginas/Mundo.3d.test.tsx` |
+| Aprovar a última ilha não promete uma ponte que não existe | `src/app/paginas/Mundo.interacao.test.tsx` |
+| Com tudo aprovado, o HUD anuncia o fim do percurso e nenhuma ilha fica fechada | `src/app/paginas/Mundo.interacao.test.tsx` |
+
+**Defeito real encontrado por teste nesta etapa:** com as quatro ilhas aprovadas, a tela de
+resultado ainda dizia "a ponte para a próxima ilha está inteira" — e não existe próxima. O texto
+passou a distinguir os dois casos, e há teste para o caso da última ilha.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       18.25 kB │ gzip:   3.24 kB
+    dist/assets/index-*.js       277.22 kB │ gzip:  88.08 kB
+    dist/assets/Cena-*.js        910.51 kB │ gzip: 241.97 kB
+
+### 4. O que continua NÃO executado
+
+O movimento das tábuas da ponte ao ser liberada, o cursor de mãozinha sobre a ponte e o voo da
+câmera até a ilha de destino: os três dependem de WebGL e de navegador. Ficam no roteiro manual
+abaixo, e **não** estão marcados como aprovados.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 3 (o mundo 3D e o ciclo de estudo da primeira ilha)
 
 ### Ambiente
@@ -191,8 +232,17 @@ item, sem presumir sucesso.
 14. Navegar só com `Tab` e `Enter`. O foco não pode ficar preso no painel, e todo botão precisa
     ter rótulo lido em voz alta.
 15. Com zoom de 200%, conferir que nada é cortado.
+16. **Ponte pela metade**: clicar numa ponte que ainda não está inteira. Deve aparecer a explicação
+    com o nome da ilha que falta aprovar, e **nada** deve abrir.
+17. **Ponte inteira**: depois de aprovar a primeira ilha, clicar na ponte entre a primeira e a
+    segunda. A câmera deve voar até a segunda ilha. O cursor do mouse deve virar mãozinha ao passar
+    sobre a ponte.
+18. **A liberação se vê**: no momento em que a aprovação acontece, as tábuas da ponte devem se
+    estender até completar o vão, em cerca de meio segundo.
+19. **Fim do percurso**: com as quatro ilhas aprovadas, o HUD deve anunciar que o percurso escrito
+    acabou, e nenhuma ilha deve ficar fechada.
 
-Resultado esperado: 15 de 15 conferidos. Qualquer item que falhe deve ser registrado aqui.
+Resultado esperado: 19 de 19 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

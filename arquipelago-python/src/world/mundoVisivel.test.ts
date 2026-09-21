@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado, type Progresso } from '../learning/percurso'
 import {
+  decidirTravessia,
   ilhaAtual,
   ilhasVisiveis,
   pontesVisiveis,
@@ -131,5 +132,76 @@ describe('resumo do mundo', () => {
       aprovadas: 1,
       total: PLANO_DE_UNIDADES.length,
     })
+  })
+})
+
+describe('travessia pela ponte', () => {
+  it('recusa atravessar a ponte pela metade, e diz qual aprovação falta', () => {
+    const progresso = progressoInicial()
+    const ilhas = ilhasVisiveis(progresso, PLANO_DE_UNIDADES)
+    const pontes = pontesVisiveis(progresso, PLANO_DE_UNIDADES, ilhas)
+
+    const decisao = decidirTravessia(pontes[0]!, ilhas)
+
+    expect(decisao.tipo).toBe('recusar')
+    if (decisao.tipo === 'recusar') {
+      expect(decisao.motivo).toContain(PLANO_DE_UNIDADES[0]!.titulo)
+      expect(decisao.motivo).toContain('80%')
+      expect(decisao.motivo).toContain('pela metade')
+    }
+  })
+
+  it('libera a travessia depois da aprovação', () => {
+    const progresso = comAprovadas(PRIMEIRA)
+    const ilhas = ilhasVisiveis(progresso, PLANO_DE_UNIDADES)
+    const pontes = pontesVisiveis(progresso, PLANO_DE_UNIDADES, ilhas)
+
+    const decisao = decidirTravessia(pontes[0]!, ilhas)
+
+    expect(decisao).toEqual({
+      tipo: 'atravessar',
+      unidadeId: SEGUNDA,
+      titulo: PLANO_DE_UNIDADES[1]!.titulo,
+    })
+  })
+
+  it('clicar na ponte nunca substitui a aprovação', () => {
+    // A pergunta que este teste responde: existe alguma combinação em que a
+    // travessia aconteça sem o domínio ter liberado o destino? Percorrendo todos
+    // os progressos possíveis do começo até duas aprovações, a resposta é não.
+    const progressos = [
+      progressoInicial(),
+      comAprovadas(PRIMEIRA),
+      comAprovadas(PRIMEIRA, SEGUNDA),
+      comAprovadas(PRIMEIRA, SEGUNDA, TERCEIRA),
+    ]
+
+    for (const progresso of progressos) {
+      const ilhas = ilhasVisiveis(progresso, PLANO_DE_UNIDADES)
+      const pontes = pontesVisiveis(progresso, PLANO_DE_UNIDADES, ilhas)
+
+      for (const ponte of pontes) {
+        const decisao = decidirTravessia(ponte, ilhas)
+        const destino = ilhas.find((ilha) => ilha.id === ponte.para)
+
+        if (decisao.tipo === 'atravessar') {
+          expect(destino?.acessivel).toBe(true)
+          expect(ponte.liberada).toBe(true)
+        } else {
+          expect(destino?.acessivel === true && ponte.liberada).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('recusa uma ponte para ilha que não existe no percurso', () => {
+    const ilhas = ilhasVisiveis(progressoInicial(), PLANO_DE_UNIDADES)
+    const ponteInventada = {
+      ...pontesVisiveis(progressoInicial(), PLANO_DE_UNIDADES, ilhas)[0]!,
+      para: 'u99-ilha-inventada',
+      liberada: true,
+    }
+
+    expect(decidirTravessia(ponteInventada, ilhas).tipo).toBe('recusar')
   })
 })

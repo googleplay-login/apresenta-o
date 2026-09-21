@@ -1,12 +1,12 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 3**.
+Atualizado em **21/09/2026**, ao final da **Etapa 4**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 3 concluída; 4 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 4 concluída; 5 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar e câmera livre |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura, explicação, 3 exercícios e 5 perguntas cada |
@@ -25,7 +25,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 398 testes, em 25 arquivos
+    npm test             # 406 testes, em 25 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -100,6 +100,16 @@ Verificação:
   cliques, teclado e `localStorage` de verdade. Dois defeitos reais apareceram na primeira
   execução e foram corrigidos no código, não no teste.
 
+### Etapa 4 — as pontes como travessia
+
+- `decidirTravessia()` (função pura, em `world/mundoVisivel.ts`): clicar numa ponte **nunca** libera
+  nada. Pela metade, ela recusa e explica qual aprovação falta; inteira, ela leva adiante;
+- a ponte responde ao clique nos dois estados, com cursor de mãozinha fornecido pelo CSS da cena;
+- quando a aprovação chega com o mundo na tela, as tábuas se estendem até fechar o vão (animação do
+  acontecimento, não da montagem);
+- a última ilha não promete ponte: o texto, o botão de seguir e o HUD distinguem "fim do percurso
+  escrito" de "próxima ilha".
+
 ## Arquivos de referência rápida
 
 | Assunto | Arquivo |
@@ -132,10 +142,10 @@ Verificação:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 4 — três ilhas e as pontes.** O mundo já desenha as quatro ilhas e as pontes; o que falta
-é fazer a ponte e o desbloqueio mudarem de estado **na frente do usuário**, com a cena lendo a
-decisão de `src/learning/` (que já existe e já é testada) e a travessia levando a câmera ou o
-estudante à ilha seguinte.
+**Etapa 5 — navegação e avatar.** Hoje o mundo é percorrido por uma câmera livre: não existe
+personagem, e a travessia é um voo até a ilha. A Etapa 5 acrescenta o avatar — com o cuidado de não
+transformar a cena em lugar onde regra de progresso apareça, e mantendo a alternativa em texto
+equivalente (o mundo 3D nunca é a única forma de percorrer a trilha).
 
 ## Como continuar sem mim
 

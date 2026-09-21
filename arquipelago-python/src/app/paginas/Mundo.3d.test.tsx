@@ -3,6 +3,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { PonteVisivel } from '../../world/mundoVisivel'
+import { conteudoDaUnidade } from '../../content/unidades'
+import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
 
 /**
  * O caminho com 3D, com DOM de verdade e a cena trocada por um marcador.
@@ -19,10 +22,33 @@ import userEvent from '@testing-library/user-event'
 
 let cenaMontada = 0
 
+/**
+ * A cena de mentira também expõe as pontes como botões.
+ *
+ * Assim o caminho do clique na ponte — que na cena de verdade acontece sobre
+ * geometria, e não sobre HTML — pode ser percorrido aqui: a decisão continua
+ * sendo a de `decidirTravessia()`, que é função pura e testada à parte.
+ */
 vi.mock('../../world/Cena', () => ({
-  Cena: () => {
+  Cena: (props: {
+    readonly pontes: readonly PonteVisivel[]
+    readonly aoEscolherPonte: (ponte: PonteVisivel) => void
+  }) => {
     cenaMontada += 1
-    return <div data-cena-de-teste="1">cena de mentira</div>
+    return (
+      <div data-cena-de-teste="1">
+        cena de mentira
+        {props.pontes.map((ponte) => (
+          <button
+            key={`${ponte.de}-${ponte.para}`}
+            type="button"
+            onClick={() => props.aoEscolherPonte(ponte)}
+          >
+            ponte para {ponte.para}
+          </button>
+        ))}
+      </div>
+    )
   },
 }))
 
@@ -106,5 +132,63 @@ describe('mundo com 3D disponível', () => {
     // Com o painel aberto, a dica de pilotagem sai da tela: as teclas agora
     // pertencem ao estudo, e não à câmera (D-012).
     expect(screen.queryByText('Como pilotar')).toBeNull()
+  })
+})
+
+describe('travessia pelas pontes', () => {
+  it('clicar na ponte pela metade não abre nada e explica o que falta', async () => {
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+    await screen.findByText('cena de mentira')
+
+    await usuario.click(screen.getByRole('button', { name: 'ponte para u02-variaveis-e-print' }))
+
+    // O aviso diz o que falta, com o nome da ilha de origem e a nota mínima.
+    const aviso = await screen.findByText(/pela metade de propósito/)
+    expect(aviso.textContent).toContain('A Praia do Primeiro Programa')
+    expect(aviso.textContent).toContain('80%')
+
+    // E nada foi aberto: a ponte não é caminho para dentro da ilha.
+    expect(screen.queryByRole('region', { name: 'Unidade u02-variaveis-e-print' })).toBeNull()
+    expect(screen.queryByText('Sua missão nesta ilha')).toBeNull()
+  })
+
+  it('depois da aprovação, a ponte inteira leva o estudante à ilha seguinte', async () => {
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+    await screen.findByText('cena de mentira')
+
+    // Aprova a primeira ilha pelo caminho normal: entrar, avaliar, enviar.
+    const cartao = screen
+      .getByRole('heading', { level: 3, name: 'A Praia do Primeiro Programa' })
+      .closest('li')
+    await usuario.click((cartao as HTMLElement).querySelector('button') as HTMLButtonElement)
+    await usuario.click(screen.getByRole('button', { name: 'Avaliação' }))
+
+    const conteudo = conteudoDaUnidade('u01-primeiro-programa')
+    if (conteudo === null) {
+      throw new Error('Conteúdo da primeira unidade ausente')
+    }
+    const gabarito = gabaritoDaUnidade(conteudo)
+    for (const [indice, pergunta] of conteudo.perguntas.entries()) {
+      const certa = pergunta.alternativas[gabarito[indice] ?? 0] ?? ''
+      await usuario.click(screen.getByRole('radio', { name: certa }))
+    }
+    await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+    await screen.findByText('Aprovado nesta ilha')
+
+    // Com 3D, atravessar a ponte é fechar o painel e voar até lá: a câmera é o
+    // deslocamento, e não a abertura de outra tela.
+    await usuario.click(screen.getByRole('button', { name: 'ponte para u02-variaveis-e-print' }))
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('region', { name: 'Unidade u01-primeiro-programa' }),
+      ).toBeNull()
+    })
+    expect(screen.getByText('Como pilotar')).toBeTruthy()
+    // A ponte não libera aprovação nenhuma: quem faz isso é o domínio, e a
+    // segunda ilha só apareceu porque a primeira foi aprovada acima.
+    expect(screen.queryByText(/pela metade de propósito/)).toBeNull()
   })
 })
