@@ -81,6 +81,17 @@ interpretador de verdade cobra o que o validador não alcança: que cada soluç�
 na própria correção, e que sonda quebrada aparece como sonda quebrada, e não como erro de quem
 estudou.
 
+### A medida que chama o código de quem estuda (D-052)
+
+Uma medida pode ser uma **chamada à função, ao método ou à classe escrita pela pessoa** —
+`saudacao("Ana")`, `Conta("Bia").saldo`, `mimi.falar()`. Quando for, o exercício combina o nome no
+enunciado e a conferência chama por posição, sem exigir o nome do parâmetro; e o `limite` diz isso em
+português. Cada medida roda no próprio `try`: se ela não puder ser feita — o nome não existe quando o
+programa termina, a chave não está no dicionário —, o item sai como **`naoDeuParaConferir`** com a
+frase do erro ("o programa não tem esse nome quando termina (NameError)"), e os outros itens seguem
+sendo conferidos. Nunca `naoConfere`: a conferência diz o que **não olhou** em vez de acusar quem
+escreveu.
+
 ## Os diagramas
 
 Um diagrama é **dado**, não imagem: título, descrição e uma lista de partes, cada uma com rótulo,
@@ -215,6 +226,10 @@ O caminho do lote da Etapa 11, já medido — e ele **não** tem passo de mundo:
 Se algum passo exigir código em `src/world/`, pare: a conta de posição de ilha, trilha ou ponte
 deveria sair do índice da unidade (D-049). O conserto é na conta, não na unidade nova.
 
+Num exercício cuja correção **chama** o que a pessoa escreveu, escreva também o `limite` que diz quais
+nomes o enunciado combinou — e saiba que medida impossível vira `naoDeuParaConferir`, nunca
+`naoConfere` (D-052).
+
 ## Checklist antes de considerar uma unidade pronta
 
 - [ ] A missão está escrita como capacidade, não como assunto.
@@ -237,3 +252,5 @@ deveria sair do índice da unidade (D-049). O conserto é na conta, não na unid
 - [ ] Nenhum número de página foi inventado (ver D-010), e capítulo que não foi conferido no sumário
       está marcado como título a confirmar (ver D-050).
 - [ ] O texto está acentuado corretamente.
+- [ ] A correção que chama a função, o método ou a classe da pessoa usa o nome combinado no enunciado, e
+      uma medida que não puder ser feita sai como "não deu para conferir" (D-052).
