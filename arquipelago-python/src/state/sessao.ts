@@ -33,8 +33,21 @@ export const PASSOS: readonly Passo[] = ['missao', 'estudo', 'pratica', 'avaliac
 /** Onde está o foco do teclado. Ver decisão D-012. */
 export type Foco = 'mundo' | 'painel'
 
-/** Modo de câmera. `mapa` é a vista de cima, que também serve de alternativa de orientação. */
-export type ModoDeCamera = 'voar' | 'mapa'
+/**
+ * Modo de câmera.
+ *
+ * - `andar` — o avatar anda pelo chão, e a câmera o acompanha de perto. É o modo
+ *   padrão: o mundo foi feito para ser percorrido a pé, e a pessoa no mundo é o
+ *   que separa "olhar um arquipélago" de "entrar na ilha".
+ * - `voar` — voo livre, para conhecer o conjunto e voltar rápido de onde se
+ *   estava. É também o modo de quem quer atravessar sem caminhar.
+ * - `mapa` — vista de cima, que serve de orientação e de alternativa a quem não
+ *   consegue usar o mouse.
+ *
+ * Os dois caminhos levam aos mesmos lugares, com as mesmas regras: nenhum modo
+ * de câmera libera unidade (D-004).
+ */
+export type ModoDeCamera = 'andar' | 'voar' | 'mapa'
 
 export type Sessao = {
   readonly unidadeId: string | null
@@ -87,7 +100,7 @@ export function sessaoInicial(): Sessao {
     resultado: null,
     aprovadaAntes: false,
     foco: 'mundo',
-    camera: 'voar',
+    camera: 'andar',
   }
 }
 
@@ -96,10 +109,11 @@ export function estadoInicial(progresso: Progresso = progressoInicial()): Estado
 }
 
 /**
- * Verdadeiro se o foco permite mover a câmera com `W A S D`.
+ * Verdadeiro se o foco permite mover a câmera **e o avatar** com `W A S D`.
  *
  * Decisão D-012: com um painel aberto, as teclas de movimento **não** podem
- * mover a câmera. Sem isso, o estudante digita uma resposta e a câmera dispara.
+ * mover ninguém. Sem isso, o estudante digita uma resposta e a câmera dispara —
+ * ou o avatar caminha sozinho para dentro do mar enquanto ele escreve.
  */
 export function podeMoverCamera(foco: Foco): boolean {
   return foco === 'mundo'

@@ -92,6 +92,25 @@ export const CORES_DERIVADAS = {
 } as const
 
 /**
+ * Cores do avatar.
+ *
+ * A figura é o estudante no mundo: precisa se distinguir do capim, da rocha e da
+ * madeira das estruturas, sem virar um ponto fora da paleta. O corpo usa o verde
+ * da marca — que já é a cor de "unidade aprovada" no HUD e da tela do monitor —,
+ * com a mochila no âmbar da marca. As duas são cores que existem nos tokens: aqui
+ * não há valor novo escrito à mão.
+ */
+export const CORES_DO_AVATAR = {
+  corpo: deHex(cores.acento.verde),
+  /** Braços e pernas: o mesmo verde, um passo mais escuro, para o corpo ter partes. */
+  membros: ajustar(deHex(cores.acento.verde), 0.72),
+  /** Cabeça: pedra clara, a mesma das paredes, para a figura ter rosto visível. */
+  cabeca: deHex(cores.terreno.pale),
+  /** Mochila: âmbar da marca, o mesmo das unidades disponíveis. */
+  mochila: deHex(cores.acento.ambar),
+} as const
+
+/**
  * Cor da estrutura de cada ilha, conforme a situação da unidade.
  *
  * O mundo pinta o estado; quem o decide é `src/learning/percurso.ts`. O 3D não

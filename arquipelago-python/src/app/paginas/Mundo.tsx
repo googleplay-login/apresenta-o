@@ -17,6 +17,7 @@ import {
   type IlhaVisivel,
   type PonteVisivel,
 } from '../../world/mundoVisivel'
+import { chaoDoMundo, descricaoDoLugar, type Localizacao } from '../../world/mapaCaminhavel'
 
 /**
  * A tela do mundo: o arquipélago, o painel de estudo e a lista de ilhas.
@@ -52,6 +53,8 @@ export function Mundo() {
   const [estado, despachar] = useReducer(redutor, undefined, () => estadoInicial())
   const [sobreIlha, setSobreIlha] = useState<string | null>(null)
   const [focarEm, setFocarEm] = useState<{ id: string; pedido: number } | null>(null)
+  const [caminhada, setCaminhada] = useState<{ id: string; pedido: number } | null>(null)
+  const [lugar, setLugar] = useState<Localizacao>(null)
   const [avisoDoMundo, setAvisoDoMundo] = useState<string | null>(null)
   const suporta3d = useSuporteWebgl()
 
@@ -71,6 +74,11 @@ export function Mundo() {
     () => pontesVisiveis(estado.progresso, UNIDADES, ilhas),
     [estado.progresso, ilhas],
   )
+  // O chão caminhável é montado aqui, uma vez, e desce pronto para a cena — que
+  // não recalcula nada. Fora do 3D ele também serve: é dele que sai a frase do
+  // HUD dizendo onde o avatar está ("na ilha tal", "na ponte entre tal e tal").
+  // As duas pontas leem o mesmo objeto, e é por isso que não podem discordar.
+  const chao = useMemo(() => chaoDoMundo(ilhas, pontes), [ilhas, pontes])
   const resumo = useMemo(() => resumoDoMundo(estado.progresso, UNIDADES), [estado.progresso])
   const unidadeDoMomento = useMemo(() => ilhaAtual(estado.progresso, UNIDADES), [estado.progresso])
   const todasAprovadas = resumo.total > 0 && resumo.aprovadas === resumo.total
@@ -113,9 +121,23 @@ export function Mundo() {
     despachar({ tipo: 'fecharUnidade' })
   }, [despachar])
 
-  const irParaIlha = useCallback((unidadeId: string) => {
-    setFocarEm((atual) => ({ id: unidadeId, pedido: (atual?.pedido ?? 0) + 1 }))
-  }, [])
+  /**
+   * Levar até uma ilha: a pé no modo `andar`, de câmera nos outros modos.
+   *
+   * O pedido de caminhada não carrega posição nenhuma: quem conhece a posição do
+   * avatar é a cena. Aqui só se diz **para onde ir**; a cena decide se há caminho
+   * a pé e, quando não há, devolve o motivo (ver `Avatar.tsx`).
+   */
+  const irParaIlha = useCallback(
+    (unidadeId: string) => {
+      if (estado.sessao.camera === 'andar') {
+        setCaminhada((atual) => ({ id: unidadeId, pedido: (atual?.pedido ?? 0) + 1 }))
+        return
+      }
+      setFocarEm((atual) => ({ id: unidadeId, pedido: (atual?.pedido ?? 0) + 1 }))
+    },
+    [estado.sessao.camera],
+  )
 
   /**
    * Travessia: clique na ponte, ou o botão "Seguir para a próxima ilha".
@@ -185,6 +207,14 @@ export function Mundo() {
   const nomeSobreIlha =
     sobreIlha === null ? null : ilhas.find((ilha) => ilha.id === sobreIlha)?.titulo ?? null
 
+  const ondeEsta = descricaoDoLugar(chao, lugar)
+  const AoNaoPoderCaminhar = useCallback((motivo: string) => {
+    setAvisoDoMundo(motivo)
+  }, [])
+  const AoMudarDeLugar = useCallback((novo: Localizacao) => {
+    setLugar(novo)
+  }, [])
+
   return (
     <div className="mundo">
       <section className="mundo__palco" aria-label="Mundo 3D do arquipélago">
@@ -202,12 +232,16 @@ export function Mundo() {
               <Cena
                 ilhas={ilhas}
                 pontes={pontes}
+                chao={chao}
                 modo={estado.sessao.camera}
                 tecladoAtivo={podeMoverCamera(estado.sessao.foco)}
                 focarEm={focarEm}
+                destinoDeCaminhada={estado.sessao.camera === 'andar' ? caminhada : null}
                 aoEscolher={abrirUnidade}
                 aoEscolherPonte={escolherPonte}
                 aoPassarPorCima={setSobreIlha}
+                aoMudarDeLugar={AoMudarDeLugar}
+                aoNaoPoderCaminhar={AoNaoPoderCaminhar}
               />
             </Suspense>
           </LimiteDeErro>
@@ -260,6 +294,17 @@ export function Mundo() {
               <button
                 type="button"
                 className={
+                  estado.sessao.camera === 'andar'
+                    ? 'botao botao--pequeno botao--ativo'
+                    : 'botao botao--pequeno'
+                }
+                onClick={() => despachar({ tipo: 'definirCamera', camera: 'andar' })}
+              >
+                Andar pelo mundo
+              </button>
+              <button
+                type="button"
+                className={
                   estado.sessao.camera === 'voar'
                     ? 'botao botao--pequeno botao--ativo'
                     : 'botao botao--pequeno'
@@ -282,6 +327,12 @@ export function Mundo() {
             </div>
           ) : null}
 
+          {com3d && estado.sessao.camera === 'andar' ? (
+            <p className="hud__lugar" role="status">
+              {ondeEsta === null ? 'Procurando onde você está…' : `Você está ${ondeEsta}`}
+            </p>
+          ) : null}
+
           <p className="hud__sobre" role="status">
             {nomeSobreIlha ??
               (estado.sessao.foco === 'painel'
@@ -294,23 +345,41 @@ export function Mundo() {
           {com3d && estado.sessao.foco === 'mundo' ? (
             <details className="hud__teclas">
               <summary>Como pilotar</summary>
-              <ul>
-                <li>
-                  <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> ou as setas: andar pelo mundo
-                </li>
-                <li>
-                  <kbd>E</kbd> sobe, <kbd>Q</kbd> desce
-                </li>
-                <li>
-                  <kbd>Shift</kbd>: mais rápido
-                </li>
-                <li>Arrastar com o mouse: olhar em volta</li>
-                <li>Clique numa ilha liberada: abrir a missão dela</li>
-                <li>
-                  Clique numa ponte inteira: atravessar até a ilha seguinte. Ponte pela metade
-                  explica o que falta para ela ficar inteira
-                </li>
-              </ul>
+              {estado.sessao.camera === 'andar' ? (
+                <ul>
+                  <li>
+                    <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> ou as setas: andar pela
+                    ilha e pelas pontes
+                  </li>
+                  <li>
+                    <kbd>Shift</kbd>: correr
+                  </li>
+                  <li>Arrastar com o mouse: girar a câmera em volta de você</li>
+                  <li>Clique numa ilha liberada: abrir a missão dela</li>
+                  <li>
+                    Clique numa ponte inteira: ir a pé até a ilha seguinte. Ponte pela metade
+                    explica o que falta para ela ficar inteira
+                  </li>
+                </ul>
+              ) : (
+                <ul>
+                  <li>
+                    <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> ou as setas: voar
+                  </li>
+                  <li>
+                    <kbd>E</kbd> sobe, <kbd>Q</kbd> desce
+                  </li>
+                  <li>
+                    <kbd>Shift</kbd>: mais rápido
+                  </li>
+                  <li>Arrastar com o mouse: olhar em volta</li>
+                  <li>Clique numa ilha liberada: abrir a missão dela</li>
+                  <li>
+                    Clique numa ponte inteira: voar até a ilha seguinte. Ponte pela metade explica
+                    o que falta para ela ficar inteira
+                  </li>
+                </ul>
+              )}
             </details>
           ) : null}
         </div>

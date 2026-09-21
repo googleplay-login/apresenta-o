@@ -33,11 +33,25 @@ vi.mock('../../world/Cena', () => ({
   Cena: (props: {
     readonly pontes: readonly PonteVisivel[]
     readonly aoEscolherPonte: (ponte: PonteVisivel) => void
+    readonly focarEm: { readonly id: string } | null
+    readonly destinoDeCaminhada: { readonly id: string } | null
   }) => {
     cenaMontada += 1
     return (
       <div data-cena-de-teste="1">
         cena de mentira
+        {/*
+          A cena de mentira mostra o que a página pediu: enquadrar uma ilha
+          (voo) ou caminhar até ela (a pé). São coisas diferentes, e é isso que
+          distingue os modos de câmera — sem esta linha, o teste não teria como
+          saber qual dos dois pedidos saiu daqui.
+        */}
+        <p>{props.focarEm === null ? 'sem enquadramento' : `enquadrando: ${props.focarEm.id}`}</p>
+        <p>
+          {props.destinoDeCaminhada === null
+            ? 'sem caminhada'
+            : `caminhada: ${props.destinoDeCaminhada.id}`}
+        </p>
         {props.pontes.map((ponte) => (
           <button
             key={`${ponte.de}-${ponte.para}`}
@@ -74,23 +88,47 @@ describe('mundo com 3D disponível', () => {
     expect(screen.queryByText(/Preparando o mundo 3D/)).toBeNull()
   })
 
-  it('oferece voo livre e vista de mapa, e marca o modo escolhido', async () => {
+  it('oferece andar, voo livre e vista de mapa, e marca o modo escolhido', async () => {
     const usuario = userEvent.setup()
     render(<Mundo />)
     await screen.findByText('cena de mentira')
 
+    const andar = screen.getByRole('button', { name: 'Andar pelo mundo' })
     const voo = screen.getByRole('button', { name: 'Voo livre' })
     const mapa = screen.getByRole('button', { name: 'Vista de mapa' })
 
-    expect(voo.className).toContain('botao--ativo')
+    // O padrão é andar: o mundo foi feito para ser percorrido a pé, e é a pessoa
+    // no mundo que faz a diferença entre olhar um arquipélago e entrar na ilha.
+    expect(andar.className).toContain('botao--ativo')
+    expect(voo.className).not.toContain('botao--ativo')
     expect(mapa.className).not.toContain('botao--ativo')
 
-    await usuario.click(mapa)
+    await usuario.click(voo)
+    expect(screen.getByRole('button', { name: 'Voo livre' }).className).toContain('botao--ativo')
+    expect(screen.getByRole('button', { name: 'Andar pelo mundo' }).className).not.toContain(
+      'botao--ativo',
+    )
 
+    await usuario.click(mapa)
     expect(screen.getByRole('button', { name: 'Vista de mapa' }).className).toContain(
       'botao--ativo',
     )
     expect(screen.getByRole('button', { name: 'Voo livre' }).className).not.toContain('botao--ativo')
+  })
+
+  it('troca a ajuda das teclas conforme o modo, sem prometer tecla sem efeito', async () => {
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+    await screen.findByText('cena de mentira')
+
+    // Andando: as teclas de voo não aparecem — subir e descer não faz nada a pé.
+    await usuario.click(screen.getByText('Como pilotar'))
+    expect(screen.getByText(/andar pela ilha e pelas pontes/)).toBeTruthy()
+    expect(screen.queryByText(/sobe/)).toBeNull()
+
+    await usuario.click(screen.getByRole('button', { name: 'Voo livre' }))
+    expect(screen.getByText(/ou as setas: voar/)).toBeTruthy()
+    expect(screen.getByText(/sobe/)).toBeTruthy()
   })
 
   it('ensina as teclas enquanto o foco está no mundo', async () => {
@@ -136,6 +174,41 @@ describe('mundo com 3D disponível', () => {
 })
 
 describe('travessia pelas pontes', () => {
+  it('no modo andar, atravessar a ponte é pedir uma caminhada, e não um voo', async () => {
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+    await screen.findByText('cena de mentira')
+
+    // Aprova a primeira ilha para a ponte ficar inteira.
+    const cartao = screen
+      .getByRole('heading', { level: 3, name: 'A Praia do Primeiro Programa' })
+      .closest('li')
+    await usuario.click((cartao as HTMLElement).querySelector('button') as HTMLButtonElement)
+    await usuario.click(screen.getByRole('button', { name: 'Avaliação' }))
+
+    const conteudo = conteudoDaUnidade('u01-primeiro-programa')
+    if (conteudo === null) {
+      throw new Error('Conteúdo da primeira unidade ausente')
+    }
+    const gabarito = gabaritoDaUnidade(conteudo)
+    for (const [indice, pergunta] of conteudo.perguntas.entries()) {
+      const certa = pergunta.alternativas[gabarito[indice] ?? 0] ?? ''
+      await usuario.click(screen.getByRole('radio', { name: certa }))
+    }
+    await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+    await screen.findByText('Aprovado nesta ilha')
+
+    // O padrão já é andar: a ponte inteira pede uma caminhada até a outra ilha.
+    expect(screen.getByRole('button', { name: 'Andar pelo mundo' }).className).toContain(
+      'botao--ativo',
+    )
+    await usuario.click(screen.getByRole('button', { name: 'ponte para u02-variaveis-e-print' }))
+
+    expect(screen.getByText('caminhada: u02-variaveis-e-print')).toBeTruthy()
+    // E nada de voo: a câmera não foi enquadrar ilha nenhuma.
+    expect(screen.queryByText(/enquadrando/)).toBeNull()
+  })
+
   it('clicar na ponte pela metade não abre nada e explica o que falta', async () => {
     const usuario = userEvent.setup()
     render(<Mundo />)
@@ -177,9 +250,13 @@ describe('travessia pelas pontes', () => {
     await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
     await screen.findByText('Aprovado nesta ilha')
 
-    // Com 3D, atravessar a ponte é fechar o painel e voar até lá: a câmera é o
-    // deslocamento, e não a abertura de outra tela.
+    // Com 3D no modo voo, atravessar a ponte é fechar o painel e voar até lá: a
+    // câmera é o deslocamento, e não a abertura de outra tela.
+    await usuario.click(screen.getByRole('button', { name: 'Voo livre' }))
     await usuario.click(screen.getByRole('button', { name: 'ponte para u02-variaveis-e-print' }))
+
+    expect(screen.getByText('enquadrando: u02-variaveis-e-print')).toBeTruthy()
+    expect(screen.getByText('sem caminhada')).toBeTruthy()
 
     await waitFor(() => {
       expect(

@@ -6,6 +6,74 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 5 (navegação e avatar)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro. Três ajustes de tipo apareceram durante a escrita e foram corrigidos na hora: o `ref` do
+avatar passou a aceitar `null` (ele existe antes de começar a andar), o teste da rota precisou do
+tipo do ponto do plano, e a prop nova da cena obrigou a página a montar o chão uma vez e passá-lo
+adiante — o que era exatamente a intenção.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 462 testes, 28 arquivos, todos aprovados** (eram 416/26 antes desta etapa).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| Só ponte liberada vira chão: com o progresso inicial não há faixa nenhuma | `src/world/mapaCaminhavel.test.ts` (15 testes) |
+| O capim é um domo: a altura no centro é a do centro da ilha, e sobe até a borda | `src/world/mapaCaminhavel.test.ts` |
+| O topo do tabuleiro encosta no capim das **duas** pontas | `src/world/mapaCaminhavel.test.ts` |
+| A faixa caminhável é mais estreita que o tabuleiro, pela largura do corpo | `src/world/mapaCaminhavel.test.ts` |
+| Onde é capim, onde é tabuleiro, e onde não é lugar nenhum | `src/world/mapaCaminhavel.test.ts` |
+| As teclas movem na direção da câmera, e a diagonal não é mais rápida | `src/world/avatar/passos.test.ts` (19 testes) |
+| A beirada segura: andar oito segundos em linha reta não tira o avatar do capim | `src/world/avatar/passos.test.ts` |
+| Contra a borda, o corpo desliza em vez de travar | `src/world/avatar/passos.test.ts` |
+| Sem ponte inteira, não há rota a pé — e a rota não sai do chão em nenhum ponto | `src/world/avatar/passos.test.ts` |
+| Seguir a rota chega ao destino, quadro a quadro, sem pisar fora do chão | `src/world/avatar/passos.test.ts` |
+| O avatar existe, com corpo, cabeça, braços, pernas e mochila | `src/world/ConteudoDaCena.test.tsx` |
+| Segurar a tecla de frente desloca o avatar no modo andar, e não nos outros | `src/world/ConteudoDaCena.test.tsx` |
+| Com o painel aberto, o teclado não move ninguém | `src/world/ConteudoDaCena.test.tsx` |
+| Em cima da ponte, os pés ficam no tabuleiro (entre as duas alturas) | `src/world/ConteudoDaCena.test.tsx` |
+| O lugar é anunciado quando muda: na ilha ao chegar, na ponte ao atravessar | `src/world/ConteudoDaCena.test.tsx` |
+| Chão que sumiu debaixo do avatar: ele volta ao começo, em vez de flutuar | `src/world/ConteudoDaCena.test.tsx` |
+| Pedir para ir a pé com a ponte inteira: o avatar atravessa e chega | `src/world/ConteudoDaCena.test.tsx` |
+| Pedir para ir a pé sem ponte inteira: avisa, nomeia a ilha, e não anda | `src/world/ConteudoDaCena.test.tsx` |
+| Ao lado do tabuleiro é vazio: o chão acaba na largura da faixa | `src/world/mapaCaminhavel.test.ts` |
+| Três modos de câmera, com o padrão em andar e o escolhido marcado | `src/app/paginas/Mundo.3d.test.tsx` |
+| A ajuda de teclas muda com o modo, sem prometer tecla sem efeito | `src/app/paginas/Mundo.3d.test.tsx` |
+| No modo andar, atravessar a ponte pede caminhada; em voo, pede enquadramento | `src/app/paginas/Mundo.3d.test.tsx` |
+| A ponte encosta no capim da borda (no topo do tabuleiro, não no eixo) | `src/world/mapaDoMundo.test.ts` |
+
+**Defeito real encontrado nesta etapa:** o tabuleiro da ponte estava 0,36 abaixo do capim da borda
+da ilha, porque a ponte era desenhada na altura do **centro** da ilha e o capim é um domo. Ninguém
+notava olhando o código; apareceu quando o pé do avatar passou a precisar da altura exata. Corrigido
+na geometria e coberto por teste (D-031). Um segundo defeito, menor: o teste que conferia o fim da
+ponte media o **eixo** do tabuleiro — o que passava com o degrau lá. Agora mede o topo.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       18.33 kB │ gzip:   3.25 kB
+    dist/assets/index-*.js       285.53 kB │ gzip:  90.77 kB
+    dist/assets/Cena-*.js        912.10 kB │ gzip: 242.34 kB
+
+A cena continua em bloco separado, buscado só quando há 3D (D-022). O avatar e o chão caminhável
+somam ~8 kB comprimidos ao pacote principal — menos do que custaria uma biblioteca de física.
+
+### 4. O que continua NÃO executado
+
+Aparência do avatar e do mundo, animação das pernas (que **não existe**), sensação de velocidade,
+enquadramento da câmera de terceira pessoa, custo por quadro com o avatar em cena, teclado de
+verdade e leitor de tela. Nada disso tem teste neste ambiente, e nada disso está marcado como
+aprovado. O roteiro manual abaixo ganhou os itens do avatar.
+
+---
+
 ## Execução de 21/09/2026 — revisão da Etapa 4 (a árvore 3D sob teste)
 
 Esta execução é da revisão da Etapa 4: o mundo passou a ser montado em teste, e um defeito de
@@ -297,7 +365,35 @@ item, sem presumir sucesso.
 19. **Fim do percurso**: com as quatro ilhas aprovadas, o HUD deve anunciar que o percurso escrito
     acabou, e nenhuma ilha deve ficar fechada.
 
-Resultado esperado: 19 de 19 conferidos. Qualquer item que falhe deve ser registrado aqui.
+### Roteiro manual — o avatar (Etapa 5)
+
+20. **Ele está lá**: ao abrir o mundo no modo padrão, deve aparecer uma pessoa no centro da primeira
+    ilha, com a câmera atrás dela. Se a figura estiver flutuando, ou com os pés dentro do capim, o
+    item falhou.
+21. **Andar**: `W A S D` (ou as setas) move a pessoa pela ilha. Ela não deve atravessar a borda do
+    capim nem sumir no vão. `Shift` deve deixar visivelmente mais rápido.
+22. **A beirada segura**: caminhar contra a borda por vários segundos. A pessoa deve parar ou
+    deslizar pela borda — nunca cair no vazio.
+23. **A ponte encosta**: no modo andar, com a primeira ponte liberada, caminhar da ilha até a ponte.
+    O pé deve passar do capim para o tabuleiro **sem degrau** — é o defeito corrigido em D-031, e é
+    exatamente o que só se vê na tela.
+24. **Atravessar a pé**: clicar na ponte inteira no modo andar. A pessoa deve andar até a outra ilha
+    e parar no centro dela, sem atravessar o vão em linha reta por fora do tabuleiro.
+25. **O HUD acompanha**: a frase do lugar deve mudar ao entrar na ponte ("Você está na ponte entre
+    «…» e «…»") e ao chegar na outra ilha.
+26. **Sem ponte inteira, a recusa**: pedir para ir a pé a uma ilha distante, com ponte pela metade no
+    meio. Deve aparecer a explicação com o nome da ilha, e a pessoa **não** deve se mover.
+27. **A câmera não briga**: arrastar o mouse deve girar a câmera em volta da pessoa sem atravessar o
+    chão nem entrar na pedra. `W` depois de girar deve andar para onde a câmera aponta.
+28. **As teclas de voo somem**: no modo andar, `Q` e `E` não devem fazer nada — e a lista "Como
+    pilotar" não pode citá-las. Ao trocar para `Voo livre`, a lista muda.
+29. **Ordem de quadro**: andando e girando ao mesmo tempo, a câmera não deve tremer nem ficar um
+    quadro atrás da pessoa.
+30. **Desempenho**: andar com o mundo inteiro em cena deve manter a animação fluida num aparelho
+    modesto. Sem medida neste ambiente, isto é o item mais frágil do roteiro — e o único que pede
+    olhar um contador de quadros.
+
+Resultado esperado: 30 de 30 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

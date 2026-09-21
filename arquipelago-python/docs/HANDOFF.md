@@ -1,19 +1,19 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **revisão da Etapa 4**.
+Atualizado em **21/09/2026**, ao final da **Etapa 5 (navegação e avatar)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 4 concluída; 5 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
-| Código de aplicação | mundo 3D, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar e câmera livre |
+| Etapa atual | 5 concluída; 6 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
+| Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura, explicação, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo, prática, avaliação e resultado |
 | Persistência | **existe**: `localStorage`, versionada, com aviso honesto de falha |
 | Execução de código (Pyodide) | **não existe** — Etapa 9 |
-| Avatar | **não existe** — Etapa 5 |
+| Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **não existe** — Etapa 6 |
 | Testes de navegador | **não executados** — não há navegador neste ambiente |
 
@@ -25,7 +25,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 416 testes, em 26 arquivos
+    npm test             # 462 testes, em 28 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -37,9 +37,11 @@ Páginas:
 | `#/painel` | Painel do projeto: estado real, unidades planejadas, como verificar |
 | `#/tema` | Guia de estilo: paleta, tipografia, espécimes e contraste medido |
 
-Como usar o mundo, em uma linha: `W A S D` (ou setas) para andar, `Q`/`E` para subir e descer,
-`Shift` para acelerar, arrastar o mouse para olhar, clique numa ilha liberada para abrir a missão.
-Com o painel aberto, as teclas de movimento ficam desligadas e `Esc` fecha o painel (D-012).
+Como usar o mundo, em uma linha: o mundo abre no modo **andar** — `W A S D` (ou setas) move a
+pessoa, `Shift` corre, arrastar o mouse gira a câmera em volta dela, clique numa ilha liberada abre a
+missão, e clique numa ponte inteira leva a pessoa a pé até a ilha seguinte. Os modos `Voo livre`
+(`Q`/`E` sobem e descem) e `Vista de mapa` ficam no HUD. Com o painel aberto, as teclas de movimento
+ficam desligadas e `Esc` fecha o painel (D-012).
 
 ## O que foi entregue
 
@@ -110,6 +112,24 @@ Verificação:
 - a última ilha não promete ponte: o texto, o botão de seguir e o HUD distinguem "fim do percurso
   escrito" de "próxima ilha".
 
+### Etapa 5 — o avatar, e o chão caminhável
+
+- `world/mapaCaminhavel.ts`: onde dá para pisar — um disco por ilha (o capim, que é um domo) e uma
+  faixa por ponte **inteira**. Fora disso, `null`, e o passo é recusado. Só ponte liberada vira
+  chão: nenhuma segunda regra de liberação (D-004, D-029);
+- `world/avatar/passos.ts`: andar com velocidade e corrida, girar o corpo para onde se anda, deslizar
+  na beirada, e a rota a pé entre ilhas — que **só existe por ponte inteira** e, quando não existe,
+  é dita em voz alta com o nome da ilha (D-030);
+- `world/Avatar.tsx` e `world/CameraDoAvatar.tsx`: a figura (primitivas, cores dos tokens) e a câmera
+  de terceira pessoa; a guinada da câmera é a mesma que o passo consulta, então `W` anda para onde se
+  olha;
+- modo padrão agora é `andar`; `voar` e `mapa` continuam no HUD (D-028);
+- **defeito corrigido:** o tabuleiro da ponte estava 0,36 abaixo do capim da borda, porque a ponte
+  era desenhada na altura do centro da ilha e o capim é um domo. Agora a altura do capim tem uma
+  fórmula só, usada pela malha e pelo chão (D-031);
+- verificação: `@react-three/test-renderer` com `advanceFrames` — o caminhar é medido quadro a quadro
+  na árvore 3D real, sem placa de vídeo (D-032).
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -157,10 +177,13 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 5 — navegação e avatar.** Hoje o mundo é percorrido por uma câmera livre: não existe
-personagem, e a travessia é um voo até a ilha. A Etapa 5 acrescenta o avatar — com o cuidado de não
-transformar a cena em lugar onde regra de progresso apareça, e mantendo a alternativa em texto
-equivalente (o mundo 3D nunca é a única forma de percorrer a trilha).
+**Etapa 6 — o estudo com o livro na tela.** Hoje a aba de estudo mostra a explicação original, o
+exemplo e os exercícios; o que falta é a **leitura recomendada** virar parte visível do ciclo — dizer
+qual parte do livro ler, por que aquela parte, e o que fazer com ela — e o diagrama do livro, sem
+nunca reproduzir texto do livro nem inventar página (D-010).
+
+Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
+leitura recomendada fala em capítulo e seção, não em página.
 
 ## Como continuar sem mim
 

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { Euler, Vector3 } from 'three'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { sementeDeTexto } from './geometria/aleatorio'
+import { alturaDoTopo } from './geometria/ilha'
+import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 import {
   DISTANCIA_ENTRE_CENTROS,
   RAIO_DA_ILHA,
@@ -97,11 +99,15 @@ describe('ponte entre duas ilhas', () => {
     }
   })
 
-  it('aponta para a outra ilha e termina na borda dela — conferido com o Three.js', () => {
+  it('termina na borda da outra ilha, com o topo encostado no capim', () => {
     // A ponte é gerada ao longo de +x. Aplicando a rotação calculada em Z e
     // depois em Y sobre o vetor (comprimento, 0, 0), o fim da ponte tem de cair
     // exatamente na borda da ilha de destino. O teste usa a própria biblioteca,
     // e não uma segunda cópia da conta: é o Three.js que decide se está certo.
+    //
+    // A altura é conferida **no topo do tabuleiro**, não no eixo dele: é o topo
+    // que recebe o pé do avatar. Encostado no capim da borda, a travessia a pé
+    // acontece sem degrau.
     for (let indice = 0; indice < ILHAS.length - 1; indice += 1) {
       const uma = ILHAS[indice]!
       const outra = ILHAS[indice + 1]!
@@ -116,7 +122,10 @@ describe('ponte entre duas ilhas', () => {
       )
 
       expect(fim.x).toBeCloseTo(bordaEsperada.x, 5)
-      expect(fim.y).toBeCloseTo(bordaEsperada.y - 0.11, 5)
+      expect(fim.y + ESPESSURA_DO_TABULEIRO / 2).toBeCloseTo(
+        bordaEsperada.y + alturaDoTopo(outra.raio, outra.raio),
+        5,
+      )
       expect(fim.z).toBeCloseTo(bordaEsperada.z, 5)
     }
   })

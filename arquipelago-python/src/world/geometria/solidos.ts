@@ -12,6 +12,15 @@ import { deslocarMalha, juntarMalhas, type Malha } from './ilha'
  * sem navegador, como o resto da geometria.
  */
 
+/**
+ * Espessura do tabuleiro da ponte.
+ *
+ * Exportada porque outra conta depende dela: o topo do tabuleiro fica em
+ * `posicao.y + ESPESSURA_DO_TABULEIRO / 2`, e é onde o pé do avatar pisa. Com a
+ * constante em um lugar só, mudar a espessura não deixa o avatar flutuando.
+ */
+export const ESPESSURA_DO_TABULEIRO = 0.22
+
 export type Ponto = { readonly x: number; readonly y: number; readonly z: number }
 
 export type OpcoesDaCaixa = {
@@ -178,7 +187,7 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
   }
 
   const espacamento = comprimento / tabuas
-  const espessura = 0.22
+  const espessura = ESPESSURA_DO_TABULEIRO
   const vao = liberada ? tabuas : Math.ceil(tabuas / 2)
 
   const pecas: Malha[] = []

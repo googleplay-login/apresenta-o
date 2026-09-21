@@ -39,7 +39,9 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 import { ConteudoDaCena } from './ConteudoDaCena'
 import { decidirTravessia, ilhasVisiveis, pontesVisiveis } from './mundoVisivel'
 import type { ArrastoPendente } from './CameraLivre'
-import { SEM_TECLAS } from './camera/movimento'
+import { SEM_TECLAS, type TeclasDeMovimento } from './camera/movimento'
+import { chaoDoMundo, type ChaoDoMundo, type Localizacao } from './mapaCaminhavel'
+import { caminhanteInicial, type Caminhante } from './avatar/passos'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado } from '../learning/percurso'
 
@@ -53,35 +55,63 @@ const UNIDADE_02 = UNIDADES[1]?.id ?? ''
  * O arrasto e as teclas são mutáveis por natureza (são atualizados a cada quadro,
  * sem passar por estado do React). Na página, quem os cria é a casca `Cena`.
  */
+type PropsDaCena = {
+  readonly progresso: ReturnType<typeof progressoInicial>
+  readonly modo?: 'andar' | 'voar' | 'mapa'
+  readonly tecladoAtivo?: boolean
+  readonly teclas?: React.RefObject<TeclasDeMovimento>
+  readonly caminhante?: React.RefObject<Caminhante | null>
+  readonly destino?: { readonly id: string; readonly pedido: number } | null
+  readonly aoEscolher?: (unidadeId: string) => void
+  readonly aoEscolherPonte?: (ponte: ReturnType<typeof pontesVisiveis>[number]) => void
+  readonly aoMudarDeLugar?: (lugar: Localizacao) => void
+  readonly aoNaoPoderCaminhar?: (motivo: string) => void
+}
+
 function CenaDeTeste({
   progresso,
-  aoEscolher,
-  aoEscolherPonte,
-}: {
-  readonly progresso: ReturnType<typeof progressoInicial>
-  readonly aoEscolher: (unidadeId: string) => void
-  readonly aoEscolherPonte: (ponte: ReturnType<typeof pontesVisiveis>[number]) => void
-}) {
+  modo = 'voar',
+  tecladoAtivo = true,
+  teclas: teclasDeFora,
+  caminhante: caminhanteDeFora,
+  destino = null,
+  aoEscolher = () => {},
+  aoEscolherPonte = () => {},
+  aoMudarDeLugar = () => {},
+  aoNaoPoderCaminhar = () => {},
+}: PropsDaCena) {
   const arrasto = useRef<ArrastoPendente>({ dx: 0, dy: 0 })
-  const teclas = useRef(SEM_TECLAS)
+  const teclasProprias = useRef(SEM_TECLAS)
+  const teclas = teclasDeFora ?? teclasProprias
+
   const ilhas = ilhasVisiveis(progresso, UNIDADES)
   const pontes = pontesVisiveis(progresso, UNIDADES, ilhas)
+  const chao = chaoDoMundo(ilhas, pontes)
+  const caminhanteProprio = useRef<Caminhante | null>(caminhanteInicial(chao))
+  const caminhante = caminhanteDeFora ?? caminhanteProprio
+  const olhar = useRef(0)
 
   return (
     <ConteudoDaCena
       ilhas={ilhas}
       pontes={pontes}
-      modo="voar"
-      tecladoAtivo
+      chao={chao}
+      modo={modo}
+      tecladoAtivo={tecladoAtivo}
       teclas={teclas}
       arrasto={arrasto}
+      caminhante={caminhante}
+      olhar={olhar}
       enquadramento={null}
       espalhamento={30}
       destacadaId={null}
+      destinoDeCaminhada={destino}
       aoChegar={() => {}}
       aoEscolher={aoEscolher}
       aoEscolherPonte={aoEscolherPonte}
       aoPassarPorCima={() => {}}
+      aoMudarDeLugar={aoMudarDeLugar}
+      aoNaoPoderCaminhar={aoNaoPoderCaminhar}
     />
   )
 }
@@ -330,5 +360,271 @@ describe('cliques no mundo', () => {
     if (decisao.tipo === 'atravessar') {
       expect(decisao.unidadeId).toBe(UNIDADE_02)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// O avatar: a pessoa no mundo
+// ---------------------------------------------------------------------------
+
+/** A posição do grupo do avatar na árvore 3D. */
+function posicaoDoAvatar(cena: { scene: No }): { x: number; y: number; z: number } {
+    const grupo = cena.scene.find((no) => comNome(no) === 'avatar')
+    const posicao = grupo.instance.position as { x: number; y: number; z: number }
+    return { x: posicao.x, y: posicao.y, z: posicao.z }
+}
+
+function chaoDe(progresso: ReturnType<typeof progressoInicial>): ChaoDoMundo {
+  const ilhas = ilhasVisiveis(progresso, UNIDADES)
+  return chaoDoMundo(ilhas, pontesVisiveis(progresso, UNIDADES, ilhas))
+}
+
+describe('o avatar no mundo', () => {
+  it('existe, com corpo, cabeça e mochila', async () => {
+    const cena = await ReactThreeTestRenderer.create(<CenaDeTeste progresso={progressoInicial()} />)
+
+    const nomes = nomesDentro(cena.scene.find((no) => comNome(no) === 'avatar'))
+    for (const parte of ['corpo', 'cabeca', 'mochila', 'braco-esquerdo', 'perna-direita']) {
+      expect(nomes, `O avatar não tem ${parte}`).toContain(parte)
+    }
+
+    await cena.unmount()
+  })
+
+  it('começa no centro da primeira ilha, com os pés no capim', async () => {
+    const progresso = progressoInicial()
+    const ilhas = ilhasVisiveis(progresso, UNIDADES)
+    const chao = chaoDe(progresso)
+    const primeira = chao.ilhas[0]
+    if (primeira === undefined) {
+      throw new Error('Sem a primeira ilha não há mundo')
+    }
+
+    const cena = await ReactThreeTestRenderer.create(<CenaDeTeste progresso={progresso} />)
+    await cena.advanceFrames(1, 0.016)
+
+    const posicao = posicaoDoAvatar(cena)
+    expect(posicao.x).toBeCloseTo(primeira.x, 4)
+    expect(posicao.z).toBeCloseTo(primeira.z, 4)
+    // A altura é a do capim naquele ponto — não é chute, é o que `chaoEm` diz.
+    expect(posicao.y).toBeCloseTo(primeira.altura, 4)
+    expect(ilhas[0]?.titulo.length).toBeGreaterThan(0)
+
+    await cena.unmount()
+  })
+
+  it('no modo andar, segurar a tecla de frente desloca o avatar', async () => {
+    const teclas = { current: { ...SEM_TECLAS, frente: true } }
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} modo="andar" teclas={teclas} />,
+    )
+
+    await cena.advanceFrames(1, 0.016)
+    const antes = posicaoDoAvatar(cena)
+
+    await cena.advanceFrames(30, 0.016)
+    const depois = posicaoDoAvatar(cena)
+
+    const andou = Math.hypot(depois.x - antes.x, depois.z - antes.z)
+    expect(andou).toBeGreaterThan(1)
+
+    await cena.unmount()
+  })
+
+  it('no modo voo, as mesmas teclas não movem o avatar', async () => {
+    const teclas = { current: { ...SEM_TECLAS, frente: true } }
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} modo="voar" teclas={teclas} />,
+    )
+
+    await cena.advanceFrames(1, 0.016)
+    const antes = posicaoDoAvatar(cena)
+
+    await cena.advanceFrames(30, 0.016)
+    const depois = posicaoDoAvatar(cena)
+
+    expect(depois.x).toBeCloseTo(antes.x, 6)
+    expect(depois.z).toBeCloseTo(antes.z, 6)
+
+    await cena.unmount()
+  })
+
+  it('com o painel aberto, o teclado não move ninguém', async () => {
+    const teclas = { current: { ...SEM_TECLAS, frente: true } }
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste
+        progresso={progressoInicial()}
+        modo="andar"
+        teclas={teclas}
+        tecladoAtivo={false}
+      />,
+    )
+
+    await cena.advanceFrames(1, 0.016)
+    const antes = posicaoDoAvatar(cena)
+    await cena.advanceFrames(30, 0.016)
+    const depois = posicaoDoAvatar(cena)
+
+    expect(depois.x).toBeCloseTo(antes.x, 6)
+    expect(depois.z).toBeCloseTo(antes.z, 6)
+
+    await cena.unmount()
+  })
+
+  it('em cima da ponte, os pés ficam no tabuleiro — não no capim nem no vazio', async () => {
+    const progresso = comPrimeiraAprovada()
+    const chao = chaoDe(progresso)
+    const ponte = chao.pontes[0]
+    if (ponte === undefined) {
+      throw new Error('A primeira ponte deveria estar liberada')
+    }
+
+    const meio = {
+      x: ponte.inicio.x + ponte.direcao[0] * (ponte.comprimento / 2),
+      z: ponte.inicio.z + ponte.direcao[1] * (ponte.comprimento / 2),
+    }
+    const caminhante = { current: { x: meio.x, z: meio.z, giro: 0 } }
+
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progresso} modo="andar" caminhante={caminhante} />,
+    )
+    await cena.advanceFrames(1, 0.016)
+
+    const posicao = posicaoDoAvatar(cena)
+    expect(posicao.x).toBeCloseTo(meio.x, 4)
+    expect(posicao.z).toBeCloseTo(meio.z, 4)
+    // O chão do meio da ponte está entre as duas alturas das ilhas.
+    expect(posicao.y).toBeGreaterThan(ponte.inicio.altura)
+    expect(posicao.y).toBeLessThan(ponte.alturaNoFim)
+
+    await cena.unmount()
+  })
+
+  it('diz onde está: na ilha ao chegar, na ponte ao atravessar', async () => {
+    const progresso = comPrimeiraAprovada()
+    const chao = chaoDe(progresso)
+    const ponte = chao.pontes[0]
+    if (ponte === undefined) {
+      throw new Error('A primeira ponte deveria estar liberada')
+    }
+
+    const lugares: (string | null)[] = []
+    const caminhante = { current: caminhanteInicial(chao) }
+
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste
+        progresso={progresso}
+        modo="andar"
+        caminhante={caminhante}
+        aoMudarDeLugar={(lugar) =>
+          lugares.push(lugar === null ? null : lugar.tipo === 'ilha' ? lugar.id : `${lugar.de}->${lugar.para}`)
+        }
+      />,
+    )
+
+    await cena.advanceFrames(1, 0.016)
+    expect(lugares).toEqual([UNIDADE_01])
+
+    // Leva o avatar para o meio da ponte e deixa um quadro passar.
+    caminhante.current = {
+      x: ponte.inicio.x + ponte.direcao[0] * (ponte.comprimento / 2),
+      z: ponte.inicio.z + ponte.direcao[1] * (ponte.comprimento / 2),
+      giro: 0,
+    }
+    await cena.advanceFrames(1, 0.016)
+
+    expect(lugares).toEqual([UNIDADE_01, `${UNIDADE_01}->${UNIDADE_02}`])
+
+    await cena.unmount()
+  })
+
+  it('se o chão sumir debaixo dele, volta ao começo em vez de flutuar no vazio', async () => {
+    const progresso = progressoInicial()
+    const chao = chaoDe(progresso)
+    const primeira = chao.ilhas[0]
+    const segunda = chao.ilhas[1]
+    if (primeira === undefined || segunda === undefined) {
+      throw new Error('São necessárias ao menos duas ilhas')
+    }
+
+    // No meio do vão, onde não há chão nenhum.
+    const caminhante = {
+      current: { x: (primeira.x + segunda.x) / 2, z: (primeira.z + segunda.z) / 2, giro: 0 },
+    }
+
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progresso} modo="andar" caminhante={caminhante} />,
+    )
+    await cena.advanceFrames(1, 0.016)
+
+    const posicao = posicaoDoAvatar(cena)
+    expect(posicao.x).toBeCloseTo(primeira.x, 4)
+    expect(posicao.z).toBeCloseTo(primeira.z, 4)
+
+    await cena.unmount()
+  })
+})
+
+describe('pedir para ir a pé até outra ilha', () => {
+  it('com a ponte inteira, o avatar atravessa e chega', async () => {
+    const progresso = comPrimeiraAprovada()
+    const chao = chaoDe(progresso)
+    const destino = chao.ilhas[1]
+    if (destino === undefined) {
+      throw new Error('A segunda ilha deveria existir')
+    }
+
+    const caminhante = { current: caminhanteInicial(chao) }
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste
+        progresso={progresso}
+        modo="andar"
+        caminhante={caminhante}
+        destino={{ id: destino.id, pedido: 1 }}
+      />,
+    )
+
+    // Uns segundos de caminhada: o suficiente para cruzar o vão.
+    await cena.advanceFrames(60 * 6, 0.016)
+
+    const posicao = posicaoDoAvatar(cena)
+    expect(posicao.x).toBeCloseTo(destino.x, 2)
+    expect(posicao.z).toBeCloseTo(destino.z, 2)
+
+    await cena.unmount()
+  })
+
+  it('sem ponte inteira, avisa e não sai do lugar', async () => {
+    const progresso = progressoInicial()
+    const chao = chaoDe(progresso)
+    const destino = chao.ilhas[2]
+    if (destino === undefined) {
+      throw new Error('A terceira ilha deveria existir')
+    }
+
+    const avisos: string[] = []
+    const caminhante = { current: caminhanteInicial(chao) }
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste
+        progresso={progresso}
+        modo="andar"
+        caminhante={caminhante}
+        destino={{ id: destino.id, pedido: 1 }}
+        aoNaoPoderCaminhar={(motivo) => avisos.push(motivo)}
+      />,
+    )
+
+    await cena.advanceFrames(1, 0.016)
+    const antes = posicaoDoAvatar(cena)
+    await cena.advanceFrames(120, 0.016)
+    const depois = posicaoDoAvatar(cena)
+
+    expect(avisos).toHaveLength(1)
+    expect(avisos[0]).toContain(destino.titulo)
+    expect(avisos[0]).toContain('ponte')
+    expect(depois.x).toBeCloseTo(antes.x, 6)
+    expect(depois.z).toBeCloseTo(antes.z, 6)
+
+    await cena.unmount()
   })
 })

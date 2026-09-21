@@ -161,11 +161,38 @@ propriamente dito sob teste.
 
 ---
 
+## Etapa 5 — Navegação e avatar (concluída em 21/09/2026)
+
+O mundo tinha câmera; faltava gente. Quem se deslocava era a câmera, e "entrar na ilha" era sempre
+um voo até ela. Agora existe uma pessoa no arquipélago.
+
+- **O avatar anda de verdade.** `world/avatar/passos.ts` move o corpo pelo chão caminhável:
+  velocidade, corrida com `Shift`, giro suave do corpo para onde se anda, e deslize na beirada em
+  vez de travar contra a borda. Não existe pulo, gravidade nem queda.
+- **Onde dá para pisar é geometria declarada** (`world/mapaCaminhavel.ts`): um disco por ilha — o
+  capim, que é um domo — e uma faixa por ponte **inteira**. Fora disso a altura do chão é `null` e o
+  passo é recusado: ninguém cai no vazio (D-029).
+- **A ponte pela metade não é caminho.** Pedir para ir a pé até uma ilha que depende dela devolve
+  uma explicação com o nome da ilha, e o avatar não sai do lugar (D-030).
+- **A câmera de terceira pessoa** segue o avatar por trás, e o arrasto gira em volta dele. `W` anda
+  para onde se olha, porque a guinada da câmera é a mesma que o passo consulta.
+- **Andar é o modo padrão**, e a escolha do modo fica no HUD: `Andar pelo mundo`, `Voo livre`,
+  `Vista de mapa`. Nenhum deles libera unidade (D-028).
+- **O HUD diz onde a pessoa está** — na ilha «tal» ou na ponte entre «tal» e «tal» —, e a frase sai
+  do mesmo módulo que desenha o mundo.
+- **A ponte encostou no capim.** O topo do tabuleiro estava 0,36 abaixo da borda da ilha; agora a
+  altura do capim tem **uma** fórmula, usada pela malha e pelo chão (D-031).
+
+**Limite explícito:** o avatar não é um personagem animado — não há passada de pernas, expressão,
+nem modelo externo. Também não há interação física com as estruturas: atravessar a biblioteca é
+possível, porque o chão não tem paredes internas.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **5** — navegação e avatar.
 - **6** — estudo: leitura recomendada, explicação original, diagrama do livro.
 - **7** — avaliação: as perguntas de verdade, exigir resposta em todas, corrigir após envio.
 - **8** — persistência local versionada e protótipo jogável.

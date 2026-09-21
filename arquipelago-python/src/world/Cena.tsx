@@ -3,6 +3,8 @@ import { Canvas } from '@react-three/fiber'
 import type { ArrastoPendente } from './CameraLivre'
 import { ConteudoDaCena } from './ConteudoDaCena'
 import { useTeclasDeMovimento } from './useTeclasDeMovimento'
+import type { ChaoDoMundo, Localizacao } from './mapaCaminhavel'
+import { caminhanteInicial, type Caminhante } from './avatar/passos'
 import { enquadramentoDaIlha, espalhamentoDasIlhas } from './mapaDoMundo'
 import type { IlhaVisivel, PonteVisivel } from './mundoVisivel'
 import type { ModoDeCamera } from '../state/sessao'
@@ -24,28 +26,45 @@ import type { ModoDeCamera } from '../state/sessao'
 type Props = {
   readonly ilhas: readonly IlhaVisivel[]
   readonly pontes: readonly PonteVisivel[]
+  /** O chão caminhável, já montado a partir das ilhas e pontes resolvidas. */
+  readonly chao: ChaoDoMundo
   readonly modo: ModoDeCamera
   readonly tecladoAtivo: boolean
   /** Ilha a enquadrar quando este valor muda. `null` desliga o pedido. */
   readonly focarEm: { readonly id: string; readonly pedido: number } | null
+  /** Ilha a alcançar a pé, pedida pela interface. Ignorado fora do modo `andar`. */
+  readonly destinoDeCaminhada: { readonly id: string; readonly pedido: number } | null
   readonly aoEscolher: (unidadeId: string) => void
   /** Clique numa ponte. Quem decide se a travessia acontece é `Mundo`. */
   readonly aoEscolherPonte: (ponte: PonteVisivel) => void
   readonly aoPassarPorCima: (unidadeId: string | null) => void
+  /** Onde o avatar está, para o HUD e a lista em texto dizerem o mesmo. */
+  readonly aoMudarDeLugar: (lugar: Localizacao) => void
+  /** Não há caminho a pé até onde pediram. A cena explica o motivo. */
+  readonly aoNaoPoderCaminhar: (motivo: string) => void
 }
 
 export function Cena({
   ilhas,
   pontes,
+  chao,
   modo,
   tecladoAtivo,
   focarEm,
+  destinoDeCaminhada,
   aoEscolher,
   aoEscolherPonte,
   aoPassarPorCima,
+  aoMudarDeLugar,
+  aoNaoPoderCaminhar,
 }: Props) {
   const teclas = useTeclasDeMovimento(tecladoAtivo)
   const arrasto = useRef<ArrastoPendente>({ dx: 0, dy: 0 })
+  // A posição do avatar e a guinada da câmera vivem em `ref`, e não em estado do
+  // React: as duas mudam a cada quadro, e re-renderizar a árvore sessenta vezes
+  // por segundo seria desperdício.
+  const caminhante = useRef<Caminhante | null>(caminhanteInicial(chao))
+  const olhar = useRef(0)
   const [arrastando, setArrastando] = useState(false)
   const [ponteSob, setPonteSob] = useState<string | null>(null)
   const ultimoPonto = useRef<{ x: number; y: number } | null>(null)
@@ -120,18 +139,24 @@ export function Cena({
         <ConteudoDaCena
           ilhas={ilhas}
           pontes={pontes}
+          chao={chao}
           modo={modo}
           tecladoAtivo={tecladoAtivo}
           teclas={teclas}
           arrasto={arrasto}
+          caminhante={caminhante}
+          olhar={olhar}
           enquadramento={enquadramento}
           espalhamento={espalhamento}
           destacadaId={focarEm?.id ?? null}
+          destinoDeCaminhada={destinoDeCaminhada}
           aoChegar={aoChegar}
           aoEscolher={aoEscolher}
           aoEscolherPonte={aoEscolherPonte}
           aoApontarPonte={(apontada) => setPonteSob(apontada === null ? null : apontada.para)}
           aoPassarPorCima={aoPassarPorCima}
+          aoMudarDeLugar={aoMudarDeLugar}
+          aoNaoPoderCaminhar={aoNaoPoderCaminhar}
         />
       </Canvas>
     </div>

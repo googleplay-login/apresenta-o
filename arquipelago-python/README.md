@@ -9,16 +9,17 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
 ## Estado atual: o protótipo já ensina e já avalia
 
-> **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, o ciclo de estudo
-> completo das quatro primeiras unidades (missão, estudo, prática, avaliação e resultado), 5
-> perguntas por ilha, aprovação com 80% e progresso salvo no próprio navegador.
+> **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, um **avatar que
+> anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
+> ciclo de estudo completo das quatro primeiras unidades (missão, estudo, prática, avaliação e
+> resultado), 5 perguntas por ilha, aprovação com 80% e progresso salvo no próprio navegador.
 >
-> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), avatar (Etapa 5), leitura
-> do livro na tela (Etapa 6) e som.
+> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), leitura do livro na tela
+> (Etapa 6), animação de caminhada do avatar e som.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 15 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 30 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -32,7 +33,7 @@ funciona, não aparece como botão.
 
 Outros comandos:
 
-    npm test         # 416 testes: regras, geometria, mundo 3D, conteúdo, interface e acentuação
+    npm test         # 462 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, interface e acentuação
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 
@@ -44,9 +45,11 @@ Páginas:
 | `#/painel` | Painel do projeto: estado real, unidades planejadas, como verificar |
 | `#/tema` | Guia de estilo: paleta, tipografia, espécimes e contraste medido |
 
-Dentro do mundo: `W A S D` (ou setas) anda, `Q`/`E` sobe e desce, `Shift` acelera, arrastar o
-mouse olha em volta, e clicar numa ilha liberada abre a missão. Com o painel aberto, as teclas de
-movimento param de mover a câmera, e `Esc` fecha o painel.
+Dentro do mundo: o padrão é **andar** — `W A S D` (ou setas) move a pessoa, `Shift` corre, arrastar
+o mouse gira a câmera em volta dela, clicar numa ilha liberada abre a missão e clicar numa ponte
+inteira leva a pessoa a pé até a ilha seguinte. `Voo livre` (com `Q`/`E` para subir e descer) e
+`Vista de mapa` ficam no HUD. Com o painel aberto, as teclas de movimento param de mover quem quer
+que seja, e `Esc` fecha o painel.
 
 ## Documentação
 
@@ -76,7 +79,7 @@ originais. Ver `docs/CONTENT_GUIDE.md`.
 
     src/
       app/          casca da aplicação, rotas e páginas
-      world/        cena 3D — SEM regra de aprovação
+      world/        cena 3D, chão caminhável e avatar — SEM regra de aprovação
       learning/     regras pedagógicas puras — FONTE ÚNICA DE VERDADE
       content/      conteúdo como dado tipado
       state/        estado em memória

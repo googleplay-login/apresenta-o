@@ -456,3 +456,95 @@ sozinha. O agregado escondia o defeito local.
 individualmente, e o checklist de `CONTENT_GUIDE.md` ganhou o item correspondente para quem escrever
 as próximas unidades. Corrigir isso mexeu em oito arquivos de conteúdo pedagógico, e é por isso que
 a regra fica escrita: padrão de gabarito é defeito de conteúdo, não detalhe de formatação.
+
+---
+
+## D-028 — O modo padrão é andar: a câmera deixou de ser o viajante
+**21/09/2026** — decisão de produto, na Etapa 5.
+
+**Decisão:** o mundo abre no modo `andar`, com um avatar no centro da primeira ilha e a câmera
+atrás dele. `voar` e `mapa` continuam existindo como modos escolhidos.
+
+**Contexto:** nas etapas 3 e 4 quem se deslocava era a câmera. Isso funciona para conhecer o
+conjunto, mas não é o que o projeto promete: o estudante deveria **entrar** na ilha. Com a câmera
+como viajante, "entrar" era sempre um voo, e a ilha um cenário visto de longe.
+
+**Consequência:** existe uma pessoa no mundo, e ela anda pelo capim e pelas pontes. Os outros dois
+modos continuam disponíveis no mesmo lugar: voar livre serve para conhecer o arquipélago e voltar
+rápido; a vista de mapa serve de orientação. Nenhum dos três libera unidade — a regra de aprovação
+não olha para a câmera (D-004).
+
+---
+
+## D-029 — O chão caminhável é geometria declarada, não motor de física
+**21/09/2026** — decisão de arquitetura, na Etapa 5.
+
+**Decisão:** onde dá para pisar é uma lista de superfícies com altura consultável
+(`world/mapaCaminhavel.ts`): um disco por ilha, uma faixa por ponte inteira. Fora delas, a altura do
+chão é `null`, e o passo é recusado.
+
+**Contexto:** um motor de física resolveria colisão, gravidade e queda — e traria três problemas
+para este projeto: peso no pacote, mais uma dependência que não foi pedida, e um comportamento que
+**não dá para conferir neste ambiente**, porque depende de navegador. Além disso, o mundo é pequeno
+e conhecido: quatro ilhas, três pontes, superfícies convexas.
+
+**Consequência:** "não cair" é uma propriedade testável em funções puras, e há teste que caminha por
+todos os trechos de uma rota conferindo que existe chão embaixo de cada ponto. O preço: o avatar
+desliza pela beirada em vez de escorregar por uma rampa, e não existe pulo, gravidade nem queda. Se
+o projeto quiser isso depois, a substituição é local — o resto da aplicação pergunta a `chaoEm()` e
+não sabe como a conta é feita.
+
+---
+
+## D-030 — A rota a pé só existe por ponte inteira, e a recusa é dita em voz alta
+**21/09/2026** — decisão de regra, na Etapa 5.
+
+**Decisão:** `rotaAte()` devolve `null` quando o caminho depende de uma ponte pela metade, e a cena
+devolve o motivo ao estudante, com o nome da ilha. Nenhum caminho por cima do vão é inventado.
+
+**Contexto:** era tentador deixar o avatar "atravessar" um vão onde a ponte está pela metade — o
+mundo é visual, e o buraco é largo. Seria mentira sobre a regra do projeto: a ponte pela metade é o
+que diz que falta aprovação. Um avatar que atravessa mesmo assim ensina que o bloqueio é decorativo.
+
+**Consequência:** pedir para ir a pé a uma ilha distante, sem as aprovações no meio do caminho,
+devolve uma explicação em vez de movimento — e o teste confere as duas coisas: que o aviso acontece
+(e nomeia a ilha) e que o avatar **não** saiu do lugar.
+
+---
+
+## D-031 — Uma fórmula só para a altura do capim, e a ponte encostada nele
+**21/09/2026** — defeito encontrado ao ligar o caminhar à geometria, na Etapa 5.
+
+**Decisão:** `alturaDoTopo(raio, distância)` vive em `geometria/ilha.ts` e é usada tanto para gerar a
+malha do capim quanto para responder onde o pé pisa. A espessura do tabuleiro
+(`ESPESSURA_DO_TABULEIRO`) saiu de dentro de `gerarPonte` para que a altura do topo da ponte seja
+calculada, e não chutada.
+
+**Contexto:** o capim é um domo — sobe 0,36 da unidade no centro para a borda —, e a ponte estava
+desenhada na altura do **centro** da ilha. No papel, ninguém notava; no mundo, a ponte encostava
+0,36 abaixo do capim da borda, e o avatar daria um degrau invisível ao atravessar. O defeito estava
+lá desde a Etapa 3: só apareceu quando algo precisou **saber** a altura.
+
+**Consequência:** a ponte agora encosta no capim da borda, e há teste que confere isso no topo do
+tabuleiro (não no eixo dele). Mudar a espessura ou a inclinação do capim em um lugar só continua
+funcionando: as duas pontas leem a mesma função.
+
+---
+
+## D-032 — O avatar é feito de primitivas, e o caminhar é verificado por quadros
+**21/09/2026** — decisão de arte e de teste, na Etapa 5.
+
+**Decisão:** o avatar é montado com primitivas do Three.js (cilindro, esfera, caixa), pintado com
+cores derivadas dos tokens. E o caminhar é verificado com `advanceFrames` do `@react-three/test-
+renderer`: a mesma árvore que roda no navegador, com quadros passando de verdade.
+
+**Contexto:** um modelo externo (GLTF) traria licença, peso e um arquivo a mais para auditar — o
+oposto do que o projeto pede. E o caminhar é exatamente o tipo de coisa que "inspeção de código"
+não prova: depende de tempo, ordem de quadro e chão. Com `advanceFrames`, o teste monta a cena real,
+segura `W` por trinta quadros e mede o deslocamento; pede uma caminhada até outra ilha e confere que
+o avatar chegou.
+
+**Consequência:** o que continua sem verificação é **pixel**: a figura agrada? As proporções são
+boas ao lado das estruturas? O passo parece passo? Isso é do roteiro manual, e não está marcado como
+aprovado em lugar nenhum. O avatar também não tem animação de caminhada — as pernas ficam paradas —,
+e isso está dito no código e no relatório.

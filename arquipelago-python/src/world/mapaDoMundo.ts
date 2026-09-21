@@ -1,6 +1,8 @@
 import type { UnidadePlanejada } from '../content/planoDeUnidades'
 import type { Vetor3 } from './camera/movimento'
 import { sementeDeTexto } from './geometria/aleatorio'
+import { alturaDoTopo } from './geometria/ilha'
+import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 
 /**
  * Onde cada ilha fica no mundo, e como as pontes ligam uma à outra.
@@ -96,8 +98,15 @@ export type TrechoDePonte = {
   readonly direcao: readonly [number, number]
 }
 
-/** Altura do tabuleiro da ponte em relação ao capim: o topo encosta na grama. */
-const ALTURA_DO_TABULEIRO = -0.11
+/**
+ * Altura do **eixo** do tabuleiro em relação ao capim da borda.
+ *
+ * O tabuleiro tem espessura: metade dele fica abaixo do eixo e metade acima.
+ * Com o eixo rebaixado em meia espessura, o **topo** do tabuleiro cai exatamente
+ * na altura do capim na borda da ilha. A ponte encosta na grama, sem degrau — e
+ * o pé do avatar passa de uma para o outro sem escalar nada.
+ */
+const ALTURA_DO_TABULEIRO = -ESPESSURA_DO_TABULEIRO / 2
 
 /**
  * Calcula a ponte entre duas ilhas.
@@ -138,10 +147,13 @@ export function ponteEntre(uma: IlhaDoMundo, outra: IlhaDoMundo): TrechoDePonte 
   const vertical = y2 - y1
   const comprimento = Math.hypot(horizontal, vertical)
 
+  // Altura do capim na borda, medida pela mesma função que gera a ilha.
+  const alturaNaBorda = alturaDoTopo(uma.raio, uma.raio)
+
   return {
     de: uma.id,
     para: outra.id,
-    posicao: [inicioX, y1 + ALTURA_DO_TABULEIRO, inicioZ],
+    posicao: [inicioX, y1 + alturaNaBorda + ALTURA_DO_TABULEIRO, inicioZ],
     rotacaoY: Math.atan2(-uz, ux),
     rotacaoZ: Math.atan2(vertical, horizontal),
     comprimento,

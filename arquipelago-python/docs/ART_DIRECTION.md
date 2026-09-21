@@ -129,3 +129,30 @@ nem publicadas.
   foi modelado.
 - Ilha ainda não construída aparece **com névoa e rótulo explícito** — nunca como ilha alcançável
   e vazia.
+
+---
+
+## O avatar (Etapa 5)
+
+A figura que anda pelo mundo é a coisa mais simples que ainda é gente: corpo cilíndrico, cabeça
+esférica, dois braços, duas pernas e uma mochila. Sem modelo externo — licença, peso e auditoria de
+arquivo a mais —, e com as cores vindo dos tokens (`CORES_DO_AVATAR` em `ui/theme/paleta3d.ts`):
+
+| Parte | Cor | Por quê |
+|---|---|---|
+| Corpo | Verde da marca | É a cor da tela do monitor e do estado "aprovada": a pessoa pertence ao mundo |
+| Braços e pernas | O mesmo verde, escurecido | Dá partes ao corpo sem virar duas figuras diferentes |
+| Cabeça | Pedra clara (o mesmo tom das paredes) | O rosto é o ponto mais claro, e é o que se enxerga de longe |
+| Mochila | Âmbar da marca | O mesmo âmbar das unidades disponíveis, nas costas de quem estuda |
+
+Três decisões visuais que ficam registradas porque o ambiente não permite conferi-las:
+
+- **a figura é pequena em relação às estruturas** (1,3 unidades de altura, contra 1,7 da biblioteca e
+  2,2 da placa). A intenção é parecer gente do lado das coisas, não um monumento;
+- **as pernas não se movem.** Não há animação de caminhada nesta etapa. Quem for olhar o mundo no
+  navegador deve saber disso antes de achar que quebrou;
+- **a câmera fica a 10,5 unidades atrás e um pouco acima**, olhando o peito da pessoa. Perto o
+  bastante para ver o caminho à frente, longe o bastante para não cortar a ilha.
+
+Nada disso foi visto em tela: sem navegador com WebGL neste ambiente, proporção, cor e enquadramento
+seguem **não verificados**, com itens próprios no roteiro manual de `docs/TEST_REPORT.md`.

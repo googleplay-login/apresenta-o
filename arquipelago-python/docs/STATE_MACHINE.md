@@ -108,3 +108,27 @@ resposta que não mude quando a aprovação acontece (D-023).
 - Formato de exibição da nota. Padrão proposto e **já implementado**: `"4 de 5 acertos (80%)"` —
   a fração é o número exato, e o percentual é derivado dela.
 - Número de tentativas visíveis no histórico (padrão proposto: **mostrar**, sem limite).
+
+---
+
+## Os modos de percurso (e o que eles **não** mudam)
+
+Desde a Etapa 5 o mundo tem três modos, escolhidos no HUD:
+
+| Modo | Quem se desloca | Serve para |
+|---|---|---|
+| `andar` (padrão) | O avatar, a pé, sobre o chão caminhável | Percorrer a trilha como quem caminha: capim, ponte, ilha seguinte |
+| `voar` | A câmera livre | Conhecer o arquipélago e voltar rápido de onde se estava |
+| `mapa` | A câmera, vista de cima | Orientação — e alternativa para quem não usa mouse |
+
+O modo de câmera **não** entra em nenhuma regra de progressão. Ele não libera unidade, não aprova
+nada e não muda nota: é a mesma decisão D-004 de sempre. O que ele muda é o que a pessoa vê e como
+ela se move.
+
+Dois pontos que valem para quem for mexer nisso depois:
+
+- **a pé, a ponte pela metade não é caminho.** O chão caminhável só recebe ponte `liberada`, e pedir
+  para ir a pé a uma ilha que depende de uma ponte incompleta devolve uma explicação — nunca um
+  caminho por cima do vão (D-030);
+- **o lugar onde o avatar está é informação, não permissão.** O HUD diz "na ilha tal" ou "na ponte
+  entre tal e tal" para a pessoa se localizar; nenhuma tela abre ou fecha por causa disso.

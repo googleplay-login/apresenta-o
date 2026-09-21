@@ -27,7 +27,7 @@ Consequências práticas, e o motivo de cada uma:
 | Pasta | Responsabilidade | Estado |
 |---|---|---|
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
-| `src/world/` | Cena 3D: ilhas, pontes, câmera, céu, névoa, e a geometria pura que a alimenta. **Sem regra de aprovação** | Existe e testado |
+| `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação | Existe e testado |
 | `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes | Existe para 4 unidades |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
@@ -71,6 +71,30 @@ localStorage ──lerProgresso──► useProgressoPersistido ──► estado
 
 Nenhuma seta aponta para trás: a cena não escreve em `learning/`, e o painel não calcula nota. O
 único lugar que grava progresso é o redutor, e ele só grava o que `registrarResultado` devolveu.
+
+## O caminho a pé, e por que não há motor de física
+
+Andar pelo arquipélago poderia ser um motor de física. Não é, e a escolha tem motivo (D-029): um
+motor traria peso, uma dependência que ninguém pediu e, sobretudo, um comportamento que **não dá
+para conferir** neste ambiente — depende de navegador. Em vez disso, as superfícies onde dá para
+pisar são declaradas:
+
+| Peça | O que é | Onde |
+|---|---|---|
+| `world/mapaCaminhavel.ts` | Discos (capim de cada ilha) e faixas (tabuleiro de cada ponte inteira), com a altura do chão em cada ponto | Fonte do "onde se pisa" |
+| `world/avatar/passos.ts` | Passo com deslize na beirada, giro do corpo, rota entre ilhas | Fonte do "como se anda" |
+| `world/Avatar.tsx` | A figura, e o laço por quadro que escreve a posição no objeto | Desenho |
+| `world/CameraDoAvatar.tsx` | Câmera atrás da pessoa, girando em volta dela | Desenho |
+
+Duas invariantes que os testes cobram, e que valem mais do que qualquer sensação de jogo:
+
+- **não existe chão fora do capim e do tabuleiro** — a altura é `null`, e o passo é recusado;
+- **só ponte `liberada` vira chão**. A ponte pela metade é visível, clicável e explicável, mas não é
+  caminho (D-004, D-030).
+
+A altura do chão não é inventada: `alturaDoTopo()` em `geometria/ilha.ts` é a **mesma** função que
+gera o domo do capim, e o topo do tabuleiro sai de `ESPESSURA_DO_TABULEIRO`. Foi essa unificação que
+revelou o degrau de 0,36 entre a ponte e a borda da ilha (D-031).
 
 ## A cena em duas partes, e por quê
 
@@ -148,6 +172,9 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Acentuação do português | `qa/acentuacao.test.ts` | Texto sem acento no código e na documentação (D-015) |
 | O mundo desenhado é o mundo prometido | `src/world/ConteudoDaCena.test.tsx` | Ilha sem biblioteca, mesa ou placa; ponte a mais ou a menos (D-025) |
 | Nenhum gabarito viciado em uma posição | `src/content/conteudo.test.ts` | Alternativa correta sempre no mesmo lugar, **por unidade** (D-027) |
+| Só ponte inteira vira chão | `src/world/mapaCaminhavel.test.ts` | Atravessar a pé onde a aprovação não chegou (D-029, D-030) |
+| Ninguém anda para fora do chão | `src/world/avatar/passos.test.ts` | Queda no vazio, travessia por fora do tabuleiro |
+| O caminhar funciona quadro a quadro | `src/world/ConteudoDaCena.test.tsx` | Avatar parado, teclas sem efeito, chão errado sob os pés (D-032) |
 
 ## Ambiente de execução (preview remoto)
 

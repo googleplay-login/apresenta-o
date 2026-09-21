@@ -136,6 +136,22 @@ export type OpcoesDoTopo = {
   readonly amplitude: number
 }
 
+/**
+ * Quanto o capim sobe do centro até a borda, por unidade de raio.
+ *
+ * O topo da ilha é um domo suave: o centro é o ponto baixo e a borda é a mais
+ * alta. O número importa para quem anda: é a altura em que os pés do avatar
+ * ficam e é onde a ponte precisa encostar. Por isso ele mora aqui, numa função
+ * só — a geometria e o chão caminhável leem a mesma conta.
+ */
+export const INCLINACAO_DO_TOPO = 0.06
+
+/** Altura do capim a uma distância do centro da ilha. Fora do raio, fica na borda. */
+export function alturaDoTopo(raio: number, distanciaDoCentro: number): number {
+  const t = Math.min(Math.max(distanciaDoCentro / raio, 0), 1)
+  return t * t * raio * INCLINACAO_DO_TOPO
+}
+
 export const TOPO_PADRAO: OpcoesDoTopo = {
   segmentosRadiais: 14,
   aneis: 4,
@@ -177,7 +193,8 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
   for (let anel = 1; anel <= aneis; anel += 1) {
     const t = anel / aneis
     const raioDoAnel = raio * t
-    const y = t * t * raio * 0.06
+    // A mesma fórmula que o chão caminhável usa — ver `alturaDoTopo`.
+    const y = alturaDoTopo(raio, raioDoAnel)
 
     for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
       const angulo = (coluna / segmentosRadiais) * Math.PI * 2
