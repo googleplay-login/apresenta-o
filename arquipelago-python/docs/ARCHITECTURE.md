@@ -96,6 +96,28 @@ A altura do chão não é inventada: `alturaDoTopo()` em `geometria/ilha.ts` é 
 gera o domo do capim, e o topo do tabuleiro sai de `ESPESSURA_DO_TABULEIRO`. Foi essa unificação que
 revelou o degrau de 0,36 entre a ponte e a borda da ilha (D-031).
 
+## A avaliação: regra no domínio, frase na tela
+
+A avaliação é o único lugar do projeto em que a pessoa é medida, e por isso mesmo é onde a tela tem
+menos liberdade: nenhum texto de avaliação é escrito no componente.
+
+| Peça | O que é | Onde |
+|---|---|---|
+| `learning/avaliacao.ts` | Aprovação em inteiros, percentual para baixo, `acertosMinimos()`, `textoDePendencias()`, `textoDoPlacar()`, `AVISO_DE_HONESTIDADE` | A regra **e** as frases |
+| `state/sessao.ts` | A ação `enviar`, que é o único caminho para `registrarResultado` | O encontro entre tela e regra |
+| `ui/paineis/AvaliacaoDaUnidade.tsx` | Perguntas, pendências, atalho de foco | Desenho |
+| `ui/paineis/ResultadoDaUnidade.tsx` | Nota, placar, revisão explicada | Desenho |
+| `content/validadorDeConteudo.ts` | Forma das perguntas e do gabarito | Trava de conteúdo |
+
+Três coisas que a tela **não** faz, e o motivo:
+
+- **não corrige antes do envio** — nem uma marca de certo ou errado aparece antes disso, e um teste
+  percorre a avaliação procurando exatamente essas marcas;
+- **não conta tentativa** — o número vem de `ProgressoDaUnidade`, o mesmo que a trilha e a cena
+  consultam (D-037);
+- **não decide o que é resposta certa** — o gabarito sai de `gabaritoDaUnidade()`, do conteúdo, e a
+  comparação é de `avaliarRespostas()`.
+
 ## O estudo: leitura orientada, e o que ela não faz
 
 A aba de estudo tem duas seções declaradas — **1. Ler no livro** e **2. Entender do nosso jeito** — e
@@ -211,6 +233,9 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Ninguém anda para fora do chão | `src/world/avatar/passos.test.ts` | Queda no vazio, travessia por fora do tabuleiro |
 | O caminhar funciona quadro a quadro | `src/world/ConteudoDaCena.test.tsx` | Avatar parado, teclas sem efeito, chão errado sob os pés (D-032) |
 | Toda variável de estilo existe, e com nome válido | `qa/estilos.test.ts` | Estilo silenciosamente ignorado, como `--painel.fundo-elevado` |
+| O enunciado da avaliação é honesto, e a revisão explica tudo | `src/learning/avaliacao.test.ts`, `src/ui/paineis/ResultadoDaUnidade.test.tsx` | Avaliação que promete antifraude ou esconde o porquê de quem acertou (D-036) |
+| O placar vem do progresso gravado | `src/app/paginas/Mundo.interacao.test.tsx` | Tentativa contada na tela, que mente depois de recarregar (D-037) |
+| O gabarito não se entrega por tamanho | `src/content/conteudo.test.ts`, `validadorDeConteudo.ts` | Acertar escolhendo a alternativa mais longa (D-038) |
 | O arquivo guardado de versão anterior é migrado, não descartado | `src/persistence/progressoSalvo.test.ts` | Perda de progresso por causa de um campo novo (D-035) |
 
 ## Ambiente de execução (preview remoto)

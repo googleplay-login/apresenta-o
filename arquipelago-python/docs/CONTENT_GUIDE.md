@@ -118,6 +118,23 @@ Prometer "teste secreto inviolável" seria mentira sobre a própria robustez. A 
 para execução de código: quando o Pyodide entrar (Etapa 9), nada afirma que rodar código de
 terceiros é seguro.
 
+## O tamanho da alternativa correta não entrega o gabarito (D-038)
+
+A alternativa certa costuma ficar mais longa sozinha: quem escreve quer ser preciso, e precisão pede
+palavras. O efeito, somado, é um atalho — quem não estudou marca sempre a mais longa e acerta.
+
+Regras ao escrever:
+
+- em cada unidade, **no máximo metade** das perguntas pode ter a correta como a mais longa por 12
+  caracteres ou mais — o validador cobra;
+- o caminho para consertar **não** é encurtar a verdade até ela ficar obscura: é dar aos distratores
+  o mesmo cuidado. Distrator plausível e específico costuma ficar tão longo quanto a resposta certa;
+- alternativa do tipo "todas as anteriores" e "nenhuma das anteriores" é proibida: não mede
+  entendimento;
+- enunciado com menos de 20 caracteres e explicação com menos de 40 são recusados pelo validador.
+
+Este defeito existiu de verdade: em `u01`, as cinco corretas eram as mais longas (D-038).
+
 ## A posição da alternativa correta varia (D-027)
 
 Cinco perguntas, quatro alternativas. Se a correta cai sempre na mesma posição, quem não estudou

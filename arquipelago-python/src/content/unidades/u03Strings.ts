@@ -167,10 +167,10 @@ export const u03Strings: ConteudoDaUnidade = {
       id: 'p3-1',
       enunciado: 'O que o método `.strip()` faz?',
       alternativas: [
-        'Remove todos os espaços de dentro do texto',
-        'Remove espaços e quebras de linha do começo e do fim do texto',
-        'Converte o texto para letras minúsculas',
-        'Divide o texto em uma lista de palavras',
+        'Remove todos os espaços em branco de dentro do texto, deixando-o compacto',
+        'Remove espaços e quebras de linha das pontas do texto',
+        'Converte o texto inteiro para letras minúsculas',
+        'Divide o texto em uma lista de palavras separadas nos espaços',
       ],
       correta: 1,
       explicacao:
@@ -193,10 +193,10 @@ export const u03Strings: ConteudoDaUnidade = {
       id: 'p3-3',
       enunciado: 'O que a letra `f` faz em `f"Total: {pontos}"`?',
       alternativas: [
-        'Avisa que as chaves ali dentro devem ser substituídas pelo valor das variáveis',
-        'Define o texto como formato fixo, imutável',
-        'Formata o número com casas decimais automáticas',
-        'Transforma a frase em um arquivo',
+        'Avisa que as chaves serão trocadas pelo valor das variáveis',
+        'Define o texto como um formato fixo, que não pode ser alterado depois',
+        'Formata os números com casas decimais automáticas na saída',
+        'Transforma a frase em um arquivo de texto separado do programa',
       ],
       correta: 0,
       explicacao:
@@ -206,9 +206,9 @@ export const u03Strings: ConteudoDaUnidade = {
       id: 'p3-4',
       enunciado: 'Por que `"Ana" == "ana"` devolve `False`?',
       alternativas: [
-        'Porque o Python compara o tamanho das palavras primeiro',
-        'Porque falta converter os dois textos com `str()`',
-        'Porque maiúsculas e minúsculas são caracteres diferentes, e a comparação é exata',
+        'Porque o Python compara primeiro o tamanho das duas palavras',
+        'Porque falta converter os dois textos com `str()` antes de comparar',
+        'Porque maiúsculas e minúsculas são caracteres diferentes entre si',
         'Porque o operador `==` só funciona com números',
       ],
       correta: 2,
@@ -218,7 +218,7 @@ export const u03Strings: ConteudoDaUnidade = {
     {
       id: 'p3-5',
       enunciado: 'O que `"4" + "5"` devolve?',
-      alternativas: ['9', '"45"', '45', 'Um erro de tipo, como no caso de texto com número'],
+      alternativas: ['9', '"45"', '45', 'Um erro de tipo, como acontece ao somar texto com número'],
       correta: 1,
       explicacao:
         'Os dois são textos, então o `+` junta em vez de somar: o resultado é o texto "45". Para somar de verdade, seria preciso converter: `int("4") + int("5")`. Esta é a raiz do `TypeError` que aparece quando se esquece a conversão.',

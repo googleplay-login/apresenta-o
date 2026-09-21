@@ -4,7 +4,12 @@ import { PainelDaUnidade } from '../../ui/paineis/PainelDaUnidade'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
-import { leituraFoiFeita, progressoInicial, proximaUnidade } from '../../learning/percurso'
+import {
+  leituraFoiFeita,
+  progressoDaUnidade,
+  progressoInicial,
+  proximaUnidade,
+} from '../../learning/percurso'
 import { criarRedutor, estadoInicial, podeMoverCamera, type Passo } from '../../state/sessao'
 import { useProgressoPersistido } from '../../persistence/useProgressoPersistido'
 import { useSuporteWebgl } from '../../world/suporteWebgl'
@@ -95,6 +100,11 @@ export function Mundo() {
       ? null
       : UNIDADES.find((unidade) => unidade.id === unidadeAbertaId)?.referencia ?? null
   const leituraFeita = unidadeAbertaId === null ? false : leituraFoiFeita(estado.progresso, unidadeAbertaId)
+  // Placar: quantas tentativas esta ilha já teve e qual foi a melhor nota. Vem
+  // do progresso, e não de um contador da tela — o número precisa ser o mesmo
+  // depois de recarregar a página (D-037).
+  const progressoDestaIlha =
+    unidadeAbertaId === null ? null : progressoDaUnidade(estado.progresso, unidadeAbertaId)
 
   const abrirUnidade = useCallback(
     (unidadeId: string) => {
@@ -433,6 +443,8 @@ export function Mundo() {
             respostas={estado.sessao.respostas}
             resultado={estado.sessao.resultado}
             aprovadaAntes={estado.sessao.aprovadaAntes}
+            tentativas={progressoDestaIlha?.tentativas ?? 0}
+            melhorNota={progressoDestaIlha?.melhorNota ?? null}
             temProxima={proxima !== null && proxima.id !== conteudo.id}
             aoIrPara={(passo: Passo) => despachar({ tipo: 'irPara', passo })}
             aoAvancar={() => despachar({ tipo: 'avancar' })}

@@ -609,3 +609,61 @@ de perder dados em silêncio. Versão não numérica ou atual corrompida continu
 inesperado". `ehProgressoValido` é guardião de `ProgressoGuardado` — com `leituraFeita` opcional —, e
 **não** de `Progresso`: só a migração produz a versão completa (o `tsc` já foi enganado por essa
 tentação uma vez, e está registrado em `TEST_REPORT.md`).
+
+---
+
+## D-036 — A correção é honesta em voz alta, e a explicação aparece em toda pergunta
+**21/09/2026** — decisão de avaliação, na Etapa 7.
+
+**Decisão:** o enunciado da avaliação diz, em texto visível e **antes** das perguntas, que a correção
+roda no próprio navegador, que **não é antifraude** e que o objetivo é aprender. E a revisão mostra a
+explicação de **todas** as perguntas — as certas incluídas.
+
+**Contexto:** a regra do enunciado honesto estava escrita nos documentos desde a Etapa 2 e não
+existia em lugar nenhum da tela: nem a tela nem o teste cobravam. Documento que promete o que o
+produto não faz é pior do que documento nenhum, porque dá a impressão de que a decisão foi tomada e
+cumprida. E a explicação só nas erradas parte de um princípio errado: quem acertou por sorte é
+exatamente quem mais precisa ler o porquê.
+
+**Consequência:** o texto vive em `AVISO_DE_HONESTIDADE`, em `learning/avaliacao.ts` — uma fonte só,
+como todas as frases que descrevem regra. Um teste cobra as três informações (navegador, não é
+antifraude, aprender) e recusa promessa de inviolabilidade. Outro teste percorre a revisão inteira e
+confere que as cinco explicações estão na tela, independentemente da nota.
+
+## D-037 — O placar vem do progresso gravado, não de um contador da tela
+**21/09/2026** — decisão de estado, na Etapa 7.
+
+**Decisão:** a tela de resultado mostra em que tentativa a pessoa está e qual é a melhor nota — e as
+duas coisas vêm de `ProgressoDaUnidade`, lidas pelo mesmo caminho que a tela já usava para a
+aprovação.
+
+**Contexto:** um contador no componente seria mais fácil de escrever e mentiria na primeira recarga
+da página: "tentativa nº 1" depois de três tentativas, ou uma "melhor nota" que não é a melhor. O
+número de tentativas e a melhor nota são fatos do percurso, e fatos do percurso moram no progresso
+(D-004).
+
+**Consequência:** o `PainelDaUnidade` recebe `tentativas` e `melhorNota` do mesmo lugar de onde já
+vinha `aprovadaAntes`, e a frase do placar é montada por `textoDoPlacar()`, que **compara** a nota
+atual com a melhor guardada para não chamar de "melhor até agora" uma nota que acabou de ser
+superada. O teste de integração aprova, refaz, reprova e confere que a melhor nota continua na tela e
+que a ilha continua aprovada na trilha.
+
+## D-038 — A alternativa correta não pode se destacar pelo tamanho
+**21/09/2026** — decisão de conteúdo, na Etapa 7.
+
+**Decisão:** em cada unidade, no máximo metade das perguntas pode ter a alternativa correta como a
+mais longa por uma margem visível (12 caracteres ou mais). Quem escreve conteúdo confere isso, e o
+validador cobra.
+
+**Contexto:** é o mesmo defeito do gabarito viciado em uma posição (D-027), medido em caracteres. E
+ele existia: em `u01PrimeiroProgama` as **cinco** alternativas corretas eram as mais longas — quem
+não estudou nada acertava 5 de 5 marcando sempre a alternativa maior. Nas quatro unidades, 11 de 20
+perguntas tinham esse vício. Como no caso da posição, o conjunto escondia o problema de cada
+pergunta, e o teste antigo só olhava posição.
+
+**Consequência:** as quatro unidades foram reescritas — distratores mais específicos, corretas mais
+enxutas — e nenhuma pergunta ficou com a correta destacada. Passam a valer também: enunciado com 20
+caracteres ou mais, explicação com 40 ou mais e diferente de qualquer alternativa, e a proibição de
+"todas as anteriores" e afins, que não medem entendimento nenhum. Duas travas independentes medem o
+conjunto: o validador, com defeito injetado em teste, e uma varredura do conteúdo real que pergunta,
+do ponto de vista de quem está chutando, quantas perguntas a alternativa mais longa acertaria.

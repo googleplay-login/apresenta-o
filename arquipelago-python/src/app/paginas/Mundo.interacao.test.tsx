@@ -9,6 +9,7 @@ import { conteudoDaUnidade } from '../../content/unidades'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
 import { CHAVE_DO_PROGRESSO } from '../../persistence/progressoSalvo'
 import { VERSAO_DO_PROGRESSO } from '../../learning/percurso'
+import { AVISO_DE_HONESTIDADE, textoDePendencias, type Resposta } from '../../learning/avaliacao'
 
 /**
  * O ciclo de estudo inteiro, com cliques de verdade, num DOM de verdade.
@@ -30,6 +31,14 @@ import { VERSAO_DO_PROGRESSO } from '../../learning/percurso'
 
 const primeira = PLANO_DE_UNIDADES[0]
 const segunda = PLANO_DE_UNIDADES[1]
+
+/**
+ * Cinco respostas em branco. A mensagem é montada pelo domínio, e não escrita à
+ * mão no teste: se o texto mudar, o teste acompanha — o que ele cobra é que a
+ * tela diga o que falta, com os números certos.
+ */
+const CINCO_EM_BRANCO: readonly Resposta[] = [null, null, null, null, null]
+const PENDENCIA_DE_CINCO = textoDePendencias(CINCO_EM_BRANCO)
 
 beforeEach(() => {
   window.localStorage.clear()
@@ -170,7 +179,7 @@ describe('avaliação', () => {
 
     const enviar = screen.getByRole('button', { name: 'Enviar respostas' })
     expect((enviar as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getByText('Faltam 5 perguntas para responder.')).toBeTruthy()
+    expect(screen.getByText(PENDENCIA_DE_CINCO)).toBeTruthy()
 
     await usuario.click(enviar)
 
@@ -198,8 +207,10 @@ describe('avaliação', () => {
       }
     }
 
-    expect(screen.queryByText(/Você errou/)).toBeNull()
-    expect(screen.getByText(/Todas as perguntas estão respondidas/)).toBeTruthy()
+    // Nada de "a resposta certa é ...": a revisão inteira só existe depois do envio.
+    expect(screen.queryByText(/A resposta certa é/)).toBeNull()
+    expect(screen.queryByText(/Você marcou/)).toBeNull()
+    expect(screen.getByText(/Todas as 5 perguntas estão respondidas/)).toBeTruthy()
   })
 
   it('aprova com 4 de 5, mostra 80% e libera a próxima ilha', async () => {
@@ -212,7 +223,9 @@ describe('avaliação', () => {
     await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
 
     expect(await screen.findByText('Aprovado nesta ilha')).toBeTruthy()
-    expect(screen.getByText(/4 de 5 acertos \(80%\)/)).toBeTruthy()
+    expect(screen.getByText(/4 de 5 acertos \(80%\)/, { selector: 'p.resultado__nota' })).toBeTruthy()
+    // E o placar conta a tentativa a partir do progresso gravado.
+    expect(screen.getByText(/tentativa nº 1/)).toBeTruthy()
     expect(screen.getByText(/A ponte para a próxima ilha está inteira/)).toBeTruthy()
   })
 
@@ -226,11 +239,50 @@ describe('avaliação', () => {
     await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
 
     expect(await screen.findByText('Ainda não foi desta vez')).toBeTruthy()
-    expect(screen.getByText(/3 de 5 acertos \(60%\)/)).toBeTruthy()
+    expect(screen.getByText(/3 de 5 acertos \(60%\)/, { selector: 'p.resultado__nota' })).toBeTruthy()
     expect(screen.getByText(/Nada foi bloqueado/)).toBeTruthy()
     // Reprovado: o estudo continua à mão e a avaliação pode ser refeita.
     expect(screen.getByRole('button', { name: 'Rever o estudo' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Refazer a avaliação' })).toBeTruthy()
+  })
+
+  it('diz, no enunciado, que a correção roda no navegador e não é antifraude', async () => {
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+
+    await abrirIlha(usuario, primeira?.titulo ?? '')
+    await irParaAvaliacao(usuario)
+
+    expect(screen.getByText(AVISO_DE_HONESTIDADE)).toBeTruthy()
+  })
+
+  it('reprovar depois de aprovar mantém a aprovação e mostra a melhor nota', async () => {
+    // A regra é antiga (reprovar não revoga aprovação nem bloqueia a ilha); este
+    // teste percorre o caminho inteiro na tela, incluindo o placar, que passou a
+    // contar tentativas no progresso gravado (D-037).
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+
+    await abrirIlha(usuario, primeira?.titulo ?? '')
+    await irParaAvaliacao(usuario)
+    await responderTudo(usuario, 0, primeira?.id ?? '')
+    await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+    await screen.findByText('Aprovado nesta ilha')
+
+    await usuario.click(screen.getByRole('button', { name: 'Refazer a avaliação' }))
+    await responderTudo(usuario, 3, primeira?.id ?? '')
+    await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+
+    expect(await screen.findByText('Ainda não foi desta vez')).toBeTruthy()
+    expect(screen.getByText(/tentativa nº 2/)).toBeTruthy()
+    expect(screen.getByText(/melhor nota até agora: 5 de 5 acertos \(100%\)/)).toBeTruthy()
+
+    // E o mundo continua com a ilha aprovada: a ponte não voltou atrás. Na
+    // trilha, a ilha aprovada troca o botão "Entrar" por "Revisar".
+    await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
+    const cartao = screen.getByRole('heading', { level: 3, name: primeira?.titulo ?? '' }).closest('li')
+    expect(within(cartao as HTMLElement).getByRole('button', { name: 'Revisar' })).toBeTruthy()
+    expect(within(cartao as HTMLElement).queryByRole('button', { name: 'Entrar' })).toBeNull()
   })
 
   it('tranca as respostas depois do envio', async () => {
@@ -264,7 +316,7 @@ describe('avaliação', () => {
 
     await usuario.click(screen.getByRole('button', { name: 'Refazer a avaliação' }))
 
-    expect(await screen.findByText('Faltam 5 perguntas para responder.')).toBeTruthy()
+    expect(await screen.findByText(PENDENCIA_DE_CINCO)).toBeTruthy()
     const enviar = screen.getByRole('button', { name: 'Enviar respostas' })
     expect((enviar as HTMLButtonElement).disabled).toBe(true)
   })

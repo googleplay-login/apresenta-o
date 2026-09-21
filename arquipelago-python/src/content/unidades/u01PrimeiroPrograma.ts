@@ -172,8 +172,8 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       alternativas: [
         'Traduz o arquivo inteiro para outra linguagem e o guarda em disco',
         'Envia o arquivo para um serviço na internet, que devolve o resultado',
-        'Lê o arquivo e executa as instruções uma por vez, de cima para baixo',
-        'Compila o arquivo e gera um programa executável independente',
+        'Executa as instruções do arquivo uma por vez, de cima para baixo',
+        'Compila o arquivo inteiro e gera um programa executável independente',
       ],
       correta: 2,
       explicacao:
@@ -183,9 +183,9 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       id: 'p1-2',
       enunciado: 'Para que servem as aspas em `print("Olá")`?',
       alternativas: [
-        'Decorar a saída, deixando o texto em destaque na tela',
-        'Indicar que "Olá" é texto, e não o nome de algo que o Python deveria procurar',
-        'Avisar ao Python que aquela linha deve ser ignorada',
+        'Decorar a saída, deixando o texto em destaque na tela do terminal',
+        'Indicar que "Olá" é texto, e não um nome a procurar',
+        'Avisar ao Python que aquela linha deve ser ignorada durante a execução',
         'Separar o comando do restante do arquivo',
       ],
       correta: 1,
@@ -196,10 +196,10 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       id: 'p1-3',
       enunciado: 'O que significa `SyntaxError`?',
       alternativas: [
-        'O programa rodou até o fim, mas mostrou a resposta errada',
-        'Faltou instalar uma biblioteca que o programa usa',
+        'O programa rodou até o fim, mas mostrou uma resposta diferente da esperada',
+        'Faltou instalar uma biblioteca que uma das linhas do programa usa',
         'O arquivo não foi encontrado no disco',
-        'O Python não conseguiu nem entender a escrita do programa, e parou antes de executar',
+        'Que o Python não entendeu a escrita do programa e parou antes de executar',
       ],
       correta: 3,
       explicacao:
@@ -210,10 +210,10 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       enunciado:
         'Você roda `python3 programa.py` e não acontece nada, nem erro, nem saída. O arquivo provavelmente:',
       alternativas: [
-        'Está vazio, ou tem apenas linhas de comentário — nada que produza saída',
+        'Está vazio, ou só tem comentários: nada que produza saída',
         'Foi salvo no lugar errado e o Python abriu outro arquivo',
-        'Tem erro de sintaxe que o Python ignorou',
-        'Precisa ser executado como administrador',
+        'Tem um erro de sintaxe em uma linha que o Python ignorou por engano',
+        'Precisa ser executado como administrador do sistema para abrir',
       ],
       correta: 0,
       explicacao:
@@ -224,10 +224,10 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       enunciado:
         'Se você rodar `python3` sem indicar nenhum arquivo, o que acontece?',
       alternativas: [
-        'O Python mostra uma mensagem de erro e encerra',
-        'O Python apaga o último arquivo executado',
-        'O Python abre uma conversa direta, mostrando `>>>` para você digitar linhas e ver a resposta na hora',
-        'O Python instala a versão mais nova automaticamente',
+        'O Python mostra uma mensagem de erro pedindo o nome de um arquivo e encerra',
+        'O Python apaga o último arquivo executado, para começar uma sessão limpa',
+        'O Python abre o modo interativo, com `>>>`, pronto para receber linhas',
+        'O Python baixa e instala a versão mais nova da linguagem, se houver internet',
       ],
       correta: 2,
       explicacao:

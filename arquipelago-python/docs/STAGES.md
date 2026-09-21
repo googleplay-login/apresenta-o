@@ -15,7 +15,7 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 4 | Três ilhas e as pontes | **concluída** |
 | 5 | Navegação e avatar | **concluída** |
 | 6 | Estudo e leitura do livro na tela | **concluída** |
-| 7 | Avaliação | não iniciada |
+| 7 | Avaliação | **concluída** |
 | 8 | Persistência local e protótipo jogável | não iniciada |
 | 9 | Prova de conceito de Pyodide | não iniciada |
 | 10 | Exercícios com correção automática | não iniciada |
@@ -227,11 +227,39 @@ nenhuma regra: ele é a pessoa anotando o que fez, não o programa liberando o q
 
 ---
 
+## Etapa 7 — A avaliação revisada (concluída em 21/09/2026)
+
+As regras de aprovação e a tela da avaliação existiam desde as Etapas 2 e 3. Esta etapa olhou o que
+estava lá, cobrou o que os documentos prometiam e não existia, e encontrou um vício de gabarito que
+ninguém tinha medido.
+
+- **O enunciado passou a ser honesto em voz alta**: diz, antes das perguntas, que a correção roda no
+  navegador, que **não é antifraude** e que o objetivo é aprender. Isso estava escrito nos documentos
+  desde a Etapa 2 e não existia na tela (D-036).
+- **A revisão explica todas as perguntas**, inclusive as que a pessoa acertou — quem acertou por
+  sorte é quem mais precisa do porquê — e mostra **o que foi marcado** em cada erro, em vez de só
+  dizer que errou (D-036).
+- **O placar saiu do progresso gravado**: "tentativa nº 2", "melhor nota até agora: 5 de 5 (100%)".
+  Um contador na tela seria mais fácil e mentiria na primeira recarga (D-037).
+- **A tela diz quais perguntas faltam**, pelos números, e cada pendência tem um atalho que leva o
+  foco até a pergunta — antes ela dizia só quantas faltavam, e quem usa teclado tinha de procurar.
+- **Defeito de conteúdo encontrado e corrigido:** em `u01`, as cinco alternativas corretas eram as
+  mais longas; nas quatro unidades, 11 de 20 perguntas tinham esse vício, e escolher sempre a
+  alternativa maior acertava a unidade inteira. As quatro unidades foram reescritas, e o validador
+  ganhou a regra (D-038).
+- **Foco movido para o anúncio do resultado** ao enviar: a tela inteira muda por causa de um clique,
+  e quem usa leitor de tela precisa ouvir isso.
+
+**Limite explícito:** não há limite de tempo, não há banco de perguntas, e a correção continua
+rodando no cliente — quem quiser ver o gabarito consegue, e a tela diz isso. A avaliação não virou
+prova.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **7** — avaliação: as perguntas de verdade, exigir resposta em todas, corrigir após envio.
 - **8** — persistência local versionada e protótipo jogável.
 - **9** — prova de conceito de Pyodide em Web Worker, carregado sob demanda.
 - **10** — exercícios com correção automática.

@@ -165,11 +165,109 @@ describe('validador de conteúdo', () => {
         indice === 0 ? { ...pergunta, explicacao: '' } : pergunta,
       ),
     }
-    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('sem explicação')
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('explicação curta demais')
+  })
+
+  it('acusa alternativa do tipo "todas as anteriores"', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0
+          ? { ...pergunta, alternativas: [...pergunta.alternativas.slice(0, 3), 'Todas as anteriores'] }
+          : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('não mede entendimento')
+  })
+
+  it('acusa enunciado curto demais', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0 ? { ...pergunta, enunciado: 'O que é?' } : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('enunciado curto demais')
+  })
+
+  it('acusa explicação repetida de uma alternativa', () => {
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice === 0 ? { ...pergunta, explicacao: pergunta.alternativas[pergunta.correta] ?? '' } : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('explicação repetida')
+  })
+
+  it('acusa a unidade em que a resposta certa é sempre a mais longa', () => {
+    // O defeito injetado é o vício de tamanho: em três das cinco perguntas, a
+    // alternativa correta fica muito maior que as outras. Quem não estudou
+    // acerta escolhendo a maior — o mesmo mal do gabarito viciado em posição.
+    const longa =
+      'Esta alternativa é longa o bastante para se destacar das demais em qualquer leitura, ' +
+      'mesmo para quem só está passando os olhos pelas opções antes de escolher'
+    const comDefeito = {
+      ...base!,
+      perguntas: base!.perguntas.map((pergunta, indice) =>
+        indice < 3
+          ? {
+              ...pergunta,
+              alternativas: pergunta.alternativas.map((alternativa, posicao) =>
+                posicao === pergunta.correta ? longa : alternativa,
+              ),
+            }
+          : pergunta,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('a mais longa')
   })
 
   it('acusa id de unidade vazio', () => {
     expect(problemasNoConteudo({ ...base!, id: '' }).join(' ')).toContain('unidade sem id')
+  })
+})
+
+describe('o gabarito não se entrega pelo tamanho da alternativa', () => {
+  it('nenhuma unidade faz a resposta certa se destacar das outras', () => {
+    // Trava independente do validador, medida direto no conteúdo real. Ela
+    // existe porque o defeito existia: em u01, as cinco corretas eram as
+    // alternativas mais longas, e escolher sempre a maior acertava 5 de 5.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const destacadas: string[] = []
+
+      for (const pergunta of unidade.perguntas) {
+        const comprimentos = pergunta.alternativas.map((alternativa) => alternativa.length)
+        const daCorreta = comprimentos[pergunta.correta] ?? 0
+        const demais = comprimentos.filter((_, indice) => indice !== pergunta.correta)
+        const maiorDasDemais = Math.max(0, ...demais)
+
+        if (daCorreta >= maiorDasDemais + 12) {
+          destacadas.push(pergunta.id)
+        }
+      }
+
+      expect(
+        destacadas.length,
+        `Na unidade ${unidade.id}, a alternativa correta se destaca por tamanho em: ${destacadas.join(', ')}`,
+      ).toBeLessThanOrEqual(Math.floor(unidade.perguntas.length / 2))
+    }
+  })
+
+  it('escolher sempre a alternativa mais longa não acerta a unidade inteira', () => {
+    // A prova direta do vício, do ponto de vista de quem está chutando.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const acertos = unidade.perguntas.filter((pergunta) => {
+        const comprimentos = pergunta.alternativas.map((alternativa) => alternativa.length)
+        const maior = Math.max(...comprimentos)
+        return comprimentos[pergunta.correta] === maior
+      }).length
+
+      expect(
+        acertos,
+        `Em ${unidade.id}, marcar sempre a alternativa mais longa acertaria ${acertos} de ${unidade.perguntas.length}`,
+      ).toBeLessThan(unidade.perguntas.length)
+    }
   })
 })
 

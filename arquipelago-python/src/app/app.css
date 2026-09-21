@@ -1200,10 +1200,47 @@ kbd {
   color: var(--texto-secundario);
 }
 
+/*
+ * Atalhos para as perguntas que ficaram em branco. Ficam em linha e quebram
+ * sozinhos em tela estreita: são até cinco botões, e uma coluna de cinco
+ * empurraria o botão de enviar para fora da vista.
+ */
+.envio__pendencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * O aviso de que a correção roda no navegador e não é antifraude. Ele precisa
+ * ser lido, e não confundido com decoração: por isso tem borda e respiro, e não
+ * apenas um tom mais claro de texto.
+ */
+.honestidade {
+  margin: 0 0 var(--espaco-md);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border: 1px solid var(--painel-borda);
+  border-left: 4px solid var(--acento-ambar);
+  border-radius: var(--raio-chip);
+  background: var(--painel-fundo-elevado);
+  color: var(--texto-secundario);
+  font-size: var(--fonte-legenda);
+}
+
 .resultado__nota {
   margin: 0 0 var(--espaco-sm);
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+/* A tentativa e a melhor nota: informação de acompanhamento, não de destaque. */
+.resultado__placar {
+  margin: 0 0 var(--espaco-md);
+  color: var(--texto-secundario);
+  font-size: var(--fonte-legenda);
 }
 
 .resultado__texto {

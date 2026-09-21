@@ -180,10 +180,10 @@ export const u04Listas: ConteudoDaUnidade = {
       id: 'p4-2',
       enunciado: 'Qual é a diferença entre `sorted(numeros)` e `numeros.sort()`?',
       alternativas: [
-        'Não há diferença: os dois ordenam a lista',
-        '`sorted()` só funciona com números, e `.sort()` só com textos',
-        '`sorted()` devolve uma versão ordenada e não altera a original; `.sort()` altera a lista e não devolve nada útil',
-        '`sorted()` ordena ao contrário, e `.sort()` ordena normalmente',
+        'Não há diferença nenhuma: os dois ordenam a lista do mesmo jeito',
+        '`sorted()` só funciona com números, e o `.sort()` só com textos',
+        '`sorted()` devolve uma cópia ordenada; `.sort()` altera a lista',
+        '`sorted()` ordena ao contrário, e o `.sort()` ordena na ordem normal',
       ],
       correta: 2,
       explicacao:
@@ -191,12 +191,12 @@ export const u04Listas: ConteudoDaUnidade = {
     },
     {
       id: 'p4-3',
-      enunciado: 'O que `.pop()` faz?',
+      enunciado: 'O que `.pop()` faz com a lista em que é chamado?',
       alternativas: [
-        'Remove o item pelo valor que você informa',
+        'Remove o item pelo valor que você informa, se ele estiver na lista',
         'Remove o último item e devolve o item removido',
-        'Esvazia a lista inteira de uma vez',
-        'Cria uma cópia da lista sem o primeiro item',
+        'Esvazia a lista inteira de uma vez, sem devolver nada',
+        'Cria uma cópia da lista original sem o primeiro item dela',
       ],
       correta: 1,
       explicacao:

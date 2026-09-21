@@ -17,6 +17,29 @@ import type { ConteudoDaUnidade, Pergunta } from './tiposDeConteudo'
 const LINGUAGENS = ['python', 'terminal'] as const
 
 /**
+ * A partir de quantos caracteres a alternativa correta se destaca das outras.
+ *
+ * Diferença pequena é coincidência de redação; diferença grande vira **pista**.
+ * Uma alternativa certa muito mais longa que as erradas ensina a acertar por
+ * tamanho, sem saber o assunto — o mesmo defeito do gabarito viciado em uma
+ * posição (D-027), só que medido em caracteres.
+ */
+const VANTAGEM_DE_TAMANHO = 12
+
+/**
+ * Expressões que transformam a pergunta em sorteio.
+ *
+ * "Todas as anteriores" não mede entendimento: quem não estudou responde a mesma
+ * coisa em qualquer pergunta, e quem marcou errado não descobre por quê.
+ */
+const EXPRESSOES_PROIBIDAS = [
+  'todas as anteriores',
+  'nenhuma das anteriores',
+  'todas estão corretas',
+  'nenhuma está correta',
+] as const
+
+/**
  * Problemas de um diagrama.
  *
  * Um diagrama com uma caixa só não desenha nada, e um com rótulos repetidos
@@ -141,7 +164,35 @@ function problemasNasPerguntas(unidade: ConteudoDaUnidade): readonly string[] {
     problemas.push(...problemasNaPergunta(pergunta, onde, ids))
   }
 
+  // Nenhuma pergunta isolada precisa ser perfeita; o vício aparece no conjunto.
+  const destacadas = unidade.perguntas.filter((pergunta) => corretaEDestaque(pergunta)).length
+  const permitidas = Math.floor(unidade.perguntas.length / 2)
+  if (destacadas > permitidas) {
+    problemas.push(
+      `${onde}: em ${destacadas} de ${unidade.perguntas.length} perguntas a alternativa correta é ` +
+        `a mais longa por ${VANTAGEM_DE_TAMANHO} caracteres ou mais (o limite é ${permitidas}): ` +
+        'dá para acertar escolhendo a maior.',
+    )
+  }
+
   return problemas
+}
+
+/**
+ * Verdadeiro quando a alternativa correta se destaca por tamanho.
+ *
+ * Empate não conta: duas alternativas do mesmo tamanho não destacam nada. O que
+ * conta é a correta ser a maior **e** passar das demais por uma margem visível.
+ */
+function corretaEDestaque(pergunta: Pergunta): boolean {
+  const comprimentos = pergunta.alternativas.map((alternativa) => alternativa.length)
+  const comprimentoDaCorreta = comprimentos[pergunta.correta]
+  if (comprimentoDaCorreta === undefined) {
+    return false
+  }
+  const demais = comprimentos.filter((_, indice) => indice !== pergunta.correta)
+  const maiorDasDemais = Math.max(0, ...demais)
+  return comprimentoDaCorreta >= maiorDasDemais + VANTAGEM_DE_TAMANHO
 }
 
 function problemasNaPergunta(
@@ -156,8 +207,8 @@ function problemasNaPergunta(
   }
   ids.add(pergunta.id)
 
-  if (pergunta.enunciado.trim() === '') {
-    problemas.push(`${onde}: pergunta ${pergunta.id} sem enunciado`)
+  if (pergunta.enunciado.trim().length < 20) {
+    problemas.push(`${onde}: pergunta ${pergunta.id} com enunciado curto demais ou vazio`)
   }
   if (pergunta.alternativas.length !== 4) {
     problemas.push(
@@ -173,8 +224,20 @@ function problemasNaPergunta(
   if (pergunta.alternativas.some((alternativa) => alternativa.trim() === '')) {
     problemas.push(`${onde}: pergunta ${pergunta.id} tem alternativa vazia`)
   }
-  if (pergunta.explicacao.trim() === '') {
-    problemas.push(`${onde}: pergunta ${pergunta.id} sem explicação para depois do envio`)
+  if (pergunta.explicacao.trim().length < 40) {
+    problemas.push(`${onde}: pergunta ${pergunta.id} com explicação curta demais ou vazia`)
+  }
+  if (pergunta.alternativas.includes(pergunta.explicacao.trim())) {
+    problemas.push(`${onde}: pergunta ${pergunta.id} explicação repetida de uma alternativa`)
+  }
+
+  for (const alternativa of pergunta.alternativas) {
+    const minuscula = alternativa.toLowerCase()
+    if (EXPRESSOES_PROIBIDAS.some((expressao) => minuscula.includes(expressao))) {
+      problemas.push(
+        `${onde}: pergunta ${pergunta.id} com alternativa "${alternativa}" — não mede entendimento`,
+      )
+    }
   }
 
   return problemas

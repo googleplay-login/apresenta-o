@@ -6,6 +6,83 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 7 (a avaliação revisada)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com as duas props novas do painel de resultado (`tentativas`, `melhorNota`) e as funções
+novas do domínio. Um detalhe de forma foi corrigido durante a escrita: um comentário de linha dentro
+da lista de props de um componente JSX — o `tsc` aceita, mas é frágil de ler, e ele saiu para fora.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 548 testes, 32 arquivos, todos aprovados** (eram 505/30 antes desta etapa).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| O aviso de honestidade diz navegador, não é antifraude e aprender — e não promete inviolabilidade | `src/learning/avaliacao.test.ts` |
+| Os números das perguntas em branco, contando de 1 como na tela | `src/learning/avaliacao.test.ts` |
+| A frase de pendência com um, dois e cinco em branco, com vírgula e "e" | `src/learning/avaliacao.test.ts` |
+| Nenhum "faltam algumas": só existe a contagem exata | `src/learning/avaliacao.test.ts` |
+| Quantos acertos aprovam, medido em inteiros de 1 a 60 perguntas | `src/learning/avaliacao.test.ts` |
+| O placar conta a tentativa, mostra a melhor nota e recusa tentativa zero | `src/learning/avaliacao.test.ts` |
+| O enunciado da avaliação diz as três coisas obrigatórias, antes das perguntas | `src/ui/paineis/AvaliacaoDaUnidade.test.tsx` (11 testes) |
+| Nada de marca de certo ou errado antes do envio | `src/ui/paineis/AvaliacaoDaUnidade.test.tsx` |
+| O botão de enviar fica ligado ao estado por `aria-describedby` | `src/ui/paineis/AvaliacaoDaUnidade.test.tsx` |
+| Um atalho por pergunta em branco, e o foco vai até a pergunta | `src/ui/paineis/AvaliacaoDaUnidade.test.tsx` |
+| Depois do envio, os campos trancam e o botão de enviar desaparece | `src/ui/paineis/AvaliacaoDaUnidade.test.tsx` |
+| A revisão explica as cinco perguntas, certas incluídas | `src/ui/paineis/ResultadoDaUnidade.test.tsx` (11 testes) |
+| Em cada erro, o que foi marcado e qual era a resposta certa | `src/ui/paineis/ResultadoDaUnidade.test.tsx` |
+| Pergunta em branco é dita em branco, e não inventada | `src/ui/paineis/ResultadoDaUnidade.test.tsx` |
+| O foco vai para o anúncio do resultado ao aparecer | `src/ui/paineis/ResultadoDaUnidade.test.tsx` |
+| Reprovar depois de aprovar mantém a aprovação e mostra a melhor nota, ponta a ponta | `src/app/paginas/Mundo.interacao.test.tsx` |
+| O validador acusa "todas as anteriores", enunciado curto e explicação repetida | `src/content/conteudo.test.ts` |
+| O validador acusa a unidade em que a correta é sempre a mais longa (defeito injetado) | `src/content/conteudo.test.ts` |
+| Nenhuma unidade entrega o gabarito pelo tamanho, medido no conteúdo real | `src/content/conteudo.test.ts` |
+
+**Defeito real encontrado nesta etapa:** em `u01-primeiro-programa`, **as cinco** alternativas
+corretas eram as mais longas; somando as quatro unidades, 11 de 20 perguntas tinham o vício. Quem não
+estudou nada acertava a primeira ilha inteira marcando sempre a alternativa maior. O teste que existia
+cuidava da **posição** da resposta (D-027) e não do **tamanho** — o mesmo defeito, medido de outro
+jeito. As quatro unidades foram reescritas (distratores mais específicos, corretas mais enxutas) e a
+regra entrou no validador (D-038).
+
+**Defeito de documento cumprido:** os documentos prometiam, desde a Etapa 2, que o enunciado da
+avaliação diria que a correção roda no cliente e que não há antifraude. Não dizia. Passou a dizer, e
+o texto virou constante única (D-036).
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       20.77 kB │ gzip:   3.57 kB
+    dist/assets/index-*.js       300.50 kB │ gzip:  95.18 kB
+    dist/assets/Cena-*.js        912.10 kB │ gzip: 242.34 kB
+
+### 4. Servidor de desenvolvimento — EXECUTADO
+
+Dez caminhos conferidos com `curl -H 'Host: 5173-x.e2b.app'` — `/`, os painéis da avaliação e do
+resultado, o painel da unidade, `learning/avaliacao.ts`, o validador, o conteúdo de `u01` e a página
+do mundo: todos **200**, nenhum "Internal server error". Isto prova que os módulos compilam e são
+servidos; **não** prova aparência.
+
+### 5. Prova da trava de estilos — EXECUTADO
+
+`--nao-existe-este-token` foi acrescentado de propósito ao `app.css` e a suíte de `qa/` reprovou,
+nomeando a variável. O arquivo voltou ao estado anterior e a suíte passou de novo. A trava não é
+decorativa.
+
+### 6. O que continua NÃO executado
+
+Aparência da avaliação e da revisão, contraste do aviso de honestidade, comportamento real de foco
+com leitor de tela, teclado de verdade, e o placar depois de recarregar a página num navegador real.
+O roteiro manual abaixo ganhou os itens 37 a 41.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 6 (o estudo com o livro na tela)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -501,7 +578,27 @@ item, sem presumir sucesso.
     legenda dizendo o que o sinal significa — e **nenhum** `·` nos espaços do meio das frases. Num
     navegador com leitor de tela, a legenda precisa ser lida.
 
-Resultado esperado: 36 de 36 conferidos. Qualquer item que falhe deve ser registrado aqui.
+### Roteiro manual — a avaliação (Etapa 7)
+
+37. **O aviso antes das perguntas**: abrir a aba **Avaliação**. Antes da primeira pergunta deve
+    aparecer, com destaque próprio, a frase dizendo que a correção roda no navegador, que não é
+    antifraude e que o objetivo é aprender. Ela precisa ser lida sem esforço — se passar despercebida,
+    o item falhou.
+38. **Falta responder, e a tela diz o quê**: responder duas perguntas e olhar o rodapé da avaliação.
+    A frase deve citar os **números** das que faltam, e cada uma deve ter um botão que leva o cursor
+    de teclado até ela. O botão de enviar deve continuar apagado.
+39. **Depois do envio, a revisão**: enviar e percorrer a revisão inteira. Cada pergunta deve trazer o
+    que foi marcado, qual era a resposta certa e a explicação — **inclusive** nas que foram
+    acertadas. Nenhum texto de explicação pode aparecer antes do envio.
+40. **O placar**: conferir a linha "Esta foi a tentativa nº 1". Fechar o painel, reabrir a ilha,
+    refazer a avaliação errando mais e conferir a linha "tentativa nº 2" com a melhor nota anterior;
+    a ilha deve continuar marcada como aprovada na trilha. Recarregar a página e conferir que a
+    contagem de tentativas continua lá.
+41. **Foco ao enviar**: com leitor de tela ou navegando só por teclado, enviar a avaliação. O foco
+    deve ir para o anúncio do resultado ("Aprovado nesta ilha" ou "Ainda não foi desta vez"), e não
+    ficar perdido no fim do formulário.
+
+Resultado esperado: 41 de 41 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

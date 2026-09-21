@@ -51,6 +51,25 @@ export function foiAprovado(resultado: ResultadoDeAvaliacao): boolean {
   return resultado.acertos * 5 >= resultado.total * 4
 }
 
+/**
+ * Quantos acertos aprovam numa avaliação de `total` perguntas.
+ *
+ * A conta é feita em inteiros, procurando o primeiro número que passa em
+ * `foiAprovado` — em vez de `Math.ceil(total * 0.8)`, que dependeria de ponto
+ * flutuante justamente no número que decide a aprovação. Para 5 perguntas dá 4.
+ */
+export function acertosMinimos(total: number): number {
+  if (!Number.isInteger(total) || total <= 0) {
+    throw new Error(`Total de perguntas inválido: ${total}. Deve ser inteiro maior que zero.`)
+  }
+
+  let acertos = 0
+  while (!foiAprovado({ acertos, total })) {
+    acertos += 1
+  }
+  return acertos
+}
+
 /** Percentual exato. Pode ter dízima (2 de 3 = 66,666...). */
 export function percentualExato(resultado: ResultadoDeAvaliacao): number {
   validarResultado(resultado)
@@ -82,6 +101,19 @@ export function descreverNota(resultado: ResultadoDeAvaliacao): string {
   return `${resultado.acertos} de ${resultado.total} acertos (${percentualExibido(resultado)}%)`
 }
 
+/**
+ * O que o enunciado da avaliação é obrigado a dizer, em texto visível.
+ *
+ * Está aqui, e não escrito à mão na tela, pela mesma razão de sempre: é uma
+ * regra do projeto (`STATE_MACHINE.md`, `CONTENT_GUIDE.md`), e regra escrita em
+ * dois lugares acaba valendo em um só. Prometer teste secreto inviolável seria
+ * mentira sobre a própria robustez — a correção roda no cliente, e quem quiser
+ * ver as respostas consegue.
+ */
+export const AVISO_DE_HONESTIDADE =
+  'A correção acontece aqui no seu navegador, e não é antifraude: quem quiser ver as respostas ' +
+  'consegue. O objetivo é aprender, não passar.'
+
 /** Uma resposta ainda não dada é `null`; resposta dada é o índice da alternativa. */
 export type Resposta = number | null
 
@@ -93,6 +125,77 @@ export function respostasCompletas(respostas: readonly Resposta[]): boolean {
 /** Quantas perguntas ainda faltam responder. */
 export function contarEmBranco(respostas: readonly Resposta[]): number {
   return respostas.filter((resposta) => resposta === null).length
+}
+
+/**
+ * Números das perguntas ainda sem resposta, contando de 1 — como na tela.
+ *
+ * Devolver os **números** e não só a quantidade existe por um motivo prático:
+ * "faltam 2" obriga a pessoa a caçar quais são. Com os números, a tela mostra o
+ * que falta e ainda leva o foco até lá.
+ */
+export function numerosEmBranco(respostas: readonly Resposta[]): readonly number[] {
+  const numeros: number[] = []
+  respostas.forEach((resposta, indice) => {
+    if (resposta === null) {
+      numeros.push(indice + 1)
+    }
+  })
+  return numeros
+}
+
+/** Lista em português: "3", "3 e 5", "3, 4 e 5". */
+function listar(numeros: readonly number[]): string {
+  if (numeros.length <= 1) {
+    return numeros[0]?.toString() ?? ''
+  }
+  const ultimo = numeros[numeros.length - 1]
+  return `${numeros.slice(0, -1).join(', ')} e ${ultimo}`
+}
+
+/**
+ * Mensagem de pendência para a tela.
+ *
+ * Uma frase só, montada aqui para que a contagem, o plural e os números nunca
+ * discordem entre si — foi assim que a tela passou a dizer exatamente o que
+ * falta, em vez de "faltam algumas".
+ */
+export function textoDePendencias(respostas: readonly Resposta[]): string {
+  const numeros = numerosEmBranco(respostas)
+
+  if (respostas.length === 0) {
+    return 'Esta avaliação não tem perguntas.'
+  }
+  if (numeros.length === 0) {
+    return `Todas as ${respostas.length} perguntas estão respondidas. Confira antes de enviar: depois do envio não dá para voltar.`
+  }
+  if (numeros.length === 1) {
+    return `Falta responder a pergunta ${listar(numeros)}.`
+  }
+  return `Faltam responder as perguntas ${listar(numeros)}.`
+}
+
+/**
+ * Texto do placar: em que tentativa a pessoa está e qual foi a melhor nota.
+ *
+ * Compara a nota atual com a melhor guardada para não chamar de "melhor até
+ * agora" uma nota que acabou de ser superada — a tela não pode se contradizer
+ * no mesmo instante em que mostra o resultado.
+ */
+export function textoDoPlacar(
+  tentativas: number,
+  melhorNota: ResultadoDeAvaliacao,
+  resultadoAtual: ResultadoDeAvaliacao,
+): string {
+  if (!Number.isInteger(tentativas) || tentativas < 1) {
+    throw new Error(`Número de tentativas inválido: ${tentativas}.`)
+  }
+
+  const ordem = `Esta foi a tentativa nº ${tentativas}`
+  if (compararNotas(resultadoAtual, melhorNota) >= 0) {
+    return `${ordem} — e é a sua melhor nota até agora: ${descreverNota(resultadoAtual)}.`
+  }
+  return `${ordem}. Sua melhor nota até agora: ${descreverNota(melhorNota)}.`
 }
 
 /** Um resultado só é aceito se todas as perguntas tiverem resposta. */

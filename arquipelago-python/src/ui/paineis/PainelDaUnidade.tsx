@@ -35,6 +35,10 @@ export type PropsDoPainel = {
   readonly respostas: readonly Resposta[]
   readonly resultado: ResultadoDeAvaliacao | null
   readonly aprovadaAntes: boolean
+  /** Tentativas desta unidade, contando a atual. Vem do progresso gravado. */
+  readonly tentativas: number
+  /** Melhor nota guardada desta unidade. Vem do progresso gravado. */
+  readonly melhorNota: ResultadoDeAvaliacao | null
   readonly temProxima: boolean
   readonly aoIrPara: (passo: Passo) => void
   readonly aoAvancar: () => void
@@ -135,11 +139,16 @@ export function PainelDaUnidade(props: PropsDoPainel) {
               Nenhum resultado ainda. Responda a avaliação para ver a nota aqui.
             </p>
           ) : (
+            /* Depois do envio a melhor nota nunca é nula: `registrarResultado`
+               acabou de gravar. O `??` cobre apenas o caso de o progresso ser
+               substituído por fora no meio da sessão. */
             <ResultadoDaUnidade
               conteudo={conteudo}
               respostas={props.respostas}
               resultado={props.resultado}
               aprovadaAntes={props.aprovadaAntes}
+              tentativas={props.tentativas}
+              melhorNota={props.melhorNota ?? props.resultado}
               temProxima={props.temProxima}
               aoRefazer={props.aoRefazer}
               aoVoltarAoEstudo={() => aoIrPara('estudo')}

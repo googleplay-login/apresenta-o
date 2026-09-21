@@ -21,7 +21,7 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 36 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 41 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -35,7 +35,7 @@ funciona, não aparece como botão.
 
 Outros comandos:
 
-    npm test         # 505 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
+    npm test         # 548 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 
@@ -52,6 +52,10 @@ o mouse gira a câmera em volta dela, clicar numa ilha liberada abre a missão e
 inteira leva a pessoa a pé até a ilha seguinte. `Voo livre` (com `Q`/`E` para subir e descer) e
 `Vista de mapa` ficam no HUD. Com o painel aberto, as teclas de movimento param de mover quem quer
 que seja, e `Esc` fecha o painel.
+
+Na aba **Avaliação**, o enunciado diz que a correção roda no navegador e que não é antifraude, o
+envio exige todas as respostas (com a lista das que faltam), e a revisão, depois do envio, explica
+todas as perguntas — certas e erradas — junto do placar de tentativas.
 
 No painel, a aba **Estudo** tem duas seções: *1. Ler no livro* — a parte indicada, o porquê, o que
 procurar e um botão que registra a leitura como feita — e *2. Entender do nosso jeito* — a explicação

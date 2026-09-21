@@ -34,4 +34,8 @@ export const ESTADO_DO_PROJETO = {
   leitura:
     'Marcar a leitura do livro como feita é registro, não permissão: não aprova a unidade, não ' +
     'abre a ponte e não muda nota nenhuma. Quem decide se a pessoa segue é a nota da avaliação.',
+
+  placar:
+    'O placar de tentativas e a melhor nota vêm do progresso gravado, e não de um contador da ' +
+    'tela — por isso continuam certos depois de recarregar a página.',
 } as const

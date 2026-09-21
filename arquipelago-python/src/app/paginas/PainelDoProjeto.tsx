@@ -1,6 +1,7 @@
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { descreverReferencia } from '../../content/referenciaLivro'
 import { ESTADO_DO_PROJETO } from '../../learning/resumoDoProjeto'
+import { AVISO_DE_HONESTIDADE } from '../../learning/avaliacao'
 import { Cartao } from '../../ui/components/Cartao'
 import { Chip } from '../../ui/components/Chip'
 
@@ -137,6 +138,14 @@ export function PainelDoProjeto() {
             <code>leitura é registro</code>
           </dt>
           <dd>{ESTADO_DO_PROJETO.leitura}</dd>
+          <dt>
+            <code>avaliação honesta</code>
+          </dt>
+          <dd>{AVISO_DE_HONESTIDADE}</dd>
+          <dt>
+            <code>placar é do progresso</code>
+          </dt>
+          <dd>{ESTADO_DO_PROJETO.placar}</dd>
         </dl>
       </Cartao>
 

@@ -1,21 +1,22 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 6 (o estudo com o livro na tela)**.
+Atualizado em **21/09/2026**, ao final da **Etapa 7 (a avaliação revisada)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 6 concluída; 7 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 7 concluída; 8 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
-| Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado |
+| Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **2**, com migração da versão anterior e aviso honesto de falha |
 | Execução de código (Pyodide) | **não existe** — Etapa 9 |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
 | Testes de navegador | **não executados** — não há navegador neste ambiente |
+| Avaliação | **existe e é honesta**: enunciado que diz que a correção roda no cliente, envio exige todas as respostas, revisão explica todas as perguntas (Etapa 7) |
 
 Badge honesto: **o protótipo já ensina e já avalia, com o mundo desenhado — mas ninguém viu o
 desenho, porque não há navegador aqui.**
@@ -25,7 +26,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 505 testes, em 30 arquivos
+    npm test             # 548 testes, em 32 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -162,6 +163,25 @@ Verificação:
   3D**), e três testes em `src/app/App.test.tsx` travam o retorno do texto velho. A contagem de
   testes saiu da página: número em tela envelhece, e envelheceu.
 
+### Etapa 7 — a avaliação revisada
+
+- `learning/avaliacao.ts`: `AVISO_DE_HONESTIDADE` (o texto que o enunciado é obrigado a dar),
+  `numerosEmBranco()`, `textoDePendencias()`, `acertosMinimos()` — medido em inteiros, e não com
+  `Math.ceil(total * 0.8)` — e `textoDoPlacar()`, que compara a nota atual com a melhor guardada;
+- `ui/paineis/AvaliacaoDaUnidade.tsx`: o aviso de honestidade antes das perguntas, a lista das
+  perguntas em branco **pelos números**, um atalho por pendência que leva o foco até a pergunta, e
+  `aria-describedby` ligando o botão de enviar ao estado;
+- `ui/paineis/ResultadoDaUnidade.tsx`: placar de tentativas e melhor nota (vindos do progresso
+  gravado), o que foi marcado em cada erro, explicação em **todas** as perguntas, e foco no anúncio
+  do resultado ao aparecer (D-036, D-037);
+- `content/validadorDeConteudo.ts`: enunciado com 20 caracteres ou mais, explicação com 40 ou mais e
+  diferente de qualquer alternativa, proibição de "todas as anteriores" e limite de alternativas
+  corretas destacadas por tamanho (D-038);
+- **defeito de conteúdo corrigido:** em `u01`, as cinco corretas eram as mais longas; nas quatro
+  unidades, 11 de 20 perguntas passavam por esse atalho. As quatro unidades foram reescritas;
+- **documento cumprido:** os documentos prometiam o aviso de honestidade desde a Etapa 2, e ele não
+  existia na tela. Agora existe, com teste.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -196,7 +216,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 36 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 41 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Pyodide não instalado | Sem execução de código no navegador | Etapa 9, que traz o pacote junto com o Web Worker (D-026) |
 
@@ -209,11 +229,12 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 7 — a avaliação.** As regras de aprovação existem desde a Etapa 2 e a tela de avaliação
-desde a Etapa 3; o que a Etapa 7 acrescenta é a avaliação de verdade, revisada: enunciado que não
-entrega a resposta, revisão pergunta a pergunta depois do envio, o placar com tentativas e melhor
-nota, e a recusa explicada quando o envio está incompleto. O que **não** entra nesta etapa: execução
-de código (Etapa 9) e exercícios com correção automática (Etapa 10).
+**Etapa 8 — persistência local e protótipo jogável.** A persistência existe desde a Etapa 3 (com
+formato versionado, migração e aviso honesto de falha); a Etapa 8 fecha as pontas: o que acontece
+quando o armazenamento está indisponível, o que a pessoa vê quando a gravação falha no meio do
+percurso, o estado do protótipo inteiro do começo ao fim num navegador real, e a alternativa
+acessível sem 3D revista de ponta a ponta. O que **não** entra nesta etapa: Pyodide (Etapa 9) e
+correção automática de exercícios (Etapa 10).
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
 leitura recomendada fala em capítulo e seção, não em página.

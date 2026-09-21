@@ -199,7 +199,7 @@ export const u02Variaveis: ConteudoDaUnidade = {
     {
       id: 'p2-1',
       enunciado: 'Depois de `pontos = 10` e `pontos = pontos + 5`, quanto vale `pontos`?',
-      alternativas: ['5', '10', 'O Python recusa, porque o nome já existia', '15'],
+      alternativas: ['5', '10', 'O Python recusa a segunda linha, porque o nome já existia antes', '15'],
       correta: 3,
       explicacao:
         'O valor antigo (10) é usado no cálculo do lado direito, e o resultado (15) passa a ser o novo valor guardado sob o mesmo nome. Guardar por cima do valor antigo é o uso normal de uma variável.',
@@ -215,7 +215,7 @@ export const u02Variaveis: ConteudoDaUnidade = {
     {
       id: 'p2-3',
       enunciado: 'Qual é o resultado de `7 / 2` no Python 3?',
-      alternativas: ['3', '4', '3.5', 'Dá erro, porque 7 não é divisível por 2'],
+      alternativas: ['3', '4', '3.5', 'Dá erro, porque 7 não é divisível por 2 e o resultado não é inteiro'],
       correta: 2,
       explicacao:
         'A divisão comum sempre devolve decimal quando o resultado não é exato. Para descartar a parte decimal de propósito, existe `//`, que daria 3.',
@@ -224,10 +224,10 @@ export const u02Variaveis: ConteudoDaUnidade = {
       id: 'p2-4',
       enunciado: 'Por que `print("Idade: " + 34)` dá erro?',
       alternativas: [
-        'Porque o texto tem dois pontos, que é caractere reservado',
-        'Porque o sinal de mais junta textos, e o 34 é número: é preciso converter com `str(34)` antes de juntar',
-        'Porque `print` aceita apenas um argumento por vez',
-        'Porque números grandes precisam de vírgula em vez de mais',
+        'Porque o texto tem dois pontos, que é um caractere reservado do Python',
+        'Porque o `+` junta textos, e `34` é número: converta com `str(34)`',
+        'Porque `print` aceita um único argumento por chamada, e aqui há dois valores',
+        'Porque números grandes precisam de vírgula entre eles em vez do sinal de mais',
       ],
       correta: 1,
       explicacao:
@@ -237,10 +237,10 @@ export const u02Variaveis: ConteudoDaUnidade = {
       id: 'p2-5',
       enunciado: 'Para que serve uma linha que começa com `#`?',
       alternativas: [
-        'Para o Python executar aquela linha com prioridade',
-        'Para marcar o arquivo como pronto para publicação',
-        'Para dividir o programa em arquivos separados',
-        'Para o Python ignorar completamente aquela linha, servindo de anotação para quem lê o código',
+        'Para o Python executar aquela linha antes de todas as outras',
+        'Para marcar o arquivo como pronto para publicação no servidor',
+        'Para dividir o programa em arquivos separados, um por linha de código',
+        'Para o Python ignorar aquela linha; é anotação para quem lê o código',
       ],
       correta: 3,
       explicacao:

@@ -55,6 +55,7 @@
 | Foco do teclado (`mundo` x `painel`) | `sessao.foco`, com `podeMoverCamera()`; ver D-012 |
 | Aprovação anterior à tentativa atual | `sessao.aprovadaAntes`, fotografada **ao abrir** a ilha |
 | Leitura feita (registro, não permissão) | `ProgressoDaUnidade.leituraFeita`, via `marcarLeituraFeita()`; ver D-033 |
+| Tentativas e melhor nota da unidade | `ProgressoDaUnidade.tentativas` e `.melhorNota`, lidas pelo painel — nunca contadas na tela (D-037) |
 
 Os estados de tela ficam em `src/state/`, e não em `src/learning/`: eles descrevem **onde o
 estudante está na interface**, e não mudam nenhuma regra de aprovação. Nenhum deles desbloqueia
@@ -81,10 +82,18 @@ resposta que não mude quando a aprovação acontece (D-023).
    função para corrigir pergunta por pergunta.
 9. **5 perguntas por unidade, 4 acertos aprovam** — no protótipo. O mínimo permanece 80% de
    acertos reais se o número de perguntas mudar.
-10. **Desbloquear apenas a próxima unidade.** Aprovar a 3 não abre a 5 se a 4 estiver pendente.
-11. **Sem antifraude, e dizendo isso.** A correção roda no cliente; o enunciado informa que quem
-    quiser ver as respostas consegue, e que o objetivo é aprender.
-12. **A leitura recomendada é passo visível, e o marcador de leitura não é permissão.** Marcar a
+10. **Sem antifraude, e dizendo isso.** A correção roda no cliente; o enunciado informa, antes das
+    perguntas, que quem quiser ver as respostas consegue, e que o objetivo é aprender. O texto é uma
+    constante única, com teste (D-036).
+11. **A revisão explica todas as perguntas**, certas e erradas, e mostra o que foi marcado em cada
+    erro. Explicar só o que a pessoa errou pressupõe que acertar dispensa entender (D-036).
+12. **O placar é fato do percurso**, e não contador de tela: tentativas e melhor nota vêm do
+    progresso gravado, e continuam certas depois de recarregar a página (D-037).
+13. **Desbloquear apenas a próxima unidade.** Aprovar a 3 não abre a 5 se a 4 estiver pendente.
+14. **A alternativa correta não se destaca pelo tamanho**, e a unidade não pode ter mais da metade
+    das perguntas com a correta sendo a mais longa. O que se mede é entendimento, não a extensão da
+    frase (D-038).
+15. **A leitura recomendada é passo visível, e o marcador de leitura não é permissão.** Marcar a
     leitura como feita é **registro**: não aprova a unidade, não abre ponte, não muda nota, não conta
     tentativa e não move o passo. Unidade bloqueada recusa o marcador, como recusa resultado (D-033).
 
@@ -105,6 +114,9 @@ resposta que não mude quando a aprovação acontece (D-023).
 | Botão de controle de câmera em máquina sem WebGL | Seria controle sem efeito (D-009) |
 | Marcar leitura como pré-requisito de aprovação | Ninguém consegue verificar se alguém leu; viraria obstáculo ou mentira |
 | Marcar leitura sozinho ao abrir o estudo | Registraria um ato que não aconteceu |
+| Contar tentativas num `useState` da tela | Mente depois de recarregar a página (D-037) |
+| Alternativa correta sempre a mais longa | Ensina a acertar por tamanho, sem saber o assunto (D-038) |
+| "Todas as anteriores" como alternativa | Não mede entendimento nenhum |
 | Prometer número de página sem o PDF em mãos | Página inventada é conteúdo inventado (D-010) |
 
 ## O que ainda precisa de decisão
