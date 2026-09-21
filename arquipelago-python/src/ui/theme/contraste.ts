@@ -1,29 +1,29 @@
 /**
- * Calculo de contraste segundo a WCAG 2.1.
+ * Cálculo de contraste segundo a WCAG 2.1.
  *
- * Funcao pura, sem dependencia de DOM ou de React. Existe para que a paleta
- * derivada das referencias visuais seja VERIFICADA por teste, e nao apenas
- * escolhida a olho: cor de texto sobre cor de fundo erra o minimo de leitura
- * com muita facilidade.
+ * Função pura, sem dependência de DOM ou de React. Existe para que a paleta
+ * derivada das referências visuais seja VERIFICADA por teste, e não apenas
+ * escolhida a olho: cor de texto sobre cor de fundo erra o mínimo de leitura com
+ * muita facilidade.
  *
- * Referencia da formula: WCAG 2.1, "relative luminance" 1.4.3 (contraste minimo).
+ * Referência da fórmula: WCAG 2.1, luminância relativa (critério 1.4.3).
  */
 
-/** Cor no formato `#rrggbb` (minusculo ou maiusculo). */
+/** Cor no formato `#rrggbb` (maiúsculas ou minúsculas). */
 export type Cor = string
 
 const FORMATO_HEX = /^#[0-9a-f]{6}$/
 
-/** Valida e normaliza uma cor. Lanca se o formato for invalido. */
+/** Valida e normaliza uma cor. Lança se o formato for inválido. */
 export function normalizarCor(cor: Cor): string {
   const normalizada = cor.trim().toLowerCase()
   if (!FORMATO_HEX.test(normalizada)) {
-    throw new Error(`Cor invalida: "${cor}". Formato esperado: #rrggbb`)
+    throw new Error(`Cor inválida: "${cor}". Formato esperado: #rrggbb`)
   }
   return normalizada
 }
 
-/** Converte `#rrggbb` nos tres canais 0-255. */
+/** Converte `#rrggbb` nos três canais 0-255. */
 export function canaisRgb(cor: Cor): readonly [number, number, number] {
   const normalizada = normalizarCor(cor)
   return [
@@ -39,13 +39,13 @@ function linearizar(canal: number): number {
   return proporcao <= 0.03928 ? proporcao / 12.92 : ((proporcao + 0.055) / 1.055) ** 2.4
 }
 
-/** Luminancia relativa (0 = preto, 1 = branco). */
+/** Luminância relativa (0 = preto, 1 = branco). */
 export function luminanciaRelativa(cor: Cor): number {
   const [r, g, b] = canaisRgb(cor)
   return 0.2126 * linearizar(r) + 0.7152 * linearizar(g) + 0.0722 * linearizar(b)
 }
 
-/** Razao de contraste entre duas cores. Vai de 1 (identicas) a 21 (preto/branco). */
+/** Razão de contraste entre duas cores. Vai de 1 (idênticas) a 21 (preto e branco). */
 export function razaoContraste(uma: Cor, outra: Cor): number {
   const primeira = luminanciaRelativa(uma)
   const segunda = luminanciaRelativa(outra)
@@ -54,18 +54,18 @@ export function razaoContraste(uma: Cor, outra: Cor): number {
   return (maisClara + 0.05) / (maisEscura + 0.05)
 }
 
-/** Contraste minimo da WCAG AA para texto normal. */
+/** Contraste mínimo da WCAG AA para texto normal. */
 export const LIMIAR_AA_TEXTO_NORMAL = 4.5
 
-/** Contraste minimo da WCAG AA para texto grande (>= 24px, ou >= 18.66px em negrito). */
+/** Contraste mínimo da WCAG AA para texto grande (≥ 24px, ou ≥ 18,66px em negrito). */
 export const LIMIAR_AA_TEXTO_GRANDE = 3
 
-/** Arredonda a razao para exibicao em relatorio (2 casas). */
+/** Arredonda a razão para exibição em relatório (duas casas). */
 export function arredondarRazao(razao: number): number {
   return Math.round(razao * 100) / 100
 }
 
-/** Verdadeiro se o par atende ao minimo da WCAG AA. */
+/** Verdadeiro se o par atende ao mínimo da WCAG AA. */
 export function atendeAA(
   primeiroPlano: Cor,
   fundo: Cor,

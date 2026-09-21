@@ -1,111 +1,125 @@
 # ETAPAS
 
-Regra do processo: **executa-se somente a etapa ou subetapa autorizada.** Aprovacao
-de uma etapa nao autoriza a seguinte. Se uma etapa envolver sistemas demais, ela e
-dividida antes de comecar.
+Regra do processo: **executa-se somente a etapa ou subetapa autorizada.** Aprovação de uma etapa
+não autoriza a seguinte. Se uma etapa envolver sistemas demais, ela é dividida antes de começar.
+E erro encontrado é corrigido **antes** de avançar.
 
-Legenda de estado: `concluida` - `em andamento` - `nao iniciada`
+Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 
 | Etapa | Escopo | Estado |
 |---|---|---|
-| 0 | Analise dos anexos, identificacao do livro, plano das tres primeiras ilhas | **concluida** |
-| 1 | Fundacao: projeto, tema visual e documentacao | **em andamento (1.1 concluida)** |
-| 2 | Dominio e progressao, testados | nao iniciada |
-| 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | nao iniciada |
-| 4 | Tres ilhas e as pontes | nao iniciada |
-| 5 | Navegacao e avatar | nao iniciada |
-| 6 | Estudo e leitura do livro na tela | nao iniciada |
-| 7 | Avaliacao | nao iniciada |
-| 8 | Persistencia local e prototipo jogavel | nao iniciada |
-| 9 | Prova de conceito de Pyodide | nao iniciada |
-| 10 | Exercicios avaliados automaticamente | nao iniciada |
-| 11 | Expansao curricular, em lotes de 2 a 3 unidades | nao iniciada |
-| 12 | Recursos complementares | nao iniciada |
-| 13 | Polimento, acessibilidade e desempenho | nao iniciada |
-| 14 | Auditoria e entrega | nao iniciada |
+| 0 | Análise dos anexos, identificação do livro, plano das três primeiras ilhas | **concluída** |
+| 1 | Fundação: projeto, tema visual e documentação | **concluída** (1.1 e 1.2) |
+| 2 | Domínio e progressão, testados | **concluída** |
+| 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | não iniciada |
+| 4 | Três ilhas e as pontes | não iniciada |
+| 5 | Navegação e avatar | não iniciada |
+| 6 | Estudo e leitura do livro na tela | não iniciada |
+| 7 | Avaliação | não iniciada |
+| 8 | Persistência local e protótipo jogável | não iniciada |
+| 9 | Prova de conceito de Pyodide | não iniciada |
+| 10 | Exercícios com correção automática | não iniciada |
+| 11 | Expansão curricular, em lotes de 2 a 3 unidades | não iniciada |
+| 12 | Recursos complementares | não iniciada |
+| 13 | Polimento, acessibilidade e desempenho | não iniciada |
+| 14 | Auditoria e entrega | não iniciada |
 
 ---
 
-## Etapa 0 - Analise e plano (concluida em 21/09/2026)
+## Etapa 0 — Análise e plano (concluída em 21/09/2026)
 
-Inspecao do repositorio, identificacao do livro, mapa curricular preliminar,
-proposta tecnica, riscos e divisao das etapas. Nenhum codigo escrito.
+Inspeção do repositório, identificação do livro, mapa curricular preliminar, proposta técnica,
+riscos e divisão das etapas. Nenhum código escrito.
 
 **Aprendizados que mudaram o plano:**
-- o repositorio e **publico** - o que obrigou a decisao D-003 (PDF e imagens de
-  terceiros nunca versionados);
-- as imagens de referencia nao chegaram ao disco - a analise visual e estimativa,
+
+- o repositório é **público** — o que obrigou à decisão D-003 (PDF e imagens de terceiros nunca
+  versionados);
+- as imagens de referência não chegaram ao disco — a análise visual é estimativa, e está
   registrada como tal;
-- o PDF do livro nao esta disponivel - toda pagina ficou `null` (D-010);
-- as referencias visuais sao uma **aplicacao 3D de verdade** de outro projeto, e
-  uma delas e um video dela - o que confirma o requisito de entregar aplicacao, e
-  nao maquete nem gravacao.
+- o PDF do livro não está disponível — toda página ficou `null` (D-010);
+- as referências visuais são uma **aplicação 3D de verdade** de outro projeto, e uma delas é um
+  vídeo dela — o que confirma o requisito de entregar aplicação, e não maquete nem gravação.
 
-## Etapa 1 - Fundacao (em andamento)
+## Etapa 1 — Fundação (concluída)
 
-Dividida em subetapas porque envolve projeto, tema e documentacao ao mesmo tempo.
+Dividida em subetapas porque envolvia projeto, tema e documentação ao mesmo tempo.
 
-### 1.1 - Projeto, tema visual e documentacao. **CONCLUIDA em 21/09/2026**
+### 1.1 — Projeto, tema visual e documentação (concluída em 21/09/2026)
 
-Entregue:
-- projeto Vite + React + TypeScript em `arquipelago-python/`, com versoes exatas
-  fixadas e `package-lock.json`;
-- tema visual derivado das referencias, com **fonte unica de tokens** e teste de
-  contraste WCAG AA;
-- as 4 primeiras unidades mapeadas ao livro, em dado tipado, com pagina
-  `referencia-pendente`;
-- os 10 documentos de continuidade em `docs/`;
-- esqueleto de `src/` com a responsabilidade e os limites de cada pasta escritos
-  no proprio diretorio;
-- servidor de desenvolvimento escutando em `0.0.0.0`, compativel com preview remoto.
+- projeto Vite + React + TypeScript em `arquipelago-python/`, com versões exatas fixadas e
+  `package-lock.json`;
+- tema visual derivado das referências, com **fonte única de tokens** e teste de contraste
+  WCAG AA;
+- as 4 primeiras unidades mapeadas ao livro, em dado tipado, com página `referencia-pendente`;
+- os documentos de continuidade em `docs/`;
+- esqueleto de `src/` com a responsabilidade e os limites de cada pasta escritos no próprio
+  diretório;
+- servidor de desenvolvimento escutando em `0.0.0.0`, compatível com preview remoto.
 
-**Limite explicito:** nenhum 3D, nenhuma aula, nenhuma pergunta, nenhum
-armazenamento, nenhum Pyodide. A pagina inicial **nao tem um unico botao**, por
-D-009.
+### 1.2 — Guia de estilo navegável (concluída em 21/09/2026)
 
-### 1.2 - Previa visual do tema (a autorizar)
+- segunda página (`#/tema`) com a linguagem visual em **espécimes**: paleta lida dos tokens,
+  escala tipográfica, etiquetas de estado, amostras do rótulo de ilha e da faixa de teclas;
+- **tabela de contraste medida na hora**, a partir dos pares declarados pela interface;
+- navegação por hash, sem dependência nova (D-016);
+- nenhum controle falso: nada clicável no guia, e os espécimes do mundo 3D estão rotulados como
+  espécimes;
+- correção de acentuação em todo o código (D-015) e trava automática em `qa/acentuacao.test.ts`.
 
-Objetivo: uma pagina que mostre a linguagem visual funcionando - ceu, mar, painel
-creme, chips, tipografia - **sem** 3D e **sem** conteudo pedagogico, para validar o
-tema antes de investir na cena.
+**Limite explícito:** nenhum 3D, nenhuma aula, nenhuma pergunta, nenhum armazenamento, nenhum
+Pyodide.
 
-Nao inclui: ilha, ponte, camera, Three.js.
+## Etapa 2 — Domínio e progressão (concluída em 21/09/2026)
 
-> Aguardando autorizacao. Nao iniciada.
+`src/learning/` implementado como funções puras e testadas:
+
+| Arquivo | O que faz |
+|---|---|
+| `avaliacao.ts` | Nota, aprovação com 80% reais em aritmética inteira, exibição que nunca arredonda para cima, correção das respostas, recusa de envio em branco |
+| `percurso.ts` | Estado de cada unidade, desbloqueio de uma por vez, registro de tentativas, melhor nota, progresso versionado e serializável |
+| `resumoDoProjeto.ts` | Frases da interface montadas a partir das constantes, para a tela não poder mentir |
+
+**Nada disto tem tela ainda.** É proposital: as regras vêm antes da interface, e não no meio dela.
+
+## Etapa 3 — Primeira ilha 3D (proposta, não iniciada)
+
+Escopo proposto, a ser detalhado na autorização: **uma** ilha com o ciclo completo funcionando
+ponta a ponta — missão, leitura recomendada, explicação, prática, avaliação de 5 perguntas,
+aprovação e ponte liberada. Uma ilha só, com tudo funcionando, **antes** de existir a segunda.
+
+Já decidido para esta etapa:
+
+- Three.js via React Three Fiber e Drei (primeira dependência de 3D a entrar);
+- câmera com rotação limitada, mouse e teclado, e a **máquina de foco** de D-012;
+- alternativa acessível em lista, com o mesmo ciclo e as mesmas regras;
+- tratamento de WebGL indisponível, com caminho alternativo funcional.
 
 ---
 
-## Etapas seguintes - escopo previsto, nao detalhado
+## Etapas seguintes — escopo previsto, não detalhado
 
-O detalhamento de cada uma sera feito na autorizacao da propria etapa. Registro do
-que **nao** pode ser antecipado:
+O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **2** - `src/learning/` com funcoes puras: aprovacao (nota real >= 80 antes de
-  arredondar), disponibilidade, efeito da reprovacao, desbloqueio apenas da proxima
-  unidade. Testado com Vitest. **Sem React e sem Three.js.**
-- **3** - primeira ilha 3D com o ciclo completo funcionando ponta a ponta. Uma ilha
-  so, com tudo funcionando, **antes** de existir a segunda. E aqui que a maquina de
-  foco de teclado (D-012) entra.
-- **4** - tres ilhas e as pontes, com o desenho da cena lendo a decisao de
-  `src/learning/`.
-- **5** - navegacao e avatar.
-- **6** - estudo: leitura recomendada, explicacao original, diagrama do livro.
-- **7** - avaliacao: 5 perguntas, exigir resposta em todas, corrigir apos envio.
-- **8** - persistencia local versionada e prototipo jogavel.
-- **9** - prova de conceito de Pyodide em Web Worker, carregado sob demanda.
-- **10** - exercicios com correcao automatica.
-- **11** - expansao curricular em lotes de 2 a 3 unidades, uma autorizacao por lote.
-- **12** - recursos complementares.
-- **13** - polimento, acessibilidade e desempenho.
-- **14** - auditoria e entrega.
+- **4** — três ilhas e as pontes, com a cena lendo a decisão de `src/learning/`.
+- **5** — navegação e avatar.
+- **6** — estudo: leitura recomendada, explicação original, diagrama do livro.
+- **7** — avaliação: as perguntas de verdade, exigir resposta em todas, corrigir após envio.
+- **8** — persistência local versionada e protótipo jogável.
+- **9** — prova de conceito de Pyodide em Web Worker, carregado sob demanda.
+- **10** — exercícios com correção automática.
+- **11** — expansão curricular em lotes de 2 a 3 unidades, uma autorização por lote.
+- **12** — recursos complementares.
+- **13** — polimento, acessibilidade e desempenho.
+- **14** — auditoria e entrega.
 
-## Requisitos do prototipo minimo
+## Requisitos do protótipo mínimo
 
-- 3 ilhas: 1 disponivel e 2 bloqueadas.
+- 3 ilhas: 1 disponível e 2 bloqueadas.
 - 5 perguntas por ilha.
 - Aprovar com 4 de 5 (80%).
-- Ponte liberada apos a aprovacao.
+- Ponte liberada após a aprovação.
 - Progresso salvo localmente.
 - Mouse e teclado.
-- Alternativa acessivel sem 3D.
-- Tratamento de falha de WebGL e de armazenamento indisponivel.
+- Alternativa acessível sem 3D.
+- Tratamento de falha de WebGL e de armazenamento indisponível.

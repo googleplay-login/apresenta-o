@@ -1,17 +1,17 @@
 /**
- * Tokens visuais do Arquipelago Python - FONTE UNICA DE VERDADE das cores,
- * raios e espacamentos.
+ * Tokens visuais do Arquipélago Python — FONTE ÚNICA DE VERDADE das cores,
+ * raios, espaçamentos e tipografia.
  *
- * De onde vem: das tres imagens de referencia fornecidas pelo usuario
- * (capturas de uma aplicacao 3D navegavel de outro projeto). A leitura esta
- * documentada em `docs/ART_DIRECTION.md`.
+ * De onde vêm: das três imagens de referência fornecidas pelo usuário (capturas
+ * de uma aplicação 3D navegável de outro projeto). A leitura está documentada em
+ * `docs/ART_DIRECTION.md`.
  *
- * Limite honesto: as cores foram lidas VISUALMENTE nas imagens. Os arquivos
- * nao chegaram ao disco, entao nao houve extracao por software. Os valores
- * sao proximos, nao medidos.
+ * Limite honesto: as cores foram lidas VISUALMENTE nas imagens. Os arquivos não
+ * chegaram ao disco, então não houve extração por software. Os valores são
+ * próximos, não medidos.
  *
- * Regra: nenhuma cor e escrita duas vezes. O CSS consome estas cores atraves
- * das variaveis geradas por `tokensComoVariaveisCss()`.
+ * Regra: nenhuma cor é escrita duas vezes. O CSS consome estas cores através das
+ * variáveis geradas por `tokensComoVariaveisCss()`.
  */
 import type { CSSProperties } from 'react'
 import type { Cor } from './contraste'
@@ -38,7 +38,7 @@ export const cores = {
 
   texto: {
     principal: '#2A2A2A',
-    secundario: '#5A554E',
+    secundario: '#554F48',
     sobreEscuro: '#F2F2F0',
   },
 
@@ -64,28 +64,28 @@ export const cores = {
     fundoElevado: '#1E1E1E',
     borda: '#333333',
   },
-} as const satisfies Record<string, unknown>
+} as const
 
 /**
- * Vocabulario visual derivado das referencias. As cores dos chips de estado
- * sao escuras com texto claro - exceto o ambar, que exige texto escuro.
+ * Vocabulário visual derivado das referências. As cores dos estados são escuras
+ * com texto claro — exceto o âmbar, que exige texto escuro.
  * O teste `tokens.test.ts` verifica cada par declarado abaixo.
  */
 export const coresDeEstado = {
   /**
-   * Ainda com nevoa: nao ha conteudo construido.
-   * Cinza quente escuro (#5C5852) e nao o cinza claro da nevoa: o cinza claro
-   * nao atinge 4.5:1 com texto claro por cima. Foi o teste de contraste que
+   * Ainda com névoa: não há conteúdo construído.
+   * Cinza quente escuro (#5C5852), e não o cinza claro da névoa: o cinza claro
+   * não atinge 4,5:1 com texto claro por cima. Foi o teste de contraste que
    * reprovou a primeira escolha.
    */
   planejada: '#5C5852',
-  /** Em construcao nesta etapa do desenvolvimento. */
-  emConstrucao: cores.acento.ambar,
-  /** Construida e revisada. */
-  pronta: cores.acento.verde,
+  /** Em construção nesta etapa do desenvolvimento. */
+  emConstrucao: '#C9A063',
+  /** Construída e revisada. */
+  pronta: '#0F5A4A',
 } as const
 
-/** Cor de texto obrigatoria para cada chip de estado (o ambar exige texto escuro). */
+/** Cor de texto obrigatória para cada etiqueta de estado (o âmbar exige texto escuro). */
 export const textoDeEstado = {
   planejada: cores.texto.sobreEscuro,
   emConstrucao: cores.texto.principal,
@@ -121,18 +121,18 @@ export const tipografia = {
 
 /** Um par texto-sobre-fundo declarado pela interface e verificado por teste. */
 export type ParDeContraste = {
-  /** Onde este par aparece, em portugues, para a mensagem de falha do teste. */
+  /** Onde este par aparece, em português, para a mensagem de falha do teste. */
   readonly onde: string
   readonly primeiroPlano: Cor
   readonly fundo: Cor
-  /** Texto grande (>= 24px ou >= 18.66px em negrito) tem limiar menor na WCAG AA. */
+  /** Texto grande (≥ 24px ou ≥ 18,66px em negrito) tem limiar menor na WCAG AA. */
   readonly textoGrande?: boolean
 }
 
 /**
  * Todos os pares texto/fundo que a interface usa hoje. O teste percorre esta
- * lista e falha se algum par nao atingir o minimo da WCAG AA. Ao adicionar um
- * par novo na interface, adicione aqui tambem.
+ * lista e falha se algum par não atingir o mínimo da WCAG AA. Ao adicionar um par
+ * novo na interface, adicione aqui também.
  */
 export const PARES_DE_CONTRASTE: readonly ParDeContraste[] = [
   {
@@ -141,7 +141,7 @@ export const PARES_DE_CONTRASTE: readonly ParDeContraste[] = [
     fundo: cores.painel.fundo,
   },
   {
-    onde: 'texto secundario no painel creme',
+    onde: 'texto secundário no painel creme',
     primeiroPlano: cores.texto.secundario,
     fundo: cores.painel.fundo,
   },
@@ -151,7 +151,7 @@ export const PARES_DE_CONTRASTE: readonly ParDeContraste[] = [
     fundo: cores.painel.fundoElevado,
   },
   {
-    onde: 'texto secundario no painel creme elevado',
+    onde: 'texto secundário no painel creme elevado',
     primeiroPlano: cores.texto.secundario,
     fundo: cores.painel.fundoElevado,
   },
@@ -161,49 +161,59 @@ export const PARES_DE_CONTRASTE: readonly ParDeContraste[] = [
     fundo: cores.chrome.fundo,
   },
   {
-    onde: 'texto sobre chip verde (unidade pronta)',
-    primeiroPlano: cores.texto.sobreEscuro,
-    fundo: cores.acento.verde,
+    onde: 'aba ativa na pílula de navegação',
+    primeiroPlano: cores.chrome.fundo,
+    fundo: cores.texto.sobreEscuro,
   },
   {
-    onde: 'texto sobre chip verde claro',
-    primeiroPlano: cores.texto.sobreEscuro,
-    fundo: cores.acento.verdeClaro,
-  },
-  {
-    onde: 'texto sobre chip ambar (texto escuro por exigencia de contraste: branco sobre este ambar da apenas 2.4:1)',
-    primeiroPlano: textoDeEstado.emConstrucao,
-    fundo: coresDeEstado.emConstrucao,
-  },
-  {
-    onde: 'texto sobre chip de unidade planejada (ainda com nevoa)',
-    primeiroPlano: textoDeEstado.planejada,
-    fundo: coresDeEstado.planejada,
-  },
-  {
-    onde: 'texto sobre chip de unidade pronta',
+    onde: 'texto sobre etiqueta verde (unidade pronta)',
     primeiroPlano: textoDeEstado.pronta,
     fundo: coresDeEstado.pronta,
   },
   {
-    onde: 'texto principal sobre o ceu (faixa clara)',
+    onde: 'texto sobre etiqueta verde clara',
+    primeiroPlano: cores.texto.sobreEscuro,
+    fundo: cores.acento.verdeClaro,
+  },
+  {
+    onde: 'texto sobre etiqueta âmbar (texto escuro por exigência de contraste: branco sobre este âmbar dá apenas 2,4:1)',
+    primeiroPlano: textoDeEstado.emConstrucao,
+    fundo: coresDeEstado.emConstrucao,
+  },
+  {
+    onde: 'texto sobre etiqueta de unidade planejada (ainda com névoa)',
+    primeiroPlano: textoDeEstado.planejada,
+    fundo: coresDeEstado.planejada,
+  },
+  {
+    onde: 'texto principal sobre o céu (faixa clara)',
     primeiroPlano: cores.texto.principal,
     fundo: cores.ceu.horizonte,
   },
   {
-    onde: 'titulo do cartao de contexto sobre o ceu',
+    onde: 'título do cartão sobre o céu',
     primeiroPlano: cores.texto.principal,
     fundo: cores.ceu.alto,
     textoGrande: true,
   },
   {
-    onde: 'texto do rodape no letreiro escuro',
+    onde: 'rótulo de ilha sobre o céu (pílula escura)',
+    primeiroPlano: cores.texto.sobreEscuro,
+    fundo: cores.chrome.fundoElevado,
+  },
+  {
+    onde: 'faixa de teclas sobre o mar',
+    primeiroPlano: cores.texto.principal,
+    fundo: cores.painel.fundoElevado,
+  },
+  {
+    onde: 'texto do rodapé no letreiro escuro',
     primeiroPlano: cores.texto.sobreEscuro,
     fundo: cores.chrome.fundo,
   },
 ]
 
-/** Converte os tokens em variaveis CSS. O CSS nunca repete um valor literal. */
+/** Converte os tokens em variáveis CSS. O CSS nunca repete um valor literal. */
 export function tokensComoVariaveisCss(): CSSProperties {
   return {
     '--ceu-alto': cores.ceu.alto,

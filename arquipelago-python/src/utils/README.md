@@ -1,16 +1,16 @@
-# `src/utils` - auxiliares genericos
+# `src/utils` — auxiliares genéricos
 
-Funcoes auxiliares puras, pequenas e sem conhecimento de dominio.
+Funções auxiliares puras, pequenas e sem conhecimento de domínio.
 
-## Regra que define este diretorio
+## Regra que define este diretório
 
-Se uma funcao precisa saber o que e uma unidade, uma ilha ou uma resposta de
-avaliacao, ela **nao** pertence aqui: pertence ao dominio correspondente. Este
-diretorio e para coisas como formatacao de texto e de numero, que servem a qualquer
-assunto.
+Se uma função precisa saber o que é uma unidade, uma ilha ou uma resposta de
+avaliação, ela **não** pertence aqui: pertence ao domínio correspondente. Este
+diretório é para coisas como formatação de texto e de número, que servem a
+qualquer assunto.
 
 ## Estado
 
-Vazio de proposito: nesta etapa nada foi escrito que nao pertencesse a um dominio.
-A descricao de referencia do livro, por exemplo, condiciona ao formato do livro e por
+**Vazio de propósito**: nada foi escrito que não pertencesse a um domínio. A
+descrição da referência ao livro, por exemplo, depende do formato do livro — por
 isso ficou em `src/content/referenciaLivro.ts`.

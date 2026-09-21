@@ -1,16 +1,16 @@
-# `src/types` - tipos compartilhados
+# `src/types` — tipos compartilhados
 
-Tipos usados por modulos que nao devem depender uns dos outros.
+Tipos usados por módulos que não devem depender uns dos outros.
 
-## Regra que define este diretorio
+## Regra que define este diretório
 
-Um tipo que pertence a um dominio fica **junto do dominio**. Exemplo: `ReferenciaLivro`
-mora em `src/content/referenciaLivro.ts`, porque e uma regra do conteudo do livro, e
-nao um tipo generico.
+Um tipo que pertence a um domínio fica **junto do domínio**. Exemplo:
+`ReferenciaLivro` mora em `src/content/referenciaLivro.ts`, porque é uma regra do
+conteúdo do livro, e não um tipo genérico.
 
-Aqui entram apenas os tipos genuinamente transversais. Se este diretorio comecar a
-acumular tipo de tudo, ele virou um deposito e perdeu a funcao.
+Aqui entram apenas os tipos genuinamente transversais. Se este diretório começar a
+acumular tipo de tudo, ele virou depósito e perdeu a função.
 
 ## Estado
 
-Vazio de proposito: nesta etapa nenhum tipo e compartilhado entre dominios.
+**Vazio de propósito**: nesta etapa nenhum tipo é compartilhado entre domínios.

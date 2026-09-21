@@ -6,7 +6,7 @@ const raiz = document.getElementById('root')
 
 if (!raiz) {
   throw new Error(
-    'Elemento #root nao encontrado em index.html. A aplicacao nao pode montar sem ele.',
+    'Elemento #root não encontrado em index.html. A aplicação não pode montar sem ele.',
   )
 }
 

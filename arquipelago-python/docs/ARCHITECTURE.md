@@ -2,56 +2,65 @@
 
 ## A regra que sustenta tudo
 
-> Uma unica fonte de verdade decide. O mundo 3D e os paineis de interface apenas
-> **leem** a decisao e a apresentam.
+> Uma única fonte de verdade decide. O mundo 3D e os painéis de interface apenas **leem** a
+> decisão e a apresentam.
 
 ```
-                    src/learning/            <- DECIDE (funcoes puras, testaveis)
-                   /      |       \
+                    src/learning/            ← DECIDE (funções puras, testáveis)
+                   /      │       \
         src/world/    src/ui/    src/persistence/
-        (Three.js)   (paineis)   (localStorage)
-        desenha      mostra      grava e le
+        (Three.js)   (painéis)   (localStorage)
+        desenha      mostra      grava e lê
 ```
 
-Consequencias praticas, e o motivo de cada uma:
+Consequências práticas, e o motivo de cada uma:
 
-| Se a regra ficasse no 3D... | ...entao |
+| Se a regra ficasse no 3D… | …então |
 |---|---|
-| Clicar na ponte poderia liberar a ilha | A ponte passa a ser consequencia de uma decisao, nao a decisao |
-| Mudar parametro na URL poderia pular etapa | A interface consulta a mesma funcao antes de abrir qualquer tela |
-| Os paineis e a cena poderiam discordar | Existem duas fontes de verdade - o defeito que queremos evitar |
-| A regra nao seria testavel sem montar a cena | `src/learning/` roda em teste puro, sem browser e sem WebGL |
+| Clicar na ponte poderia liberar a ilha | A ponte passa a ser consequência de uma decisão, e não a decisão |
+| Mudar parâmetro na URL poderia pular etapa | A interface consulta a mesma função antes de abrir qualquer tela |
+| Os painéis e a cena poderiam discordar | Existiriam duas fontes de verdade — o defeito que queremos evitar |
+| A regra não seria testável sem montar a cena | `src/learning/` roda em teste puro, sem navegador e sem WebGL |
 
 ## Mapa das pastas
 
 | Pasta | Responsabilidade | Estado |
 |---|---|---|
-| `src/app/` | Composicao da aplicacao e da pagina inicial | Existe |
-| `src/world/` | Cena 3D: ilhas, pontes, camera, ceu, agua, nevoa. **Sem regra de aprovacao** | Vazio |
-| `src/learning/` | Regras pedagogicas puras: aprovacao, disponibilidade, reprovacao | Vazio |
-| `src/content/` | Conteudo pedagogico como dado tipado, separado dos componentes | Iniciado |
-| `src/state/` | Estado em memoria da sessao | Vazio |
-| `src/persistence/` | Gravacao e leitura do progresso, versionado | Vazio |
+| `src/app/` | Casca da aplicação, rotas por hash e as duas páginas atuais | Existe |
+| `src/world/` | Cena 3D: ilhas, pontes, câmera, céu, água, névoa. **Sem regra de aprovação** | Vazio |
+| `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação | Existe e testado |
+| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes | Iniciado |
+| `src/state/` | Estado em memória da sessão | Vazio |
+| `src/persistence/` | Gravação e leitura do progresso, versionado | Vazio |
 | `src/python/` | Pyodide em Web Worker, sob demanda | Vazio |
-| `src/ui/` | Componentes, tema e tokens visuais | Iniciado |
+| `src/ui/` | Componentes, tema, tokens visuais e mostruário de cores | Existe |
 | `src/types/` | Apenas tipos transversais | Vazio |
-| `src/utils/` | Apenas auxiliares genericos sem dominio | Vazio |
-| `docs/` | Documentacao de continuidade | Existe |
+| `src/utils/` | Apenas auxiliares genéricos sem domínio | Vazio |
+| `qa/` | Verificações do projeto (não da aplicação), como a trava de acentuação | Existe |
+| `docs/` | Documentação de continuidade | Existe |
 
-Cada pasta vazia tem um `README.md` explicando sua responsabilidade e seus limites.
-O motivo e simples: quem continuar o trabalho abre a pasta e encontra a regra ali,
-no lugar onde ela importa.
+Cada pasta vazia tem um `README.md` explicando sua responsabilidade e seus limites. Quem
+continuar o trabalho abre a pasta e encontra a regra ali, onde ela importa.
 
-## Piso tecnico
+## As duas páginas de hoje
 
-Vite + React + TypeScript. Three.js via React Three Fiber e Drei entra na Etapa 3.
-CSS responsivo sem framework. `localStorage` na Etapa 8 (IndexedDB so se o volume
-exigir, e com autorizacao). Vitest para teste de logica; Playwright para teste de
-navegador.
+| Rota | Página | Para quê |
+|---|---|---|
+| `#/` | Painel do projeto | Dizer o estado real: o que existe, o que não existe, o que está planejado |
+| `#/tema` | Guia de estilo | Mostrar a linguagem visual em espécimes, antes de existir cena 3D |
 
-### Versoes resolvidas em 21/09/2026
+Nenhuma das duas tem botão. Elas têm **links** de navegação, e links funcionam de verdade — a
+regra do projeto proíbe apenas alvo clicável **sem efeito**.
 
-| Pacote | Versao | Observacao |
+## Piso técnico
+
+Vite + React + TypeScript. Three.js via React Three Fiber e Drei entra na Etapa 3. CSS
+responsivo sem framework. `localStorage` na Etapa 8 (IndexedDB só se o volume exigir, e com
+autorização). Vitest para lógica e render; Playwright para teste de navegador.
+
+### Versões resolvidas em 21/09/2026
+
+| Pacote | Versão | Observação |
 |---|---|---|
 | node | 22.22.3 | ambiente de desenvolvimento |
 | npm | 10.9.8 | |
@@ -61,35 +70,55 @@ navegador.
 | typescript | 7.0.2 | |
 | vitest | 5.0.1 | |
 | @types/react / @types/react-dom | 19.3.0 | |
+| @types/node | 26.6.2 | apenas tipos, para a verificação de qualidade em `qa/` |
 
-Versoes fixadas **exatas** (sem `^`) e `package-lock.json` versionado. O objetivo e
-que outra pessoa, em outra maquina, obtenha exatamente a mesma instalacao.
-Ver `DECISIONS.md` (D-008).
+Versões fixadas **exatas** (sem `^`) e `package-lock.json` versionado, para que outra pessoa, em
+outra máquina, obtenha exatamente a mesma instalação. Ver `DECISIONS.md` (D-008).
 
-## Tema visual: fonte unica
+## Tema visual: fonte única
 
-`src/ui/theme/tokens.ts` e o unico lugar onde uma cor e escrita. O CSS consome
-variaveis geradas por `tokensComoVariaveisCss()`. Nenhuma cor literal em `.css` -
-e o teste `tokens.test.ts` verifica os pares de contraste declarados.
+`src/ui/theme/tokens.ts` é o único lugar onde uma cor é escrita. O CSS consome variáveis geradas
+por `tokensComoVariaveisCss()`. `src/ui/theme/amostras.ts` lê os tokens para o guia de estilo, e
+`contraste.ts` mede os pares. O teste percorre `PARES_DE_CONTRASTE` e falha se algum par não
+atingir a WCAG AA.
 
-Consequencia: mudar a paleta e mudar **um** arquivo, e o teste avisa se a mudanca
-quebrar a leitura.
+Mudar a paleta é mudar um arquivo — e o teste avisa se a mudança quebrar a leitura.
 
-## Ambiente de execucao (preview remoto)
+**Única exceção:** `index.html` tem uma cor literal (`#dce4ec`) aplicada antes de o React montar,
+para evitar o flash branco, quando ainda não existe JavaScript para gerar a variável. Está
+comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única vazou.
 
-O navegador do usuario **nao** e a maquina onde o servidor roda. Por isso:
+## Travas automáticas
+
+| Verificação | Onde | O que impede |
+|---|---|---|
+| Contraste dos pares de cor | `src/ui/theme/contraste.test.ts` | Texto ilegível por escolha de cor |
+| Nenhum botão na página | `src/app/App.test.tsx` | Controle sem efeito (D-009) |
+| Nenhuma página inventada | `src/content/planoDeUnidades.test.ts` | Referência de página não verificada (D-010) |
+| Aprovação só com 80% reais | `src/learning/avaliacao.test.ts` | Exibição que contradiz a decisão |
+| Nenhum atalho de desbloqueio | `src/learning/percurso.test.ts` | Pular portão por rota, clique ou ordem |
+| Acentuação do português | `qa/acentuacao.test.ts` | Texto sem acento no código e na documentação (D-015) |
+
+## Ambiente de execução (preview remoto)
+
+O navegador do usuário **não** é a máquina onde o servidor roda. Por isso:
 
 - o servidor de desenvolvimento escuta em `0.0.0.0` (`server.host: true`);
-- `allowedHosts` inclui o dominio do proxy de preview (`.e2b.app`), porque o Vite
-  recusa requisicao com Host desconhecido;
-- nada no codigo do navegador chama `localhost` para alcancar servico remoto:
-  caminhos relativos.
+- `allowedHosts` inclui o domínio do proxy de preview (`.e2b.app`), porque o Vite recusa
+  requisição com Host desconhecido;
+- nada no código do navegador chama `localhost` para alcançar serviço remoto: caminhos
+  relativos.
 
-## Decisoes de configuracao com motivo
+## Decisões de configuração com motivo
 
-- `tsconfig.json` usa `"types": []` para nao incluir automaticamente os tipos de
-  todo pacote instalado. A referencia ao Vite e explicita em `src/vite-env.d.ts`.
-- Um unico `tsconfig.json`, em vez dos tres do modelo padrao do Vite: menos arquivo,
-  mesma checagem. `npm run build` roda `tsc --noEmit` antes de empacotar.
-- Teste em ambiente `node`. `jsdom` sera adicionado quando existir teste de
-  componente - nao antes.
+- `tsconfig.json` usa `"types": []` para não incluir automaticamente os tipos de todo pacote
+  instalado. As duas referências necessárias são explícitas, no arquivo que precisa delas:
+  `vite/client` em `src/vite-env.d.ts` e `node` em `qa/acentuacao.test.ts`.
+- `@types/node` é a única dependência de tipos fora do React, e existe por um motivo concreto: o
+  teste de acentuação lê arquivos do projeto e o `tsc` recusava `node:fs` sem ela. Não vai para o
+  pacote final.
+- Um único `tsconfig.json`, em vez dos três do modelo padrão do Vite: menos arquivo, mesma
+  checagem. `npm run build` roda `tsc --noEmit` antes de empacotar.
+- Teste em ambiente `node`. `jsdom` será adicionado quando existir teste de interação — não
+  antes.
+- `qa/` fica fora de `src/` porque contém verificação do **projeto**, não da aplicação.

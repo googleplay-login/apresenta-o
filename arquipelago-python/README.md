@@ -1,71 +1,81 @@
-# Arquipelago Python
+# Arquipélago Python
 
-Mundo 3D navegavel para aprender Python, acompanhando o livro
-*Curso Intensivo de Python* (Eric Matthes, Novatec, 2016).
+Mundo 3D navegável para aprender Python, acompanhando o livro *Curso Intensivo de Python*
+(Eric Matthes, Novatec, 2016).
 
-Cada ilha suspensa e uma unidade de aprendizagem: entra-se na ilha, consulta-se a
-missao, estuda-se a parte correspondente do livro, le-se uma explicacao original,
-pratica-se, faz-se a avaliacao e - alcancando 80% - a ponte para a proxima ilha se
-abre.
+Cada ilha suspensa é uma unidade de aprendizagem: entra-se na ilha, consulta-se a missão,
+estuda-se a parte correspondente do livro, lê-se uma explicação original, pratica-se, faz-se a
+avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
-## Estado atual: fundacao
+## Estado atual: fundação e regras
 
-> **Este projeto ainda nao e um jogo e nao e um curso.** Hoje existe o alicerce:
-> projeto, tema visual, plano das quatro primeiras unidades e documentacao.
-> Nao existe 3D, aula, pergunta, progresso salvo nem execucao de Python.
+> **Este projeto ainda não é um jogo e não é um curso.** Hoje existe o alicerce: projeto, tema
+> visual, guia de estilo, plano das quatro primeiras unidades, regras de progressão testadas e
+> documentação.
+>
+> **Não existe** 3D, aula, missão, pergunta de avaliação, tela do ciclo de estudo, progresso
+> salvo nem execução de Python.
 
-Os numeros exatos e o que comprova cada afirmacao estao em `docs/HANDOFF.md` e
-`docs/TEST_REPORT.md`. A pagina inicial do proprio site tambem lista, em texto, o
-que existe e o que ainda nao existe - ela **nao tem nenhum botao**, de proposito
-(decisao D-009).
+Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
+`docs/TEST_REPORT.md`. O próprio site lista, em texto, o que existe e o que ainda não existe — e
+**não tem nenhum botão**, de propósito (decisão D-009).
 
-## Comecar
+## Começar
 
     npm install
     npm run dev
 
 Outros comandos:
 
-    npm test         # testes de contraste do tema e do plano de unidades
-    npm run build    # checagem de tipos + build de producao
-    npm run preview  # servir o build de producao
+    npm test         # testes das regras, do tema, do plano de unidades e da acentuação
+    npm run build    # checagem de tipos + build de produção
+    npm run preview  # servir o build de produção
 
-## Documentacao
+Páginas:
 
-Toda a memoria do projeto esta em [`docs/`](./docs). Se voce esta continuando o
-trabalho, comece por [`docs/HANDOFF.md`](./docs/HANDOFF.md).
+| Rota | O que é |
+|---|---|
+| `#/` | Painel do projeto: estado real, unidades planejadas, como verificar |
+| `#/tema` | Guia de estilo: paleta, tipografia, espécimes e contraste medido |
+
+## Documentação
+
+Toda a memória do projeto está em [`docs/`](./docs). Se você está continuando o trabalho,
+comece por [`docs/HANDOFF.md`](./docs/HANDOFF.md).
 
 | Documento | Assunto |
 |---|---|
-| [BRIEF](./docs/BRIEF.md) | O que e e o que nao e o projeto |
-| [ARCHITECTURE](./docs/ARCHITECTURE.md) | Camadas, pastas, versoes |
-| [DECISIONS](./docs/DECISIONS.md) | Decisoes, com motivo e consequencia |
-| [BOOK_MAP](./docs/BOOK_MAP.md) | Livro, capitulos e o mapa das unidades |
-| [CONTENT_GUIDE](./docs/CONTENT_GUIDE.md) | Como escrever conteudo |
-| [STATE_MACHINE](./docs/STATE_MACHINE.md) | Ciclo de estudo e regras de aprovacao |
-| [ART_DIRECTION](./docs/ART_DIRECTION.md) | Paleta e direcao visual |
-| [STAGES](./docs/STAGES.md) | Etapas e o que esta autorizado |
+| [BRIEF](./docs/BRIEF.md) | O que é e o que não é o projeto |
+| [ARCHITECTURE](./docs/ARCHITECTURE.md) | Camadas, pastas, versões, travas automáticas |
+| [DECISIONS](./docs/DECISIONS.md) | Decisões, com motivo e consequência |
+| [BOOK_MAP](./docs/BOOK_MAP.md) | Livro, capítulos e o mapa das unidades |
+| [CONTENT_GUIDE](./docs/CONTENT_GUIDE.md) | Como escrever conteúdo |
+| [STATE_MACHINE](./docs/STATE_MACHINE.md) | Ciclo de estudo e regras de aprovação |
+| [ART_DIRECTION](./docs/ART_DIRECTION.md) | Paleta e direção visual |
+| [STAGES](./docs/STAGES.md) | Etapas e o que está autorizado |
 | [HANDOFF](./docs/HANDOFF.md) | Estado atual |
 | [TEST_REPORT](./docs/TEST_REPORT.md) | O que foi testado, de verdade |
 
 ## Aviso de direitos
 
-O livro e **fonte de estudo e mapa**, nunca texto reproduzido. O PDF **nao** esta
-neste repositorio e nao vai estar (o repositorio e publico). Aulas, exemplos,
-exercicios e perguntas sao originais. Ver `docs/CONTENT_GUIDE.md`.
+O livro é **fonte de estudo e mapa**, nunca texto reproduzido. O PDF **não** está neste
+repositório e não vai estar (o repositório é público). Aulas, exemplos, exercícios e perguntas são
+originais. Ver `docs/CONTENT_GUIDE.md`.
 
 ## Estrutura
 
     src/
-      app/          composicao da aplicacao
-      world/        cena 3D - SEM regra de aprovacao
-      learning/     regras pedagogicas puras - FONTE UNICA DE VERDADE
-      content/      conteudo como dado tipado
-      state/        estado em memoria
+      app/          casca da aplicação, rotas e páginas
+      world/        cena 3D — SEM regra de aprovação
+      learning/     regras pedagógicas puras — FONTE ÚNICA DE VERDADE
+      content/      conteúdo como dado tipado
+      state/        estado em memória
       persistence/  progresso salvo, versionado
       python/       Pyodide em Web Worker, sob demanda
-      ui/           componentes e tema
+      ui/           componentes, tema e mostruário de cores
       types/        apenas tipos transversais
-      utils/        apenas auxiliares sem dominio
+      utils/        apenas auxiliares sem domínio
+    qa/             verificações do projeto (não da aplicação)
+    docs/           documentação de continuidade
 
 Cada pasta tem um `README.md` com sua responsabilidade e seus limites.

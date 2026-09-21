@@ -11,19 +11,19 @@ describe('invariantes do plano de unidades', () => {
     expect(PLANO_DE_UNIDADES.length).toBeGreaterThan(0)
   })
 
-  it('nao repete identificadores', () => {
+  it('não repete identificadores', () => {
     const ids = PLANO_DE_UNIDADES.map((unidade) => unidade.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('usa ordem contigua comecando em 1', () => {
+  it('usa ordem contígua começando em 1', () => {
     const ordens = PLANO_DE_UNIDADES.map((unidade) => unidade.ordem).sort((a, b) => a - b)
     expect(ordens).toEqual(Array.from({ length: ordens.length }, (_, indice) => indice + 1))
   })
 
-  it('nao deixa titulo nem tema vazios', () => {
+  it('não deixa título nem tema vazios', () => {
     for (const unidade of PLANO_DE_UNIDADES) {
-      expect(unidade.titulo.trim().length, `Unidade ${unidade.id} sem titulo`).toBeGreaterThan(0)
+      expect(unidade.titulo.trim().length, `Unidade ${unidade.id} sem título`).toBeGreaterThan(0)
       expect(unidade.tema.trim().length, `Unidade ${unidade.id} sem tema`).toBeGreaterThan(0)
     }
   })
@@ -35,63 +35,69 @@ describe('invariantes do plano de unidades', () => {
     expect(idsEmOrdem(PLANO_DE_UNIDADES)[0]).toBe('u01-primeiro-programa')
   })
 
-  it('nao inventa numero de pagina enquanto o PDF nao estiver mapeado', () => {
-    // Este e o teste mais importante deste arquivo. Ele existe para impedir que
-    // alguem preencha uma pagina "mais ou menos" sem ter verificado o PDF.
+  it('não inventa número de página enquanto o PDF não estiver mapeado', () => {
+    // Este é o teste mais importante deste arquivo. Ele existe para impedir que
+    // alguém preencha uma página "mais ou menos" sem ter verificado o PDF.
     for (const unidade of PLANO_DE_UNIDADES) {
       const { referencia } = unidade
       if (referencia.status === 'referencia-pendente') {
         expect(
           referencia.paginaImpressa,
-          `Unidade ${unidade.id} esta como pendente mas declara pagina impressa`,
+          `Unidade ${unidade.id} está como pendente mas declara página impressa`,
         ).toBeNull()
         expect(
           referencia.paginaPdf,
-          `Unidade ${unidade.id} esta como pendente mas declara pagina de PDF`,
+          `Unidade ${unidade.id} está como pendente mas declara página de PDF`,
         ).toBeNull()
       }
     }
   })
 
-  it('mantem toda referencia coerente', () => {
+  it('mantém toda referência coerente', () => {
     for (const unidade of PLANO_DE_UNIDADES) {
       expect(
         referenciaEstaCoerente(unidade.referencia),
-        `Referencia incoerente na unidade ${unidade.id}`,
+        `Referência incoerente na unidade ${unidade.id}`,
       ).toBe(true)
     }
   })
 
-  it('aponta as paginas como referencia pendente em vez de exibir numero inventado', () => {
+  it('aponta as páginas como referência pendente em vez de exibir número inventado', () => {
     for (const unidade of PLANO_DE_UNIDADES) {
-      expect(descreverReferencia(unidade.referencia)).toContain('referencia pendente')
+      expect(descreverReferencia(unidade.referencia)).toContain('referência pendente')
     }
+  })
+
+  it('mostra o capítulo e o título do capítulo na descrição', () => {
+    const primeira = PLANO_DE_UNIDADES[0]
+    expect(primeira).toBeDefined()
+    expect(descreverReferencia(primeira!.referencia)).toBe('Cap. 1 — Iniciando (página: referência pendente)')
   })
 })
 
-describe('coerencia de ReferenciaLivro', () => {
+describe('coerência de ReferenciaLivro', () => {
   const base: ReferenciaLivro = {
     capitulo: 2,
-    tituloCapitulo: 'Variaveis e tipos de dados simples',
+    tituloCapitulo: 'Variáveis e tipos de dados simples',
     recorteProposto: 'Recorte de teste.',
     paginaImpressa: null,
     paginaPdf: null,
     status: 'referencia-pendente',
   }
 
-  it('aceita referencia pendente sem paginas', () => {
+  it('aceita referência pendente sem páginas', () => {
     expect(referenciaEstaCoerente(base)).toBe(true)
   })
 
-  it('aceita referencia confirmada com as duas paginas', () => {
+  it('aceita referência confirmada com as duas páginas', () => {
     expect(
       referenciaEstaCoerente({ ...base, status: 'confirmada', paginaImpressa: 21, paginaPdf: 27 }),
     ).toBe(true)
   })
 
-  it('recusa confirmada com apenas uma das paginas', () => {
-    // Pagina impressa e pagina de PDF sao coisas diferentes: o deslocamento
-    // nao e constante e nao pode ser presumido.
+  it('recusa confirmada com apenas uma das páginas', () => {
+    // Página impressa e página de PDF são coisas diferentes: o deslocamento
+    // não é constante e não pode ser presumido.
     expect(
       referenciaEstaCoerente({ ...base, status: 'confirmada', paginaImpressa: 21, paginaPdf: null }),
     ).toBe(false)
@@ -100,11 +106,11 @@ describe('coerencia de ReferenciaLivro', () => {
     ).toBe(false)
   })
 
-  it('recusa pendente com pagina preenchida', () => {
+  it('recusa pendente com página preenchida', () => {
     expect(referenciaEstaCoerente({ ...base, paginaImpressa: 21, paginaPdf: 27 })).toBe(false)
   })
 
-  it('descreve a referencia confirmada com o numero da pagina impressa', () => {
+  it('descreve a referência confirmada com o número da página impressa', () => {
     const confirmada: ReferenciaLivro = {
       ...base,
       status: 'confirmada',
@@ -112,17 +118,17 @@ describe('coerencia de ReferenciaLivro', () => {
       paginaPdf: 27,
     }
     expect(descreverReferencia(confirmada)).toBe(
-      'Cap. 2 - Variaveis e tipos de dados simples (pagina 21)',
+      'Cap. 2 — Variáveis e tipos de dados simples (página 21)',
     )
   })
 })
 
-describe('estado de construcao das unidades', () => {
-  it('nao declara nenhuma unidade como pronta nesta etapa do projeto', () => {
-    // Garante que a pagina de status nao prometa conteudo que ainda nao existe.
+describe('estado de construção das unidades', () => {
+  it('não declara nenhuma unidade como pronta nesta etapa do projeto', () => {
+    // Garante que a página de status não prometa conteúdo que ainda não existe.
     // Quando a primeira unidade ficar pronta de verdade, este teste deve ser
-    // atualizado junto com a entrega - e nao antes.
-    const descricao = PLANO_DE_UNIDADES.map((unidade: UnidadePlanejada) => unidade.situacao)
-    expect(descricao.every((situacao) => situacao === 'planejada')).toBe(true)
+    // atualizado junto com a entrega — e não antes.
+    const situacoes = PLANO_DE_UNIDADES.map((unidade: UnidadePlanejada) => unidade.situacao)
+    expect(situacoes.every((situacao) => situacao === 'planejada')).toBe(true)
   })
 })

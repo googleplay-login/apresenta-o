@@ -1,8 +1,8 @@
 /*
- * Estilos da aplicacao.
+ * Estilos da aplicação.
  *
- * REGRA: nenhuma cor literal neste arquivo. Toda cor vem de uma variavel CSS
- * gerada por `src/ui/theme/tokens.ts`, que e a fonte unica de verdade e esta
+ * REGRA: nenhuma cor literal neste arquivo. Toda cor vem de uma variável CSS
+ * gerada por `src/ui/theme/tokens.ts`, que é a fonte única de verdade e está
  * coberta por teste de contraste.
  */
 
@@ -27,8 +27,8 @@
   font-size: var(--fonte-corpo);
   line-height: 1.6;
 
-  /* Ceu lavanda palido sobre mar turquesa, com o horizonte marcado - a
-     composicao das imagens de referencia (docs/ART_DIRECTION.md). */
+  /* Céu lavanda pálido sobre mar turquesa, com o horizonte marcado — a
+     composição das imagens de referência (docs/ART_DIRECTION.md). */
   background-image: linear-gradient(
     180deg,
     var(--ceu-alto) 0%,
@@ -44,12 +44,12 @@
   background-size: cover;
 }
 
-/* ---------- Letreiro (faixa escura no topo, como nas referencias) ---------- */
+/* ---------- Letreiro (faixa escura no topo, como nas referências) ---------- */
 
 .letreiro {
   background-color: var(--chrome-fundo);
   color: var(--texto-sobre-escuro);
-  padding: var(--espaco-lg) var(--espaco-md);
+  padding: var(--espaco-lg) var(--espaco-md) var(--espaco-md);
 }
 
 .letreiro__conteudo {
@@ -84,7 +84,44 @@
   color: var(--texto-sobre-escuro);
 }
 
-/* ---------- Conteudo ---------- */
+/* ---------- Abas (pílula de navegação das referências) ---------- */
+
+.abas {
+  background-color: var(--chrome-fundo-elevado);
+  border-bottom: 1px solid var(--chrome-borda);
+}
+
+.abas__conteudo {
+  max-width: var(--largura-conteudo);
+  margin: 0 auto;
+  padding: var(--espaco-sm) var(--espaco-md);
+  display: flex;
+  gap: var(--espaco-sm);
+  overflow-x: auto;
+}
+
+.aba {
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-chip);
+  background-color: transparent;
+  color: var(--texto-sobre-escuro);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: var(--fonte-legenda);
+  letter-spacing: 0.06em;
+}
+
+.aba:hover {
+  background-color: var(--chrome-borda);
+}
+
+.aba--ativa {
+  background-color: var(--texto-sobre-escuro);
+  color: var(--chrome-fundo);
+  font-weight: 600;
+}
+
+/* ---------- Conteúdo ---------- */
 
 .conteudo {
   flex: 1;
@@ -97,7 +134,7 @@
   gap: var(--espaco-lg);
 }
 
-/* ---------- Cartao (painel creme de leitura) ---------- */
+/* ---------- Cartão (painel creme de leitura) ---------- */
 
 .cartao {
   background-color: var(--painel-fundo);
@@ -136,6 +173,16 @@
   color: var(--texto-secundario);
 }
 
+.cartao code,
+.tabela code {
+  font-family: var(--fonte-mono);
+  font-size: 0.92em;
+  background-color: var(--painel-fundo-elevado);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  padding: 1px 6px;
+}
+
 /* ---------- Listas ---------- */
 
 .lista {
@@ -150,7 +197,7 @@
 .lista__item {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: var(--espaco-sm);
 }
 
@@ -169,6 +216,7 @@
 }
 
 .lista--ausente .lista__item {
+  align-items: baseline;
   color: var(--texto-secundario);
 }
 
@@ -197,7 +245,7 @@
   margin-bottom: 0;
 }
 
-/* ---------- Chips de estado ---------- */
+/* ---------- Etiquetas de estado ---------- */
 
 .chip {
   display: inline-block;
@@ -225,7 +273,7 @@
   color: var(--texto-estado-pronta);
 }
 
-/* ---------- Tabela ---------- */
+/* ---------- Tabelas ---------- */
 
 .tabela-rolagem {
   overflow-x: auto;
@@ -264,6 +312,7 @@
 .tabela__numero {
   font-variant-numeric: tabular-nums;
   color: var(--texto-secundario);
+  white-space: nowrap;
 }
 
 .tabela__titulo {
@@ -297,10 +346,174 @@
 
 .comandos dd {
   margin: 0;
+  max-width: 80ch;
   color: var(--texto-secundario);
 }
 
-/* ---------- Rodape (faixa escura, como nas referencias) ---------- */
+/* ---------- Amostras de cor (guia de estilo) ---------- */
+
+.amostras {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: var(--espaco-sm);
+}
+
+.amostra {
+  padding: var(--espaco-sm);
+  border-radius: var(--raio-linha);
+  border: 1px solid var(--painel-borda);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 4.5rem;
+  justify-content: flex-end;
+}
+
+.amostra__nome {
+  font-size: var(--fonte-chip);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.amostra__valor {
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-chip);
+}
+
+/* ---------- Escala tipográfica ---------- */
+
+.escala {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.escala__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espaco-sm);
+  padding: var(--espaco-sm) 0;
+  border-bottom: 1px solid var(--painel-borda);
+}
+
+.escala__item:last-child {
+  border-bottom: none;
+}
+
+.escala__amostra {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.escala__rotulo {
+  margin: 0;
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}
+
+/* ---------- Espécimes do mundo 3D ---------- */
+
+.especime {
+  margin-top: var(--espaco-md);
+}
+
+.especime__rotulo {
+  margin: 0 0 var(--espaco-sm);
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--texto-secundario);
+}
+
+.especime__palco {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-sm);
+  padding: var(--espaco-lg) var(--espaco-md);
+  border-radius: var(--raio-painel);
+  border: 1px solid var(--painel-borda);
+}
+
+.especime__palco--ceu {
+  background-image: linear-gradient(180deg, var(--ceu-alto), var(--ceu-horizonte));
+}
+
+.especime__palco--mar {
+  background-image: linear-gradient(180deg, var(--mar-claro), var(--mar-medio));
+  justify-content: center;
+}
+
+.especime__nota {
+  margin: var(--espaco-sm) 0 0;
+  max-width: 72ch;
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+/* Rótulo de ilha, como aparecerá ancorado no espaço 3D. */
+.pilula {
+  display: inline-block;
+  padding: 4px var(--espaco-md);
+  border-radius: var(--raio-chip);
+  background-color: var(--chrome-fundo-elevado);
+  color: var(--texto-sobre-escuro);
+  font-weight: 600;
+  box-shadow: 0 4px 14px var(--painel-sombra);
+}
+
+.pilula__chip {
+  display: inline-block;
+  padding: 2px var(--espaco-sm);
+  border-radius: var(--raio-chip);
+  background-color: var(--acento-verde);
+  color: var(--texto-sobre-escuro);
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Faixa de teclas, como aparecerá na base da tela. */
+.teclas {
+  margin: 0;
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-chip);
+  background-color: var(--painel-fundo-elevado);
+  font-size: var(--fonte-chip);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--texto-principal);
+}
+
+.teclas kbd {
+  font-family: var(--fonte-mono);
+  font-size: 0.95em;
+  background-color: var(--painel-borda);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* Pastilha de cor usada na tabela de contraste. */
+.pastilha {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 3px;
+  border: 1px solid var(--painel-borda);
+  vertical-align: middle;
+}
+
+/* ---------- Rodapé (faixa escura, como nas referências) ---------- */
 
 .rodape {
   background-color: var(--chrome-fundo);
@@ -340,5 +553,9 @@
 
   .comandos dd {
     margin-bottom: var(--espaco-sm);
+  }
+
+  .especime__palco {
+    padding: var(--espaco-md) var(--espaco-sm);
   }
 }

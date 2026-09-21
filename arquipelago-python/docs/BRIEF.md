@@ -1,67 +1,64 @@
-# BRIEF - Arquipelago Python
+# BRIEF — Arquipélago Python
 
-## O que e
+## O que é
 
-Um **mundo 3D real, navegavel e interativo** para aprender Python. Cada ilha
-suspensa e uma unidade de aprendizagem. O estudante entra na ilha, le a missao,
-estuda a parte correspondente do livro, le uma explicacao original, pratica,
-faz a avaliacao e, alcancando o minimo, ve a ponte para a proxima ilha se abrir.
+Um **mundo 3D real, navegável e interativo** para aprender Python. Cada ilha suspensa é uma
+unidade de aprendizagem. O estudante entra na ilha, lê a missão, estuda a parte correspondente
+do livro, lê uma explicação original, pratica, faz a avaliação e, alcançando o mínimo, vê a
+ponte para a próxima ilha se abrir.
 
-Palavra que define o entregavel: **aplicacao**. Ver *O que este projeto nao e*.
+Palavra que define o entregável: **aplicação**. Ver *O que este projeto não é*.
 
 ## O ciclo principal
 
     entrar na ilha
-      -> consultar a missao
-      -> estudar a parte identificada do livro
-      -> ler a explicacao original
-      -> praticar
-      -> fazer a avaliacao
-      -> nota real >= 80
-      -> ponte liberada
-      -> proxima ilha
+      → consultar a missão
+      → estudar a parte identificada do livro
+      → ler a explicação original
+      → praticar
+      → fazer a avaliação
+      → nota real ≥ 80%
+      → ponte liberada
+      → próxima ilha
 
 ## Fonte de estudo
 
-Eric Matthes, *Curso Intensivo de Python* (traducao de *Python Crash Course*),
-Novatec Editora, 1a edicao, maio de 2016. ISBN 978-85-7522-602-5.
-Original: No Starch Press, 2015, ISBN 978-1-59327-603-4.
+Eric Matthes, *Curso Intensivo de Python* (tradução de *Python Crash Course*), Novatec Editora,
+1ª edição, maio de 2016. ISBN 978-85-7522-602-5. Original: No Starch Press, 2015,
+ISBN 978-1-59327-603-4.
 
-O livro e **fonte de estudo e mapa**, nunca texto a ser reproduzido. Detalhes em
+O livro é **fonte de estudo e mapa**, nunca texto a ser reproduzido. Detalhes em
 `CONTENT_GUIDE.md`.
 
-## Publico
+## Público
 
-Quem esta comecando em Python e aprende melhor com contexto visual, movimento e
-objetivo claro. Nao pressupoe experiencia anterior com programacao.
+Quem está começando em Python e aprende melhor com contexto visual, movimento e objetivo claro.
+Não pressupõe experiência anterior com programação.
 
-## O que este projeto nao e
+## O que este projeto não é
 
-- **Nao e video, nem imagem, nem maquete estatica, nem cartoes com aparencia de ilha.**
-  O mundo tem que ser 3D de verdade, navegavel, com camera e interacao.
-- **Nao tem agente, LLM ou geracao automatica de conteudo.** Nao ha botao de prompt.
-  Todo texto pedagogico e escrito por nos.
-- **Nao tem autenticacao, assinatura, pagamento, multiplayer nem servidor.**
-  Nenhum backend sem autorizacao explicita. O progresso e local.
-- **Nao guarda segredo no cliente** e **nao promete** que executar codigo arbitrario
-  seja seguro.
-- **Nao alega antifraude.** A avaliacao roda no cliente e uma pessoa determinada
-  consegue ver as respostas. Isso e dito ao estudante com todas as letras. O objetivo
-  e aprender, nao policiar.
-- **Nao tem botao sem efeito.** Recurso que ainda nao funciona nao aparece na tela.
+- **Não é vídeo, nem imagem, nem maquete estática, nem cartões com aparência de ilha.** O mundo
+  tem de ser 3D de verdade, navegável, com câmera e interação.
+- **Não tem agente, LLM nem geração automática de conteúdo.** Não há botão de prompt. Todo texto
+  pedagógico é escrito por nós.
+- **Não tem autenticação, assinatura, pagamento, multiplayer nem servidor.** Nenhum backend sem
+  autorização explícita. O progresso é local.
+- **Não guarda segredo no cliente** e **não promete** que executar código arbitrário seja seguro.
+- **Não alega antifraude.** A avaliação roda no cliente e uma pessoa determinada consegue ver as
+  respostas. Isso é dito ao estudante com todas as letras. O objetivo é aprender, não policiar.
+- **Não tem botão sem efeito.** Recurso que ainda não funciona não aparece na tela.
 
 ## Processo de trabalho
 
-Desenvolvimento em etapas pequenas, verificaveis e **aprovadas uma a uma**.
-A aprovacao de uma etapa **nao** autoriza a seguinte. Se uma etapa envolver
-sistemas demais, ela e dividida antes de comecar.
+Desenvolvimento em etapas pequenas, verificáveis e **aprovadas uma a uma**. A aprovação de uma
+etapa **não** autoriza a seguinte. Se uma etapa envolver sistemas demais, ela é dividida antes
+de começar.
 
-Cada etapa termina com um relatorio de 8 itens, terminando em
-"Aguardando sua autorizacao para continuar". O roteiro completo esta em
-`STAGES.md`; o estado atual, em `HANDOFF.md`.
+Cada etapa termina com um relatório de 8 itens, terminando em "Aguardando sua autorização para
+continuar". O roteiro completo está em `STAGES.md`; o estado atual, em `HANDOFF.md`.
 
 ## Acessibilidade
 
-Existe um caminho alternativo completo, sem 3D, que percorre o mesmo ciclo com as
-mesmas regras. Nao e uma versao reduzida: e a mesma aplicacao com outra
-apresentacao. O tema visual tem teste automatico de contraste (WCAG AA).
+Existe um caminho alternativo completo, sem 3D, que percorre o mesmo ciclo com as mesmas regras.
+Não é uma versão reduzida: é a mesma aplicação com outra apresentação. O tema visual tem teste
+automático de contraste (WCAG AA).

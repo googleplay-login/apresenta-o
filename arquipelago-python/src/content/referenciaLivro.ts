@@ -1,40 +1,40 @@
 /**
- * Referencia a uma parte do livro de estudo.
+ * Referência a uma parte do livro de estudo.
  *
- * REGRA INEGOCIAVEL (registrada em docs/CONTENT_GUIDE.md):
- * nunca inventar numero de pagina. Enquanto o PDF nao estiver disponivel no
- * ambiente, `paginaImpressa` e `paginaPdf` ficam `null` e `status` fica
- * `'referencia-pendente'`. Um numero de pagina errado e pior do que nenhum:
- * ele manda o estudante ler a pagina errada.
+ * REGRA INEGOCIÁVEL (registrada em `docs/CONTENT_GUIDE.md`): nunca inventar
+ * número de página. Enquanto o PDF não estiver disponível no ambiente,
+ * `paginaImpressa` e `paginaPdf` ficam `null` e `status` fica
+ * `'referencia-pendente'`. Um número de página errado é pior do que nenhum: ele
+ * manda o estudante ler a página errada.
  */
 
-/** `'confirmada'` exige paginas preenchidas; `'referencia-pendente'` exige `null`. */
+/** `'confirmada'` exige páginas preenchidas; `'referencia-pendente'` exige `null`. */
 export type StatusReferencia = 'confirmada' | 'referencia-pendente'
 
 export type ReferenciaLivro = {
-  /** Numero do capitulo na edicao em portugues (1 a 20 + apendices). */
+  /** Número do capítulo na edição em português (1 a 20 + apêndices). */
   readonly capitulo: number
-  /** Titulo do capitulo. A conferencia do titulo depende do indice do PDF. */
+  /** Título do capítulo. A conferência do título depende do índice do PDF. */
   readonly tituloCapitulo: string
   /**
-   * NOSSA descricao do recorte proposto para esta unidade. Nao e citacao do
-   * livro: o livro e fonte de estudo, nao texto a ser reproduzido.
+   * NOSSA descrição do recorte proposto para esta unidade. Não é citação do
+   * livro: o livro é fonte de estudo, não texto a ser reproduzido.
    */
   readonly recorteProposto: string
-  /** Pagina da edicao impressa. `null` = nao verificada. */
+  /** Página da edição impressa. `null` = não verificada. */
   readonly paginaImpressa: number | null
-  /** Pagina no arquivo PDF usado. `null` = nao verificada. */
+  /** Página no arquivo PDF usado. `null` = não verificada. */
   readonly paginaPdf: number | null
   readonly status: StatusReferencia
 }
 
 /**
- * Verdadeiro se a referencia esta coerente:
- *  - `'confirmada'` exige as duas paginas preenchidas;
- *  - `'referencia-pendente'` exige as duas paginas nulas.
+ * Verdadeiro se a referência está coerente:
+ *  - `'confirmada'` exige as duas páginas preenchidas;
+ *  - `'referencia-pendente'` exige as duas páginas nulas.
  *
- * Pagina impressa e pagina de PDF sao coisas diferentes: o deslocamento entre
- * elas nao e constante e nao pode ser presumido.
+ * Página impressa e página de PDF são coisas diferentes: o deslocamento entre
+ * elas não é constante e não pode ser presumido.
  */
 export function referenciaEstaCoerente(referencia: ReferenciaLivro): boolean {
   const temAsDuasPaginas =
@@ -45,11 +45,11 @@ export function referenciaEstaCoerente(referencia: ReferenciaLivro): boolean {
   return referencia.status === 'confirmada' ? temAsDuasPaginas : naoTemPaginaNenhuma
 }
 
-/** Texto de exibicao da referencia. Mostra "referencia pendente" quando for o caso. */
+/** Texto de exibição da referência. Mostra "referência pendente" quando for o caso. */
 export function descreverReferencia(referencia: ReferenciaLivro): string {
-  const base = `Cap. ${referencia.capitulo} - ${referencia.tituloCapitulo}`
+  const base = `Cap. ${referencia.capitulo} — ${referencia.tituloCapitulo}`
   if (referencia.status === 'confirmada') {
-    return `${base} (pagina ${referencia.paginaImpressa})`
+    return `${base} (página ${referencia.paginaImpressa})`
   }
-  return `${base} (pagina: referencia pendente)`
+  return `${base} (página: referência pendente)`
 }

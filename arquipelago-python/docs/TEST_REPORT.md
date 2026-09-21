@@ -1,12 +1,12 @@
-# RELATORIO DE TESTES
+# RELATÓRIO DE TESTES
 
-Regra deste documento: dizer **o que foi realmente executado**, em que ambiente e
-com que resultado. Teste nao executado aparece como **nao executado**, e nao como
-aprovado por leitura de codigo.
+Regra deste documento: dizer **o que foi realmente executado**, em que ambiente e com que
+resultado. Teste não executado aparece como **não executado**, e não como aprovado por leitura de
+código.
 
 ---
 
-## Execucao de 21/09/2026 - Etapa 1.1
+## Execução de 21/09/2026 — Etapas 1.1, 1.2 e 2
 
 ### Ambiente
 
@@ -19,167 +19,159 @@ aprovado por leitura de codigo.
 | TypeScript | 7.0.2 |
 | Vitest | 5.0.1 |
 | React | 19.3.0 |
-| Navegador disponivel no ambiente | **nenhum** (Chromium e Playwright ausentes) |
+| Navegador disponível no ambiente | **nenhum** (Chromium e Playwright ausentes) |
 
-### 1. Checagem de tipos - EXECUTADO
+### 1. Checagem de tipos — EXECUTADO
 
     npm run typecheck        # tsc --noEmit
 
 **Resultado: passou, sem erro.**
 
-Durante o desenvolvimento, uma falha real foi encontrada e corrigida:
+Falhas reais encontradas e corrigidas durante o desenvolvimento, todas por `tsc`:
 
-    src/app/App.tsx(8,8): error TS2882: Cannot find module or type declarations
-    for side-effect import of './app.css'.
+| Erro | Causa | Correção |
+|---|---|---|
+| `TS2882: Cannot find module or type declarations for side-effect import of './app.css'` | `tsconfig.json` usa `"types": []` de propósito, o que exclui os tipos do Vite — e era deles que vinha a declaração do import de CSS | `src/vite-env.d.ts` com referência explícita a `vite/client` |
+| `TS6133: 'cores' is declared but its value is never read` | A leitura dos tokens saiu do componente para `src/ui/theme/amostras.ts`, e o import ficou | Import ajustado |
+| `TS2554: Expected 4 arguments, but got 3` | Chamada de `registrarResultado` sem a lista de unidades, em um teste | Teste corrigido |
+| `TS2591: Cannot find name 'node:fs'` (3 ocorrências) | O teste de acentuação lê arquivos do projeto, e `tsconfig.json` tem `"types": []` | `@types/node` instalado (26.6.2, apenas tipos) e referência explícita em `qa/acentuacao.test.ts` |
 
-Causa: o `tsconfig.json` usa `"types": []` de proposito, o que impede a inclusao
-automatica dos tipos do Vite - e era justamente desses tipos que vinha a declaracao
-do import de CSS. Correcao: `src/vite-env.d.ts` com referencia explicita a
-`vite/client`. Nao foi o `types: []` que estava errado, era a referencia que faltava.
+O último caso é o mais instrutivo: os **testes passavam** (`npm test` verde), mas o **build
+falhava** — porque `tsc --noEmit` roda dentro de `npm run build` e enxerga o `qa/` depois que ele
+entrou no `tsconfig.json`. Foi pego por rodar a verificação completa depois da mudança, e não por
+confiar na execução anterior.
 
-### 2. Testes automaticos - EXECUTADO
+### 2. Testes automáticos — EXECUTADO
 
     npm test                 # vitest run
 
-**Resultado: 47 testes, 3 arquivos, todos aprovados. Duracao 604 ms.**
+**Resultado: 122 testes, 9 arquivos, todos aprovados.**
 
-| Arquivo | Testes | Resultado |
+| Arquivo | Testes | O que cobre |
 |---|---|---|
-| `src/ui/theme/contraste.test.ts` | 24 | aprovado |
-| `src/content/planoDeUnidades.test.ts` | 14 | aprovado |
-| `src/app/App.test.tsx` | 9 | aprovado |
+| `src/ui/theme/contraste.test.ts` | 26 | Fórmula da WCAG e todos os pares de cor da interface |
+| `src/learning/percurso.test.ts` | 23 | Desbloqueio, reprovação, melhor nota, recusa de atalho, serialização |
+| `src/learning/avaliacao.test.ts` | 19 | Aprovação com 80% reais, exibição que não engana, correção das respostas |
+| `src/content/planoDeUnidades.test.ts` | 15 | Invariantes do plano e da referência ao livro |
+| `src/app/App.test.tsx` | 12 | Casca da aplicação e painel do projeto |
+| `src/ui/theme/amostras.test.ts` | 9 | Mostruário de cores completo |
+| `src/app/paginas/VitrineDoTema.test.tsx` | 8 | Guia de estilo |
+| `src/app/rotas.test.ts` | 6 | Rotas por hash |
+| `qa/acentuacao.test.ts` | 4 | Acentuação do português em código e documentação |
 
-O que eles verificam, de fato:
+Os números por arquivo mudam a cada incremento; a contagem acima é a desta execução.
 
-**Contraste do tema:**
-- extremos da escala WCAG: preto sobre branco = 21:1, cor sobre ela mesma = 1:1;
-- o cinza de referencia `#767676` sobre branco = 4.54:1 (valor classico da WCAG);
-- simetria: a ordem dos argumentos nao muda a razao;
-- luminancia relativa dos extremos (0 e 1);
-- normalizacao de cor e recusa de formato invalido (lanca erro em vez de devolver
-  valor errado);
-- limiares em `atendeAA`, incluindo que ambar sobre branco reprova ate em texto
-  grande;
-- **todos os 13 pares texto/fundo declarados pela interface**;
-- a regressao mais provavel: texto branco sobre o ambar (`#C9A063`) da 2.4:1 e
-  **nao** passa - o teste garante que o chip ambar continue com texto escuro;
-- as variaveis CSS geradas contem as cores declaradas e nao tem nome duplicado.
+#### Provas que valem destacar
 
-**Plano de unidades e referencia de livro:**
-- pelo menos uma unidade, sem identificador repetido, com ordem contigua a partir de 1;
-- titulo e tema nao vazios;
-- **nenhuma unidade declara pagina enquanto o PDF nao estiver mapeado** (D-010) -
-  este e o teste que impede alguem de preencher um numero de pagina nao verificado;
-- referencia coerente: `'confirmada'` exige as duas paginas; `'referencia-pendente'`
-  exige as duas nulas;
-- recusa `'confirmada'` com apenas uma das paginas - porque pagina impressa e pagina
-  de PDF sao coisas diferentes e o deslocamento entre elas nao pode ser presumido;
-- a descricao exibida contem "referencia pendente" em vez de numero inventado;
-- nenhuma unidade esta marcada como pronta.
+**Aprovação e exibição nunca se contradizem** (`avaliacao.test.ts`): dois testes percorrem todos
+os totais de 1 a 60 e todos os acertos possíveis — cerca de 3.600 combinações — verificando que:
 
-**Renderizacao da pagina inicial** (`react-dom/server`, sem navegador e sem
-dependencia nova):
-- a arvore de componentes monta e gera HTML, sem lancar erro;
-- **nao existe um unico `<button>`, `<a>`, `onclick` ou `href` no HTML gerado** -
-  e o teste que sustenta a decisao D-009;
-- o nome do projeto e a etapa atual aparecem;
-- as quatro unidades planejadas aparecem, com titulo e tema;
-- "referencia pendente" aparece pelo menos uma vez por unidade, e a pagina **nao**
-  contem nenhum padrao "pagina \<numero\>";
-- a pagina declara que o mundo 3D nao existe, que o Pyodide nao existe e que o livro
-  nao esta no repositorio.
+- aprovado implica pelo menos 80% reais;
+- se reprovou, o percentual exibido é menor que 80; se aprovou, é 80 ou mais.
 
-**Nao provado por este teste:** aparencia, layout, contraste na tela, navegacao por
-teclado e comportamento no navegador. Um render estatico nao e um navegador.
+É o que impede a existência de uma nota que apareça como aprovada e reprove (ou o contrário).
 
-### 3. Build de producao - EXECUTADO
+**Nenhum atalho de desbloqueio** (`percurso.test.ts`): aprovar a unidade 1 abre somente a 2, e
+registrar resultado na 3 lança erro enquanto a 2 não estiver aprovada. Registrar resultado de
+unidade inexistente também lança.
+
+**A regra nova encontrou um teste ruim.** Ao endurecer o domínio (D-017), um teste escrito por mim
+falhou — ele registrava resultado em unidade bloqueada. A decisão foi corrigir o **teste**, e não
+afrouxar a **regra**.
+
+**Referência de página** (`planoDeUnidades.test.ts`): nenhuma unidade pode declarar página
+enquanto o PDF não for verificado, e `'confirmada'` exige as duas páginas — a impressa e a do PDF.
+
+**Acentuação** (`qa/acentuacao.test.ts`): varre `src/`, `docs/`, `README.md`, `package.json` e
+`index.html` atrás de palavras que nunca são escritas sem acento em português, removendo antes os
+identificadores de código. Palavras ambíguas (`esta`/`está`, `e`/`é`, `da`/`dá`) ficam de fora de
+propósito. **Este teste não substitui revisão** — ele impede a repetição do erro mais comum.
+
+### 3. Build de produção — EXECUTADO
 
     npm run build            # tsc --noEmit && vite build
 
 **Resultado: passou.**
 
-    dist/index.html                0.63 kB | gzip:  0.39 kB
-    dist/assets/index-*.css        5.06 kB | gzip:  1.30 kB
-    dist/assets/index-*.js       231.51 kB | gzip: 72.87 kB
-    23 modulos transformados, 157 ms
+    dist/index.html                0.63 kB │ gzip:  0.40 kB
+    dist/assets/index-*.css        8.68 kB │ gzip:  1.84 kB
+    dist/assets/index-*.js       243.29 kB │ gzip: 76.38 kB
+    ✓ built in 156ms
 
-Os 231 kB de JavaScript sao o proprio React. Three.js **nao** esta instalado nem
-incluido nesta etapa.
+Os 243 kB de JavaScript são o próprio React mais o código do projeto. **Three.js não está
+instalado nem incluído nesta etapa.**
 
-### 4. Servidor de desenvolvimento e host do preview - EXECUTADO
+### 4. Servidor de desenvolvimento e host do preview — EXECUTADO
 
     npm run dev
 
-Subiu em 193 ms, escutando em `0.0.0.0:5173` (confirmado: a porta 5173 aparece
-ligada ao endereco `0.0.0.0`, e nao a `127.0.0.1`).
+Subiu em 193 ms, escutando em `0.0.0.0:5173` (a porta aparece ligada ao endereço `0.0.0.0`, e
+não a `127.0.0.1`).
 
-Verificacao por requisicao HTTP, com resultados reais:
+Verificação por requisição HTTP, com resultados reais:
 
-| Requisicao | Resultado |
+| Requisição | Resultado |
 |---|---|
 | `Host: localhost` | **200**, 988 bytes |
-| `Host: 5173-abc123.e2b.app` (dominio do preview) | **200**, 988 bytes |
-| `Host: evil.example.com` (host nao autorizado) | **403** - bloqueado pelo Vite |
+| `Host: 5173-abc123.e2b.app` (domínio do preview) | **200**, 988 bytes |
+| `Host: evil.example.com` (host não autorizado) | **403** — bloqueado pelo Vite |
 
-O terceiro caso e o que prova que `allowedHosts: ['.e2b.app']` esta funcionando como
-restricao, e nao como permissao ampla: eu **nao** usei `allowedHosts: true`.
+O terceiro caso é o que prova que `allowedHosts: ['.e2b.app']` funciona como restrição, e não como
+permissão ampla: **não** foi usado `allowedHosts: true`.
 
-O HTML servido contem `lang="pt-BR"`, o titulo "Arquipelago Python" e a cor de fundo
-de pre-pintura, na ordem correta.
+### 5. Arquitetura de tokens no build — EXECUTADO
 
-### 5. Arquitetura de tokens no build de producao - EXECUTADO
-
-Verificacao de que a fonte unica de cores sobrevive ao empacotamento:
-
-| Verificacao | Resultado |
+| Verificação | Resultado |
 |---|---|
-| Cores dos tokens presentes em `dist/assets/*.js` | **7 de 7** conferidas (`#0f5a4a`, `#c9a063`, `#f6f3eb`, `#5c5852`, `#121212`, `#5fb3b8`, `#c7d2e8`) |
-| Cores literais em `src/app/app.css` | **nenhuma** - o CSS so usa `var(--...)` |
-| Variaveis CSS efetivamente usadas no CSS de producao | **39** usos de `var(--...)` |
+| Cores dos tokens presentes em `dist/assets/*.js` | **7 de 7** conferidas |
+| Cores literais em `src/app/app.css` | **nenhuma** — o CSS só usa `var(--...)` |
+| Variáveis CSS efetivamente usadas no CSS de produção | **39** usos de `var(--...)` |
 
-As cores aparecem no JavaScript porque sao injetadas como estilo embutido no
-elemento raiz, e o CSS resolve `var(--...)` pela heranca de propriedades CSS. E o
-desenho previsto em D-005, confirmado na pratica.
+As cores aparecem no JavaScript porque são injetadas como estilo embutido no elemento raiz, e o
+CSS resolve `var(--...)` pela herança de propriedades. É o desenho previsto em D-005, confirmado
+na prática.
 
 ---
 
-## NAO executado nesta etapa
+## NÃO executado nesta etapa
 
-| Verificacao | Motivo | Como sera feita |
+| Verificação | Motivo | Como será feita |
 |---|---|---|
-| Teste em navegador automatizado (Playwright) | Nenhum navegador instalado no ambiente; Playwright exigiria download de centenas de MB, e isso nao foi autorizado | Etapa 13, ou quando autorizado. Enquanto isso, o roteiro manual abaixo |
-| Teste de **interacao** no navegador (clique, teclado, foco) | Nao ha interacao nesta etapa e nao ha navegador | Etapa 3, quando o primeiro controle existir |
-| Teste de aparencia e contraste **na tela** | Nao ha navegador. O contraste calculado dos tokens foi testado; a renderizacao pelos pixels, nao | Etapa 13 |
-| Teste de componente com DOM (`jsdom`) | Nao instalado (D-008). O render estatico cobre "monta sem erro", nao cobre evento | Etapa 2, junto com o primeiro estado |
-| Teste de cena 3D | Nao existe cena | Etapa 3 |
-| Teste de persistencia | Nao existe persistencia | Etapa 8 |
-| Teste de WebGL indisponivel | Nao existe 3D | Etapa 3 |
+| Teste em navegador automatizado (Playwright) | Nenhum navegador instalado no ambiente; o Playwright exigiria download de centenas de MB, e isso não foi autorizado | Etapa 13, ou quando autorizado. Enquanto isso, o roteiro manual abaixo |
+| Teste de **interação** no navegador (clique, teclado, foco, rolagem) | Não existe interação além de navegação por link, e não há navegador | Etapa 3, quando o primeiro controle existir |
+| Teste de aparencia e contraste **na tela** | Não há navegador. O contraste dos tokens foi calculado e testado; a renderização por pixels, não | Etapa 13 |
+| Teste de componente com DOM (`jsdom`) | Não instalado (D-008). O render estático cobre "monta sem erro", não cobre evento | Etapa 3, junto com o primeiro estado |
+| Teste de cena 3D | Não existe cena | Etapa 3 |
+| Teste de persistência | Não existe persistência | Etapa 8 |
+| Teste de WebGL indisponível | Não existe 3D | Etapa 3 |
 | Acessibilidade com leitor de tela real | Exige navegador | Etapa 13 |
-| Extracao de paleta das imagens de referencia | Arquivos nao chegaram ao disco | Quando os arquivos existirem |
-| Compatibilidade com `background-attachment: fixed` no Safari de iOS | Exige dispositivo. Em alguns navegadores moveis essa propriedade e ignorada, e o horizonte desce junto com a rolagem | Verificacao manual em dispositivo, ou troca por `position: fixed` na etapa de polimento |
+| Extração de paleta das imagens de referência | Arquivos não chegaram ao disco | Quando os arquivos existirem |
+| Compatibilidade com `background-attachment: fixed` no Safari de iOS | Exige aparelho. Em alguns navegadores móveis a propriedade é ignorada, e o horizonte desce junto com a rolagem | Verificação manual, ou troca por `position: fixed` na etapa de polimento |
 
-**Nada da tabela acima esta marcado como aprovado.** Nao foram executados.
+**Nada da tabela acima está marcado como aprovado.** Não foi executado.
 
 ---
 
-## Roteiro manual de verificacao visual
+## Roteiro manual de verificação visual
 
-Enquanto nao houver navegador automatizado, esta verificacao e manual e deve ser
-registrada por quem a fizer, sem presumir resultado.
+Enquanto não houver navegador automatizado, esta verificação é manual e deve ser registrada por
+quem a fizer, sem presumir resultado.
 
 1. `npm install` e `npm run dev`.
-2. Abrir a pagina. Conferir que o fundo tem ceu claro em cima e mar turquesa
-   embaixo, com o horizonte marcado.
-3. Conferir que **nao existe nenhum botao clicavel** na pagina (D-009).
-4. Ler o cartao "O que ainda nao existe" e conferir que cada item e verdade hoje.
-5. Conferir que as quatro unidades aparecem com "pagina: referencia pendente" e
-   **nenhum numero de pagina**.
-6. Reduzir a janela ate a largura de celular. Conferir que a tabela rola na
-   horizontal em vez de quebrar o layout.
-7. Aumentar o zoom do navegador para 200%. Conferir que o texto continua legivel e
-   que nada e cortado.
-8. Navegar apenas com `Tab`. Conferir que existe indicador de foco visivel em tudo
-   que for focavel - hoje, apenas o conteudo textual.
+2. Abrir a página. Conferir que o fundo tem céu claro em cima e mar turquesa embaixo, com o
+   horizonte marcado.
+3. Conferir que **não existe nenhum botão** na página. As duas abas do topo são links e devem
+   funcionar.
+4. Ler o cartão "O que ainda não existe" e conferir que cada item é verdade hoje.
+5. Conferir que as quatro unidades aparecem com "página: referência pendente" e **nenhum número de
+   página**.
+6. Abrir a aba **Guia de estilo** e conferir: a paleta aparece completa, a etiqueta âmbar tem
+   **texto escuro**, e a tabela de contraste mostra todos os pares com a razão medida.
+7. Reduzir a janela até a largura de celular. Conferir que a tabela rola na horizontal em vez de
+   quebrar o layout.
+8. Aumentar o zoom para 200% e conferir que o texto continua legível e que nada é cortado.
+9. Navegar apenas com `Tab`. Conferir indicador de foco visível nas abas e que a ordem de foco faz
+   sentido. Conferir que a mudança de aba **não** altera nada de progresso (não existe progresso).
 
-Resultado esperado: 8 de 8 conferidos. Qualquer item que falhe deve ser registrado
-aqui com a descricao do que aconteceu.
+Resultado esperado: 9 de 9 conferidos. Qualquer item que falhe deve ser registrado aqui com a
+descrição do que aconteceu.

@@ -1,108 +1,103 @@
-# MAQUINA DE ESTADOS DO CICLO DE ESTUDO
+# MÁQUINA DE ESTADOS DO CICLO DE ESTUDO
 
-> **Status: desenhada, NAO implementada.** Nada aqui existe em codigo ainda.
-> A implementacao comeca na Etapa 2 (`src/learning/`) e ganha tela na Etapa 6.
-> Registrado agora para que as regras de aprovacao nao sejam inventadas depois,
-> no meio da interface - que e exatamente como esse tipo de regra acaba duplicada.
+> **Estado: as regras estão implementadas e testadas; a tela, não.**
+> `src/learning/avaliacao.ts` e `src/learning/percurso.ts` existem desde a Etapa 2, com 100
+> testes. O que ainda não existe é a interface: missão, leitura, prática e perguntas (Etapas 6 e
+> 7) e o progresso salvo (Etapa 8).
+>
+> Este documento registra as regras **antes** de existir tela, para que elas não sejam inventadas
+> no meio da interface — que é exatamente como esse tipo de regra acaba duplicada.
 
 ## O ciclo
 
 ```
-        +---------------------------------------------------------+
-        |                                                         |
-        v                                                         |
-   [BLOQUEADA] --pre-requisito atendido--> [DISPONIVEL]           |
-        ^                                     |                   |
-        |                                     | entrar            |
-        |                                     v                   |
-        |                              [MISSAO EXIBIDA]           |
-        |                                     |                   |
-        |                                     v                   |
-        |                              [ESTUDO NO LIVRO]          |
-        |                                     |                   |
-        |                                     v                   |
-        |                           [EXPLICACAO ORIGINAL]         |
-        |                                     |                   |
-        |                                     v                   |
-        |                                [PRATICA]                 |
-        |                                     |                   |
-        |                                     v                   |
-        |                             [AVALIACAO ABERTA]           |
-        |                                     |                   |
-        |                        +------------+------------+      |
-        |                        |                         |      |
-        |                   nota < 80                  nota >= 80 |
-        |                        |                         |      |
-        |                        v                         v      |
-        |                   [REPROVADA]              [APROVADA]---+
-        |                        |                         |
-        +--- refazer ------------+                         +--> ponte aberta
+        ┌─────────────────────────────────────────────────────────┐
+        │                                                         │
+        ▼                                                         │
+   [BLOQUEADA] ──pré-requisito atendido──▶ [DISPONIVEL]           │
+        ▲                                     │                   │
+        │                                     │ entrar            │
+        │                                     ▼                   │
+        │                              [MISSÃO EXIBIDA]           │
+        │                                     │                   │
+        │                                     ▼                   │
+        │                              [ESTUDO NO LIVRO]          │
+        │                                     │                   │
+        │                                     ▼                   │
+        │                           [EXPLICAÇÃO ORIGINAL]         │
+        │                                     │                   │
+        │                                     ▼                   │
+        │                                [PRÁTICA]                 │
+        │                                     │                   │
+        │                                     ▼                   │
+        │                             [AVALIAÇÃO ABERTA]           │
+        │                                     │                   │
+        │                        ┌────────────┴────────────┐      │
+        │                        │                         │      │
+        │                   nota < 80                  nota ≥ 80 │
+        │                        │                         │      │
+        │                        ▼                         ▼      │
+        │                   [REPROVADA]              [APROVADA]───┘
+        │                        │                         │
+        └─── refazer ────────────┘                         └──▶ ponte aberta
 ```
 
-## Estados
+## Onde cada estado vive, hoje
 
-Nomes previstos para o dominio (`src/learning/`), em portugues, conforme D-007.
-
-| Estado | Significado |
+| Estado | Onde está implementado |
 |---|---|
-| `bloqueada` | O pre-requisito da unidade anterior ainda nao foi atendido |
-| `disponivel` | Pode entrar; o ciclo ainda nao comecou ou foi reiniciado |
-| `missaoExibida` | O estudante abriu a missao |
-| `emEstudo` | Leitura recomendada em andamento |
-| `emPratica` | Exercicios de escrita em andamento |
-| `avaliacaoAberta` | As perguntas estao na tela |
-| `aprovada` | Nota real maior ou igual a 80 |
-| `reprovada` | Nota real menor que 80; a unidade continua acessivel |
+| `bloqueada` / `disponivel` / `aprovada` | `estadoDaUnidade()`, em `src/learning/percurso.ts` |
+| `aprovada` | `registrarResultado()` — só marca quando `foiAprovado()` é verdadeiro |
+| Tentativas | `ProgressoDaUnidade.tentativas` |
+| Melhor nota | `ProgressoDaUnidade.melhorNota`, que só melhora |
+| `missaoExibida`, `emEstudo`, `emPratica`, `avaliacaoAberta` | **Ainda não existem.** São estados de tela, e a tela não foi construída |
 
-## Regras fixadas
+Os quatro últimos estados serão de `src/state/`, não de `src/learning/`: eles descrevem **onde o
+estudante está na interface**, e não mudam nenhuma regra de aprovação. Nenhum deles desbloqueia
+nada.
 
-Estas regras foram definidas pelo usuario **antes** de qualquer implementacao.
-Sao restricoes, nao sugestoes.
+## Regras fixadas e implementadas
 
-1. **Aprovacao com nota real >= 80**, medida **antes** de qualquer arredondamento de
-   exibicao. Uma nota 79,6 pode aparecer como "80%" na tela e **nao** aprova.
-   Se a exibicao arredonda, ela nao pode enganar quem le: mostrar "79%" ou mostrar
-   o valor sem arredondar para cima.
-2. **Reprovar nao bloqueia a unidade atual** nem revoga aprovacao anterior. O
-   estudante refaz a avaliacao. Reprovar nao e punicao.
-3. **A ponte e consequencia, nunca causa.** Ela so aparece acesa depois da
-   aprovacao. Clicar na ponte nao libera nada.
-4. **Nada de atalho por interface ou URL.** Abrir painel, mudar parametro na URL ou
-   clicar numa ponte **nao** desbloqueia unidade. Toda entrada passa pela mesma
-   funcao pura.
-5. **Uma unica fonte de verdade.** O mundo 3D e os paineis chamam
-   `src/learning/`. Nenhum dos dois decide sozinho.
-6. **Exigir resposta em todas as perguntas antes de enviar.** Sem isso, enviar em
-   branco vira estrategia.
-7. **Corrigir somente apos o envio.** Nada de correcao imediata por pergunta: isso
-   transforma a avaliacao em tentativa e erro e mede persistencia, nao aprendizado.
-8. **5 perguntas por unidade, aprovacao com 4 acertos.** No prototipo. O numero de
-   perguntas pode crescer depois, mantendo o minimo em 80% de acertos reais.
-9. **Desbloquear apenas a proxima unidade.** Aprovar a unidade 3 nao libera a 5 se
-   a 4 estiver pendente.
-10. **Sem antifraude, e dizendo isso.** A correcao roda no cliente. O enunciado
-    informa que quem quiser ver as respostas consegue, e que o objetivo e aprender.
+1. **Aprovação com nota real ≥ 80%**, medida **antes** de qualquer arredondamento de exibição. A
+   conta é inteira: `acertos * 5 >= total * 4`. Ponto flutuante erraria — `4 / 5 >= 0.8` é falso
+   em binário.
+2. **O que aparece na tela não pode enganar.** O percentual exibido é sempre arredondado para
+   baixo: quem faz 79% lê 79%.
+3. **Reprovar não é punição.** Não bloqueia a unidade atual nem revoga aprovação anterior.
+4. **A ponte é consequência, nunca causa.** Só aparece acesa depois da aprovação; clicar nela não
+   libera nada.
+5. **Nada de atalho.** Nenhuma função recebe rota, hash, clique ou parâmetro de URL. Registrar
+   resultado em unidade **bloqueada** é recusado (D-017).
+6. **Uma única fonte de verdade.** O mundo 3D e os painéis chamam as mesmas funções.
+7. **Exigir resposta em todas as perguntas antes de enviar.** `avaliarRespostas` lança se faltar
+   resposta.
+8. **Corrigir somente após o envio.** A correção recebe o conjunto completo de respostas; não há
+   função para corrigir pergunta por pergunta.
+9. **5 perguntas por unidade, 4 acertos aprovam** — no protótipo. O mínimo permanece 80% de
+   acertos reais se o número de perguntas mudar.
+10. **Desbloquear apenas a próxima unidade.** Aprovar a 3 não abre a 5 se a 4 estiver pendente.
+11. **Sem antifraude, e dizendo isso.** A correção roda no cliente; o enunciado informa que quem
+    quiser ver as respostas consegue, e que o objetivo é aprender.
 
-## Anti-padroes proibidos
+## Anti-padrões proibidos
 
-| Anti-padrao | Por que e proibido |
+| Anti-padrão | Por que é proibido |
 |---|---|
-| Regra de aprovacao dentro do componente 3D | Duplicaria a fonte de verdade; a cena passaria a decidir |
-| Ponte clicavel que chama "desbloquear" | A ponte vira a causa do desbloqueio |
-| Estado de progresso guardado so no componente React | Some ao recarregar; nao ha fonte de verdade |
-| Gravar objeto Three.js ou funcao no `localStorage` | Nao e serializavel; quebra a migracao de formato |
-| `localStorage.clear()` | Apaga dados de outras aplicacoes da mesma origem |
-| Arredondar 79,5 para 80 e aprovar | Aprovacao mostra nota que nao existiu |
-| Bloquear a unidade atual apos reprovar | Puna o erro, que e parte de aprender |
-| Anunciar "teste inviolavel" | Mentira sobre a propria robustez |
+| Regra de aprovação dentro do componente 3D | Duplicaria a fonte de verdade; a cena passaria a decidir |
+| Ponte clicável que chama "desbloquear" | A ponte viraria a causa do desbloqueio |
+| Estado de progresso guardado só no componente React | Some ao recarregar; não há fonte de verdade |
+| Gravar objeto Three.js ou função no `localStorage` | Não é serializável; quebra a migração de formato |
+| `localStorage.clear()` | Apaga dados de outras aplicações da mesma origem |
+| Arredondar 79,5% para 80% e aprovar | Aprovação mostra nota que não existiu |
+| Bloquear a unidade atual após reprovar | Pune o erro, que é parte de aprender |
+| Anunciar "teste inviolável" | Mentira sobre a própria robustez |
+| Criar progresso para unidade fora do percurso | Abriria caminho para unidade inventada |
 
-## O que ainda precisa de decisao
+## O que ainda precisa de decisão
 
-- Se a avaliacao tem limite de tempo (padrao proposto: **nao tem**).
-- Se o estudante pode voltar a uma unidade aprovada e refazer (padrao proposto:
-  **sim**, sem perder a aprovacao).
-- Formato de exibicao da nota: percentual inteiro com aviso, ou fracao de acertos.
-  Padrao proposto: **"4 de 5 acertos (80%)"** - a fracao e o numero exato, e o
-  percentual e derivado dela.
-- Numero de tentativas visiveis no historico (padrao proposto: **mostrar**, sem
-  limite).
+- Se a avaliação tem limite de tempo (padrão proposto: **não tem**).
+- Se o estudante pode voltar a uma unidade aprovada e refazer (padrão proposto: **sim**, sem
+  perder a aprovação — e as regras atuais já se comportam assim).
+- Formato de exibição da nota. Padrão proposto e **já implementado**: `"4 de 5 acertos (80%)"` —
+  a fração é o número exato, e o percentual é derivado dela.
+- Número de tentativas visíveis no histórico (padrão proposto: **mostrar**, sem limite).
