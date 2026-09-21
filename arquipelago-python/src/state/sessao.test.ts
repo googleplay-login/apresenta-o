@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { progressoInicial, type Progresso, type UnidadeDoPercurso } from '../learning/percurso'
+import {
+  VERSAO_DO_PROGRESSO,
+  estadoDaUnidade,
+  progressoInicial,
+  type Progresso,
+  type UnidadeDoPercurso,
+} from '../learning/percurso'
 import {
   PASSOS,
   criarRedutor,
@@ -9,6 +15,7 @@ import {
   perguntasEmBranco,
   podeMoverCamera,
   proximoPasso,
+  sessaoInicial,
   type Acao,
   type Estado,
 } from './sessao'
@@ -100,7 +107,14 @@ describe('abrir e fechar unidade', () => {
     // cara de quem acabou de ver a nota.
     const comAprovacao: Progresso = {
       versao: progressoInicial().versao,
-      unidades: { u01: { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 } } },
+      unidades: {
+        u01: {
+          aprovada: true,
+          tentativas: 1,
+          melhorNota: { acertos: 5, total: 5 },
+          leituraFeita: false,
+        },
+      },
     }
 
     const jaAprovada = redutor(estadoInicial(comAprovacao), abrir('u01'))
@@ -286,8 +300,15 @@ describe('preferências da sessão', () => {
 
   it('substitui o progresso lido do armazenamento', () => {
     const salvo: Progresso = {
-      versao: 1,
-      unidades: { u01: { aprovada: true, tentativas: 2, melhorNota: { acertos: 5, total: 5 } } },
+      versao: VERSAO_DO_PROGRESSO,
+      unidades: {
+        u01: {
+          aprovada: true,
+          tentativas: 2,
+          melhorNota: { acertos: 5, total: 5 },
+          leituraFeita: false,
+        },
+      },
     }
     expect(
       aplicar([{ tipo: 'substituirProgresso', progresso: salvo }]).progresso.unidades.u01?.aprovada,
@@ -319,5 +340,56 @@ describe('ações desconhecidas', () => {
 
   it('o progresso inicial é vazio', () => {
     expect(estadoInicial().progresso).toEqual(progressoInicial())
+  })
+})
+
+describe('marcar a leitura como feita', () => {
+  it('marca a leitura da unidade aberta, sem sair do passo em que o estudante está', () => {
+    const estado = redutor(estadoInicial(), abrir('u01'))
+    const depois = redutor(estado, { tipo: 'marcarLeitura', feita: true })
+
+    expect(depois.progresso.unidades.u01?.leituraFeita).toBe(true)
+    // Nem o passo, nem as respostas, nem o resultado mudam: o marcador é um
+    // lembrete, e lembrete não conduz o ciclo.
+    expect(depois.sessao.passo).toBe(estado.sessao.passo)
+    expect(depois.sessao.respostas).toEqual(estado.sessao.respostas)
+    expect(depois.sessao.resultado).toBeNull()
+  })
+
+  it('desmarca quando pedido', () => {
+    const estado = redutor(estadoInicial(), abrir('u01'))
+    const marcado = redutor(estado, { tipo: 'marcarLeitura', feita: true })
+    const desmarcado = redutor(marcado, { tipo: 'marcarLeitura', feita: false })
+
+    expect(desmarcado.progresso.unidades.u01?.leituraFeita).toBe(false)
+  })
+
+  it('marcar leitura não aprova nada', () => {
+    const depois = redutor(redutor(estadoInicial(), abrir('u01')), {
+      tipo: 'marcarLeitura',
+      feita: true,
+    })
+
+    expect(depois.progresso.unidades.u01?.aprovada).toBe(false)
+    expect(depois.progresso.unidades.u01?.tentativas).toBe(0)
+    expect(estadoDaUnidade(depois.progresso, UNIDADES, 'u02')).toBe('bloqueada')
+  })
+
+  it('sem unidade aberta, o pedido não faz nada', () => {
+    const estado = estadoInicial()
+    expect(redutor(estado, { tipo: 'marcarLeitura', feita: true })).toBe(estado)
+  })
+
+  it('recusa marcar leitura de unidade bloqueada: o domínio manda, e o estado não muda', () => {
+    // A unidade 2 aberta à força: o redutor não é caminho para contornar o
+    // domínio, e a tentativa de marcar leitura não pode criar estado novo.
+    const comU02Aberta: Estado = {
+      ...estadoInicial(),
+      sessao: { ...sessaoInicial(), unidadeId: 'u02', foco: 'painel' },
+    }
+    const depois = redutor(comU02Aberta, { tipo: 'marcarLeitura', feita: true })
+
+    expect(depois).toBe(comU02Aberta)
+    expect(depois.progresso.unidades.u02).toBeUndefined()
   })
 })

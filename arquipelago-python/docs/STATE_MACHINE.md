@@ -54,6 +54,7 @@
 | `missaoExibida`, `emEstudo`, `emPratica`, `avaliacaoAberta` | `src/state/sessao.ts`, no campo `sessao.passo`: `'missao' \| 'estudo' \| 'pratica' \| 'avaliacao' \| 'resultado'` |
 | Foco do teclado (`mundo` x `painel`) | `sessao.foco`, com `podeMoverCamera()`; ver D-012 |
 | Aprovação anterior à tentativa atual | `sessao.aprovadaAntes`, fotografada **ao abrir** a ilha |
+| Leitura feita (registro, não permissão) | `ProgressoDaUnidade.leituraFeita`, via `marcarLeituraFeita()`; ver D-033 |
 
 Os estados de tela ficam em `src/state/`, e não em `src/learning/`: eles descrevem **onde o
 estudante está na interface**, e não mudam nenhuma regra de aprovação. Nenhum deles desbloqueia
@@ -83,6 +84,9 @@ resposta que não mude quando a aprovação acontece (D-023).
 10. **Desbloquear apenas a próxima unidade.** Aprovar a 3 não abre a 5 se a 4 estiver pendente.
 11. **Sem antifraude, e dizendo isso.** A correção roda no cliente; o enunciado informa que quem
     quiser ver as respostas consegue, e que o objetivo é aprender.
+12. **A leitura recomendada é passo visível, e o marcador de leitura não é permissão.** Marcar a
+    leitura como feita é **registro**: não aprova a unidade, não abre ponte, não muda nota, não conta
+    tentativa e não move o passo. Unidade bloqueada recusa o marcador, como recusa resultado (D-033).
 
 ## Anti-padrões proibidos
 
@@ -99,6 +103,9 @@ resposta que não mude quando a aprovação acontece (D-023).
 | Criar progresso para unidade fora do percurso | Abriria caminho para unidade inventada |
 | Ler o progresso ao vivo para dizer "você já havia aprovado" | Faria a tela mentir logo depois da primeira aprovação |
 | Botão de controle de câmera em máquina sem WebGL | Seria controle sem efeito (D-009) |
+| Marcar leitura como pré-requisito de aprovação | Ninguém consegue verificar se alguém leu; viraria obstáculo ou mentira |
+| Marcar leitura sozinho ao abrir o estudo | Registraria um ato que não aconteceu |
+| Prometer número de página sem o PDF em mãos | Página inventada é conteúdo inventado (D-010) |
 
 ## O que ainda precisa de decisão
 
@@ -132,3 +139,6 @@ Dois pontos que valem para quem for mexer nisso depois:
   caminho por cima do vão (D-030);
 - **o lugar onde o avatar está é informação, não permissão.** O HUD diz "na ilha tal" ou "na ponte
   entre tal e tal" para a pessoa se localizar; nenhuma tela abre ou fecha por causa disso.
+
+O mesmo vale para o marcador de leitura, um passo acima: ele diz "eu já li esta parte", não "eu posso
+seguir". Quem decide se a pessoa segue é a nota da avaliação — e só ela.

@@ -146,6 +146,26 @@ describe('painel do projeto', () => {
   it('declara que o livro não está no repositório', () => {
     expect(painel).toContain('não está no repositório')
   })
+
+  it('não afirma que recurso pronto está ausente', () => {
+    // Esta lista envelheceu uma vez: durante três etapas o painel continuou
+    // dizendo "nenhuma ilha, nenhuma ponte, nenhum avatar" e "nada é gravado no
+    // navegador". Texto de estado que mente é defeito, e o teste trava o retorno.
+    expect(painel).toContain('quatro ilhas suspensas')
+    expect(painel).not.toContain('nenhuma ilha, nenhuma ponte')
+    expect(painel).not.toContain('nada é gravado no navegador')
+    expect(painel).not.toContain('nenhuma pergunta escrita')
+    expect(painel).not.toContain('não há tela que as use')
+  })
+
+  it('avisa que o desenho 3D não foi visto por ninguém', () => {
+    expect(painel).toContain('ninguém viu o desenho 3D')
+  })
+
+  it('diz que a leitura marcada não aprova nem muda nota', () => {
+    expect(painel).toContain('leitura é registro')
+    expect(painel).toContain('não aprova a unidade')
+  })
 })
 
 describe('guia de estilo', () => {

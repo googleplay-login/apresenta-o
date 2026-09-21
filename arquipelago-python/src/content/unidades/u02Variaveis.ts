@@ -18,6 +18,14 @@ export const u02Variaveis: ConteudoDaUnidade = {
       'Capítulo 2 do livro — as partes sobre variáveis, regras para dar nomes, números inteiros e decimais, a função `str()` e comentários.',
     porque:
       'O livro explica com calma as regras de nomes e a diferença entre tipos de número. Aqui vamos direto ao que costuma travar quem está começando: por que um número e um texto não se somam, e o que fazer com isso.',
+    oQueObservar: [
+      'Como o livro escreve nomes de variável: minúsculas, com `_` entre as palavras. Não é exigência da linguagem, é acordo entre quem escreve código — e quem lê espera isso.',
+      'A lista de regras para nomes: com o que um nome pode começar, o que pode conter e por que um nome que começa com número não é aceito.',
+      'A parte sobre `str()`: o livro mostra primeiro o erro de somar número com texto e só depois a solução. Esse erro vai acontecer com você, e é útil já ter visto o formato dele.',
+      'A parte sobre comentários: o livro diz quando comentar e quando o código já fala por si. Guarde os dois casos, e não só o primeiro.',
+    ],
+    semOLivro:
+      'Sem o livro em mãos, esta unidade continua inteira: as regras de nomes estão na explicação abaixo, com os mesmos exemplos que você vai praticar, e a diferença entre número e texto aparece no diagrama e nos exercícios. O que o livro acrescenta é a repetição calma de cada regra, com mais exemplos do que caberia aqui.',
   },
 
   explicacao: [
@@ -88,6 +96,25 @@ export const u02Variaveis: ConteudoDaUnidade = {
         'Agora o travamento mais comum de quem começa: números e textos não se misturam sozinhos. Um número é calculado; um texto é mostrado. Quando o Python precisa juntar os dois, ele exige que você diga o que quer.',
     },
     {
+      tipo: 'diagrama',
+      titulo: 'A variável é uma etiqueta, não uma caixa',
+      descricao:
+        'O nome aponta para o valor. Você escolhe o nome; o Python guarda o valor e o devolve quando você chama por ele. Repare que nada no diagrama diz onde o valor está — e é por isso que a variável é útil.',
+      partes: [
+        { rotulo: 'O nome', valor: 'mensagem', nota: 'escolhido por você, e vale para todo o programa' },
+        {
+          rotulo: 'O valor',
+          valor: '"Olá, arquipélago!"',
+          nota: 'guardado pelo Python, no lugar que ele escolher',
+        },
+        {
+          rotulo: 'O uso',
+          valor: 'print(mensagem)',
+          nota: 'o nome traz o valor de volta, e é o valor que aparece',
+        },
+      ],
+    },
+    {
       tipo: 'codigo',
       linguagem: 'python',
       legenda: 'A conversão explícita com str()',
@@ -105,6 +132,26 @@ export const u02Variaveis: ConteudoDaUnidade = {
       tipo: 'paragrafo',
       texto:
         'A mensagem está dizendo, em inglês técnico: você tentou juntar texto com número, e isso não é permitido. `str()` converte o número em texto e resolve. Existe um caminho mais confortável, que você vai conhecer na unidade das palavras, mas entender o `str()` primeiro ajuda a entender por que o outro caminho existe.',
+    },
+    {
+      tipo: 'diagrama',
+      titulo: 'Por que número e texto não se somam',
+      descricao:
+        'O Python recusa somar coisas de tipos diferentes em vez de adivinhar o que você queria. Adivinhar daria resultado errado em silêncio; recusar dá uma mensagem de erro que diz exatamente qual é o problema.',
+      partes: [
+        { rotulo: 'Um número', valor: '34', nota: 'tipo int: número inteiro' },
+        { rotulo: 'Um texto', valor: '" anos"', nota: 'tipo str: sequência de caracteres' },
+        {
+          rotulo: 'Somados como estão',
+          valor: 'TypeError',
+          nota: 'o Python para e explica o tipo de cada lado',
+        },
+        {
+          rotulo: 'Com a conversão',
+          valor: '"34 anos"',
+          nota: 'str(34) vira texto, e texto com texto se junta',
+        },
+      ],
     },
     {
       tipo: 'paragrafo',

@@ -29,14 +29,14 @@ Consequências práticas, e o motivo de cada uma:
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
 | `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação | Existe e testado |
-| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes | Existe para 4 unidades |
+| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios e perguntas | Existe para 4 unidades |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
-| `src/persistence/` | Gravação e leitura do progresso, versionado, com aviso honesto de falha | Existe e testado |
+| `src/persistence/` | Gravação e leitura do progresso, versionado (formato **2**, com migração da versão 1) e com aviso honesto de falha | Existe e testado |
 | `src/python/` | Pyodide em Web Worker, sob demanda | Vazio |
-| `src/ui/` | Componentes, painéis do ciclo, tema, tokens visuais e mostruário de cores | Existe |
+| `src/ui/` | Componentes, painéis do ciclo (missão, estudo com leitura, prática, avaliação, resultado), tema, tokens visuais e mostruário de cores | Existe |
 | `src/types/` | Apenas tipos transversais | Vazio |
 | `src/utils/` | Apenas auxiliares genéricos sem domínio | Vazio |
-| `qa/` | Verificações do projeto (não da aplicação), como a trava de acentuação | Existe |
+| `qa/` | Verificações do projeto (não da aplicação): a trava de acentuação e a de estilos | Existe |
 | `docs/` | Documentação de continuidade | Existe |
 
 Cada pasta vazia tem um `README.md` explicando sua responsabilidade e seus limites. Quem
@@ -95,6 +95,41 @@ Duas invariantes que os testes cobram, e que valem mais do que qualquer sensaç�
 A altura do chão não é inventada: `alturaDoTopo()` em `geometria/ilha.ts` é a **mesma** função que
 gera o domo do capim, e o topo do tabuleiro sai de `ESPESSURA_DO_TABULEIRO`. Foi essa unificação que
 revelou o degrau de 0,36 entre a ponte e a borda da ilha (D-031).
+
+## O estudo: leitura orientada, e o que ela não faz
+
+A aba de estudo tem duas seções declaradas — **1. Ler no livro** e **2. Entender do nosso jeito** — e
+a separação é a mesma de sempre: dado de um lado, desenho do outro.
+
+| Peça | O que é | Onde |
+|---|---|---|
+| `content/tiposDeConteudo.ts` | O tipo `leitura` (parte, porquê, `oQueObservar`, `semOLivro`) e o bloco `diagrama` | Forma do conteúdo |
+| `ui/paineis/LeituraDaUnidade.tsx` | A leitura na tela, com o marcador | Desenho |
+| `ui/paineis/DiagramaDaExplicacao.tsx` | Diagrama em texto: `<figure>`, partes rotuladas e o sinal de espaço | Desenho |
+| `learning/percurso.ts` | `marcarLeituraFeita()` / `leituraFoiFeita()` | Registro, **não** decisão |
+| `persistence/progressoSalvo.ts` | `leituraFeita` no formato guardado (versão 2) | Gravação |
+
+Três invariantes, todas cobertas por teste:
+
+- **a leitura não aprova ninguém.** `marcarLeituraFeita()` é o único caminho para o registro, e ele
+  não encosta em `aprovada`, `tentativas`, `melhorNota` nem em `sessao.passo` (D-033);
+- **não se marca sozinho.** Nada marca a leitura ao abrir a aba: registro de um ato que não
+  aconteceu é pior do que registro vazio;
+- **não há página.** A referência ao livro tem capítulo e seção, e `pagina` continua `null` enquanto o
+  PDF não estiver em mãos (D-010).
+
+As três travas que sustentam isso:
+
+| Trava | Onde | O que impede |
+|---|---|---|
+| Marcar leitura não muda nota nem passo | `src/learning/percurso.test.ts`, `src/state/sessao.test.ts` | Progresso inflado por um clique |
+| Nenhuma página inventada | `src/content/planoDeUnidades.test.ts`, `src/content/conteudo.test.ts` | Orientação de leitura que mente sobre o livro |
+| Toda `var(--…)` existe entre os tokens | `qa/estilos.test.ts` | Estilo declarado que o navegador ignora em silêncio (D-034, defeito real da Etapa 6) |
+
+O sinal de espaço merece uma nota, porque é o tipo de coisa que se erra por parecer bonita demais:
+`marcarEspacosDasPontas()` marca **só** as pontas — depois da aspa de abertura e antes da de fechar —
+e nada no meio da frase. Marcar tudo poluiria o diagrama e sugeriria um problema que não existe
+(D-034).
 
 ## A cena em duas partes, e por quê
 
@@ -175,6 +210,8 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Só ponte inteira vira chão | `src/world/mapaCaminhavel.test.ts` | Atravessar a pé onde a aprovação não chegou (D-029, D-030) |
 | Ninguém anda para fora do chão | `src/world/avatar/passos.test.ts` | Queda no vazio, travessia por fora do tabuleiro |
 | O caminhar funciona quadro a quadro | `src/world/ConteudoDaCena.test.tsx` | Avatar parado, teclas sem efeito, chão errado sob os pés (D-032) |
+| Toda variável de estilo existe, e com nome válido | `qa/estilos.test.ts` | Estilo silenciosamente ignorado, como `--painel.fundo-elevado` |
+| O arquivo guardado de versão anterior é migrado, não descartado | `src/persistence/progressoSalvo.test.ts` | Perda de progresso por causa de um campo novo (D-035) |
 
 ## Ambiente de execução (preview remoto)
 

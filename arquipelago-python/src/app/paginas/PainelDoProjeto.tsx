@@ -26,6 +26,22 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
     verificar: 'npm test',
   },
   {
+    item: 'O mundo 3D: quatro ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
+    verificar: 'aba "Mundo"',
+  },
+  {
+    item: 'O ciclo de estudo das 4 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
+    verificar: 'aba "Mundo"',
+  },
+  {
+    item: 'O conteúdo escrito das 4 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
+    verificar: 'npm test',
+  },
+  {
+    item: 'O progresso salvo no navegador, em formato versionado, com migração da versão anterior.',
+    verificar: 'npm test',
+  },
+  {
     item: 'Documentação de continuidade em docs/.',
     verificar: 'ver os arquivos em docs/',
   },
@@ -37,14 +53,12 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
  * autorizada.
  */
 const AINDA_NAO_EXISTE: readonly string[] = [
-  'O mundo 3D: nenhuma ilha, nenhuma ponte, nenhuma câmera, nenhum avatar.',
-  'As aulas: nenhuma explicação, nenhum exemplo e nenhum exercício escritos.',
-  'As missões: nenhum enunciado, nenhuma prática guiada.',
-  'As perguntas de avaliação: existem as REGRAS, mas nenhuma pergunta escrita.',
-  'O placar do estudante: as funções existem e são testadas, mas não há tela que as use.',
-  'O progresso salvo: nada é gravado no navegador. Ao recarregar, o placar volta ao início.',
-  'A execução de Python no navegador (Pyodide): nada de código roda ainda.',
-  'A alternativa acessível sem 3D: o caminho em lista ainda não foi construído.',
+  'A execução de Python no navegador (Pyodide): nada de código roda ainda. É a Etapa 9.',
+  'O exercício corrigido automaticamente: os exercícios existem, mas quem os confere é a pessoa.',
+  'A animação de caminhada do avatar: a figura anda, as pernas não se mexem.',
+  'O som e a narração: nenhum áudio existe, e não há previsão de ligá-lo por padrão.',
+  'As unidades 5 em diante: só as 4 primeiras têm conteúdo escrito.',
+  'O teste de navegador automatizado (Playwright): nenhum navegador com WebGL existe neste ambiente.',
 ]
 
 export function PainelDoProjeto() {
@@ -68,8 +82,8 @@ export function PainelDoProjeto() {
 
       <Cartao titulo="O que ainda não existe" sobretitulo="Para não haver mal-entendido">
         <p className="cartao__entrada">
-          O Arquipélago ainda não é um jogo, nem um curso. Hoje ele é o alicerce onde as duas
-          coisas vão ser construídas.
+          Esta é a parte mais importante da página: cada linha abaixo é um recurso que ainda não
+          funciona, e nenhuma delas aparece como botão em lugar nenhum.
         </p>
         <ul className="lista lista--ausente">
           {AINDA_NAO_EXISTE.map((linha) => (
@@ -83,22 +97,22 @@ export function PainelDoProjeto() {
         </ul>
         <div className="nota">
           <p>
-            Esta página não tem nenhum botão. É deliberado: a regra do projeto proíbe apresentar
-            recurso que ainda não funciona, e nenhuma das funções do ciclo de estudo tem tela
-            hoje.
+            Esta página não tem nenhum botão de ação. É deliberado: a regra do projeto proíbe
+            apresentar recurso que ainda não funciona (D-009).
           </p>
           <p>
-            Um botão &quot;Entrar na ilha&quot; aqui seria promessa vazia. Ele aparece quando a
-            ilha existir de verdade.
+            E há uma linha que não pode faltar: <strong>ninguém viu o desenho 3D</strong>. O mundo
+            existe, é montado em teste e foi conferido por medidas, mas não há navegador com WebGL
+            neste ambiente — pixel, luz e desempenho continuam sem verificação.
           </p>
         </div>
       </Cartao>
 
-      <Cartao titulo="Regras de progressão já decididas" sobretitulo="Escritas e testadas, ainda sem tela">
+      <Cartao titulo="Regras de progressão" sobretitulo="Escritas, testadas e em uso">
         <p className="cartao__entrada">
-          As regras que decidem aprovação e desbloqueio já existem como funções puras em{' '}
-          <code>src/learning/</code>, com testes. Elas ainda não têm interface — e é por isso que
-          não há botão nesta página.
+          As regras que decidem aprovação e desbloqueio vivem como funções puras em{' '}
+          <code>src/learning/</code>, e são as mesmas que a tela e o mundo 3D consultam — não
+          existe cópia da regra dentro do painel nem da cena.
         </p>
         <dl className="comandos">
           <dt>
@@ -119,6 +133,10 @@ export function PainelDoProjeto() {
             <code>sem atalho</code>
           </dt>
           <dd>{ESTADO_DO_PROJETO.semAtalho}</dd>
+          <dt>
+            <code>leitura é registro</code>
+          </dt>
+          <dd>{ESTADO_DO_PROJETO.leitura}</dd>
         </dl>
       </Cartao>
 
@@ -131,7 +149,7 @@ export function PainelDoProjeto() {
         <div className="tabela-rolagem">
           <table className="tabela">
             <caption className="tabela__legenda">
-              Plano das primeiras unidades. Nenhuma delas tem conteúdo escrito ainda.
+              Plano das unidades. As quatro primeiras têm conteúdo escrito e ciclo completo no ar.
             </caption>
             <thead>
               <tr>
@@ -180,7 +198,11 @@ export function PainelDoProjeto() {
           <dt>
             <code>npm test</code>
           </dt>
-          <dd>Roda os testes de contraste, das regras de progressão e do plano de unidades.</dd>
+          <dd>
+            Roda toda a suíte do projeto — regras, geometria, mundo 3D, conteúdo, leitura,
+            interface, acentuação e estilos. A contagem exata e a data de cada execução ficam em
+            docs/TEST_REPORT.md, para não envelhecer aqui nesta página.
+          </dd>
           <dt>
             <code>npm run build</code>
           </dt>

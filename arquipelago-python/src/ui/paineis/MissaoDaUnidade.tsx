@@ -3,25 +3,36 @@ import type { ConteudoDaUnidade } from '../../content/tiposDeConteudo'
 /**
  * Passo 1 do ciclo: a missão.
  *
- * Diz o que o estudante vai saber fazer ao final e qual parte do livro sustenta
- * esse estudo. Sem números de página: a referência de página está marcada como
- * pendente (`docs/BOOK_MAP.md`), e inventar um número seria pior do que não ter.
+ * Diz o que o estudante vai saber fazer ao final e onde fica a parte do livro
+ * que sustenta o estudo. A leitura completa — o que procurar lá e o marcador —
+ * mora no passo Estudo, que é onde ela acontece; aqui fica só o endereço dela e
+ * o caminho para chegar.
+ *
+ * Sem número de página: a referência está pendente (D-010), e inventar um número
+ * seria pior do que não ter.
  */
-export function MissaoDaUnidade({ conteudo }: { readonly conteudo: ConteudoDaUnidade }) {
+export function MissaoDaUnidade({
+  conteudo,
+  aoIrParaEstudo,
+}: {
+  readonly conteudo: ConteudoDaUnidade
+  readonly aoIrParaEstudo: () => void
+}) {
   return (
     <div className="passo">
       <h3 className="passo__titulo">Sua missão nesta ilha</h3>
       <p className="passo__missao">{conteudo.missao}</p>
 
-      <section className="leitura">
-        <h4 className="leitura__titulo">O que ler no livro</h4>
+      <section className="leitura leitura--resumo">
+        <h4 className="leitura__titulo">A leitura desta ilha</h4>
         <p className="leitura__parte">{conteudo.leitura.parte}</p>
-        <p className="leitura__porque">{conteudo.leitura.porque}</p>
         <p className="leitura__nota">
-          A referência de página está pendente: o livro ainda não pôde ser conferido página a
-          página, e a numeração impressa não é a mesma do arquivo digital. Por isso a leitura é
-          indicada pela parte do capítulo, e não por página.
+          O que procurar nessa leitura, o caminho para quem está sem o livro e o marcador de onde
+          você parou ficam no passo <strong>Estudo</strong> — junto com a explicação original.
         </p>
+        <button type="button" className="botao botao--pequeno" onClick={aoIrParaEstudo}>
+          Ir para o Estudo
+        </button>
       </section>
     </div>
   )

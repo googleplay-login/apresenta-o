@@ -188,7 +188,11 @@ function extrairTexto(arquivo: Arquivo): readonly string[] {
     trechos.push(achado[0])
   }
 
-  for (const achado of conteudo.matchAll(/'([^'\\\n]*)'|"([^"\\\n]*)"|`([^`\\]*)`/g)) {
+  // O terceiro ramo aceita barra invertida de propósito: `\n` dentro de uma
+  // string é comum no conteúdo (os blocos de código), e excluí-la fazia o par de
+  // crases ser pulado — e, com ele, TODOS os pares seguintes, que passavam a
+  // casar código com código e a acusar identificador como se fosse texto.
+  for (const achado of conteudo.matchAll(/'([^'\\\n]*)'|"([^"\\\n]*)"|`([^`]*)`/g)) {
     const texto = achado[1] ?? achado[2] ?? achado[3] ?? ''
     if (ehFrase(texto)) {
       trechos.push(texto)

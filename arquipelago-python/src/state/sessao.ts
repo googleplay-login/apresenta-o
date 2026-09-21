@@ -1,5 +1,10 @@
 import type { Progresso, UnidadeDoPercurso } from '../learning/percurso'
-import { progressoDaUnidade, progressoInicial, registrarResultado } from '../learning/percurso'
+import {
+  marcarLeituraFeita,
+  progressoDaUnidade,
+  progressoInicial,
+  registrarResultado,
+} from '../learning/percurso'
 import {
   avaliarRespostas,
   contarEmBranco,
@@ -84,6 +89,13 @@ export type Acao =
   | { readonly tipo: 'responder'; readonly indice: number; readonly alternativa: number }
   | { readonly tipo: 'enviar'; readonly gabarito: readonly number[] }
   | { readonly tipo: 'refazer' }
+  /**
+   * Marca (ou desmarca) a leitura recomendada como feita.
+   *
+   * Não aprova, não conta tentativa e não abre a unidade seguinte: quem abre é
+   * `enviar`, pelo domínio. O redutor só repassa o pedido a `marcarLeituraFeita`.
+   */
+  | { readonly tipo: 'marcarLeitura'; readonly feita: boolean }
   | { readonly tipo: 'fecharUnidade' }
   | { readonly tipo: 'definirFoco'; readonly foco: Foco }
   | { readonly tipo: 'definirCamera'; readonly camera: ModoDeCamera }
@@ -219,6 +231,25 @@ export function criarRedutor(unidades: readonly UnidadeDoPercurso[]) {
             respostas: Array.from({ length: total }, () => null),
             resultado: null,
           },
+        }
+      }
+
+      case 'marcarLeitura': {
+        const { unidadeId } = estado.sessao
+        if (unidadeId === null) {
+          return estado
+        }
+
+        try {
+          const progresso = marcarLeituraFeita(estado.progresso, unidades, unidadeId, acao.feita)
+          // Nada mais muda: o marcador de leitura não mexe no passo, não mexe
+          // nas respostas e não mexe no resultado. Ele é um lembrete, e lembrete
+          // não conduz o ciclo.
+          return { ...estado, progresso }
+        } catch {
+          // Unidade bloqueada ou desconhecida: o domínio recusou, e o estado
+          // fica como estava. Não existe caminho alternativo que contorne isso.
+          return estado
         }
       }
 

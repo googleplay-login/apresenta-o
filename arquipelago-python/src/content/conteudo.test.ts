@@ -172,3 +172,124 @@ describe('validador de conteúdo', () => {
     expect(problemasNoConteudo({ ...base!, id: '' }).join(' ')).toContain('unidade sem id')
   })
 })
+
+describe('a leitura recomendada, que virou parte do ciclo', () => {
+  it('diz o que procurar na leitura, e não só qual capítulo ler', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      expect(
+        unidade.leitura.oQueObservar.length,
+        `A unidade ${unidade.id} não diz o que procurar no livro`,
+      ).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('diz o que fazer quando o livro não está em mãos', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      // O projeto não pode supor que o estudante tenha o livro: a leitura é
+      // recomendada, e precisa existir um caminho completo sem ela.
+      expect(unidade.leitura.semOLivro).toMatch(/livro/)
+      expect(unidade.leitura.semOLivro.length).toBeGreaterThan(80)
+    }
+  })
+
+  it('nenhum ponto de observação manda procurar página', () => {
+    // A página continua pendente (D-010). Um ponto de observação que citasse
+    // número de página estaria inventando referência.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      for (const ponto of unidade.leitura.oQueObservar) {
+        expect(ponto).not.toMatch(/página \d+/i)
+      }
+      expect(unidade.leitura.parte).not.toMatch(/página \d+/i)
+    }
+  })
+})
+
+describe('os diagramas', () => {
+  it('cada unidade tem ao menos um diagrama, e todos têm duas caixas ou mais', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const diagramas = unidade.explicacao.filter((bloco) => bloco.tipo === 'diagrama')
+
+      expect(diagramas.length, `A unidade ${unidade.id} não tem diagrama`).toBeGreaterThanOrEqual(1)
+
+      for (const diagrama of diagramas) {
+        if (diagrama.tipo !== 'diagrama') {
+          continue
+        }
+        expect(diagrama.partes.length).toBeGreaterThanOrEqual(2)
+        for (const parte of diagrama.partes) {
+          expect(parte.rotulo.trim()).not.toBe('')
+          expect(parte.valor.trim()).not.toBe('')
+        }
+      }
+    }
+  })
+
+  it('não repete rótulo dentro do mesmo diagrama', () => {
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      for (const bloco of unidade.explicacao) {
+        if (bloco.tipo !== 'diagrama') {
+          continue
+        }
+        const rotulos = bloco.partes.map((parte) => parte.rotulo)
+        expect(new Set(rotulos).size, `${unidade.id}: rótulos repetidos em «${bloco.titulo}»`).toBe(
+          rotulos.length,
+        )
+      }
+    }
+  })
+
+  it('acusa diagrama com uma caixa só, rótulo repetido ou caixa vazia', () => {
+    const base = CONTEUDO_DAS_UNIDADES[0]
+    if (base === undefined) {
+      throw new Error('Sem conteúdo para testar o validador')
+    }
+
+    const comDiagrama = (partes: readonly { rotulo: string; valor: string }[]) => ({
+      ...base,
+      explicacao: [
+        { tipo: 'diagrama' as const, titulo: 'Teste', descricao: 'Um teste', partes },
+      ],
+    })
+
+    expect(
+      problemasNoConteudo(comDiagrama([{ rotulo: 'a', valor: '1' }])).join(' '),
+    ).toContain('ao menos duas caixas')
+
+    expect(
+      problemasNoConteudo(
+        comDiagrama([
+          { rotulo: 'a', valor: '1' },
+          { rotulo: 'a', valor: '2' },
+        ]),
+      ).join(' '),
+    ).toContain('rótulo repetido')
+
+    expect(
+      problemasNoConteudo(
+        comDiagrama([
+          { rotulo: 'a', valor: '' },
+          { rotulo: 'b', valor: '2' },
+        ]),
+      ).join(' '),
+    ).toContain('rótulo ou valor vazio')
+  })
+
+  it('acusa leitura sem pontos de observação e sem caminho para quem não tem o livro', () => {
+    const base = CONTEUDO_DAS_UNIDADES[0]
+    if (base === undefined) {
+      throw new Error('Sem conteúdo para testar o validador')
+    }
+
+    const semObservar = {
+      ...base,
+      leitura: { ...base.leitura, oQueObservar: [] },
+    }
+    expect(problemasNoConteudo(semObservar).join(' ')).toContain('sem pontos de observação')
+
+    const semAlternativa = {
+      ...base,
+      leitura: { ...base.leitura, semOLivro: 'sem livro' },
+    }
+    expect(problemasNoConteudo(semAlternativa).join(' ')).toContain('curto demais ou vazio')
+  })
+})

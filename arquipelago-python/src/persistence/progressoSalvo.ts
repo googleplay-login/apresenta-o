@@ -1,4 +1,9 @@
-import { VERSAO_DO_PROGRESSO, progressoInicial, type Progresso } from '../learning/percurso'
+import {
+  VERSAO_DO_PROGRESSO,
+  progressoInicial,
+  type Progresso,
+  type ProgressoDaUnidade,
+} from '../learning/percurso'
 
 /**
  * Leitura e escrita do progresso no navegador.
@@ -36,8 +41,35 @@ export type ResultadoDaEscrita = {
   readonly aviso: string | null
 }
 
-/** Verdadeiro se o formato lido é um progresso utilizável. */
-export function ehProgressoValido(valor: unknown): valor is Progresso {
+/**
+ * Versões de formato que esta versão do programa **entende**.
+ *
+ * A 1 é a versão sem `leituraFeita`. Aceitá-la na leitura não é generosidade: é
+ * a diferença entre migrar e apagar. Quem aprovou a primeira ilha antes do
+ * marcador de leitura existir continua com a aprovação no lugar.
+ */
+export const VERSOES_ACEITAS: readonly number[] = [1, VERSAO_DO_PROGRESSO]
+
+/**
+ * O que pode sair do armazenamento: um progresso de alguma versão aceita.
+ *
+ * `leituraFeita` é opcional **de propósito**: é assim que um progresso da versão
+ * 1 passa pela conferência e chega à migração, em vez de ser jogado fora.
+ */
+export type UnidadeGuardada = {
+  readonly aprovada: boolean
+  readonly tentativas: number
+  readonly melhorNota: { readonly acertos: number; readonly total: number } | null
+  readonly leituraFeita?: boolean
+}
+
+export type ProgressoGuardado = {
+  readonly versao: number
+  readonly unidades: Readonly<Record<string, UnidadeGuardada>>
+}
+
+/** Verdadeiro se o formato lido é um progresso utilizável (versão aceita). */
+export function ehProgressoValido(valor: unknown): valor is ProgressoGuardado {
   if (valor === null || typeof valor !== 'object') {
     return false
   }
@@ -45,6 +77,9 @@ export function ehProgressoValido(valor: unknown): valor is Progresso {
   const candidato = valor as { versao?: unknown; unidades?: unknown }
 
   if (typeof candidato.versao !== 'number' || !Number.isInteger(candidato.versao)) {
+    return false
+  }
+  if (!VERSOES_ACEITAS.includes(candidato.versao)) {
     return false
   }
   if (candidato.unidades === null || typeof candidato.unidades !== 'object') {
@@ -79,9 +114,57 @@ export function ehProgressoValido(valor: unknown): valor is Progresso {
         return false
       }
     }
+
+    // Na versão 2, `leituraFeita` é obrigatório e booleano. Na 1 ele nem existe,
+    // e a migração o cria — mas se vier um valor de outro tipo, o registro é
+    // recusado: adivinhar o que aquele campo queria dizer seria pior.
+    if (candidato.versao === VERSAO_DO_PROGRESSO) {
+      const leitura = (unidade as { leituraFeita?: unknown }).leituraFeita
+      if (typeof leitura !== 'boolean') {
+        return false
+      }
+    } else if ('leituraFeita' in unidade) {
+      const leitura = (unidade as { leituraFeita?: unknown }).leituraFeita
+      if (typeof leitura !== 'boolean') {
+        return false
+      }
+    }
   }
 
   return true
+}
+
+/**
+ * Traz um progresso de formato antigo para o formato atual.
+ *
+ * Hoje só existe uma migração: da versão 1 para a 2, que acrescenta
+ * `leituraFeita: false` a cada unidade. Ela não inventa leitura feita — quem não
+ * tinha o campo não marcou nada, e marcar por conta própria seria atribuir um
+ * ato ao estudante que ele não praticou.
+ *
+ * Recebe um valor já aprovado por `ehProgressoValido`, e devolve sempre um
+ * progresso na versão atual.
+ */
+export function migrarProgresso(valor: unknown): Progresso {
+  const antigo = valor as {
+    readonly versao: number
+    readonly unidades: Record<
+      string,
+      Omit<ProgressoDaUnidade, 'leituraFeita'> & { readonly leituraFeita?: boolean }
+    >
+  }
+
+  const unidades: Record<string, ProgressoDaUnidade> = {}
+  for (const [id, registro] of Object.entries(antigo.unidades)) {
+    unidades[id] = {
+      aprovada: registro.aprovada,
+      tentativas: registro.tentativas,
+      melhorNota: registro.melhorNota,
+      leituraFeita: registro.leituraFeita ?? false,
+    }
+  }
+
+  return { versao: VERSAO_DO_PROGRESSO, unidades }
 }
 
 /** Lê o progresso. Nunca lança: qualquer falha vira aviso e progresso inicial. */
@@ -121,6 +204,21 @@ export function lerProgresso(armazenamento: Armazenamento | null): ResultadoDaLe
   }
 
   if (!ehProgressoValido(analisado)) {
+    // Um progresso de versão **mais nova** merece uma mensagem própria, e não a
+    // de "formato inesperado": o problema não é o arquivo estar estragado, é
+    // este programa ser antigo. Vale dizer também o que acontece com o dado —
+    // ele não foi apagado agora, mas a próxima gravação passa por cima.
+    const versaoLida = (analisado as { versao?: unknown }).versao
+    if (typeof versaoLida === 'number' && versaoLida > VERSAO_DO_PROGRESSO) {
+      return {
+        progresso: progressoInicial(),
+        aviso:
+          `O progresso guardado foi criado por uma versão mais nova do Arquipélago (versão ` +
+          `${versaoLida}, esta entende até a ${VERSAO_DO_PROGRESSO}) e não pôde ser lido. Nada foi ` +
+          'apagado agora, mas o novo progresso será gravado por cima dele quando você estudar.',
+      }
+    }
+
     return {
       progresso: progressoInicial(),
       aviso:
@@ -128,18 +226,19 @@ export function lerProgresso(armazenamento: Armazenamento | null): ResultadoDaLe
     }
   }
 
+  // Daqui para baixo, o formato é de uma versão que este programa entende —
+  // `ehProgressoValido` já recusou o resto. A migração é aplicada e o estudante
+  // fica sabendo que o progresso dele veio de uma versão anterior.
   if (analisado.versao !== VERSAO_DO_PROGRESSO) {
-    // Quando existir migração, ela entra aqui. Enquanto não existir, a escolha
-    // honesta é começar do zero e DIZER isso, e não fingir que migrou.
     return {
-      progresso: progressoInicial(),
-      aviso:
-        `O progresso guardado é de uma versão anterior do Arquipélago (versão ${analisado.versao}, ` +
-        `atual ${VERSAO_DO_PROGRESSO}) e não pôde ser aproveitado. O placar começa do zero.`,
+      progresso: migrarProgresso(analisado),
+      aviso: `O progresso guardado era de uma versão anterior do Arquipélago (versão ${analisado.versao}). Ele foi aproveitado: nada foi perdido, e o marcador de leitura começa desmarcado.`,
     }
   }
 
-  return { progresso: analisado, aviso: null }
+  // Nesta altura o formato é o atual e `ehProgressoValido` já conferiu que
+  // `leituraFeita` é booleano em toda unidade: é um `Progresso` de verdade.
+  return { progresso: migrarProgresso(analisado), aviso: null }
 }
 
 /** Grava o progresso. Devolve se deu certo — e não engole a falha. */

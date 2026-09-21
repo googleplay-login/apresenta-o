@@ -35,6 +35,41 @@ export type Bloco =
       readonly texto: string
     }
   | { readonly tipo: 'lista'; readonly titulo?: string; readonly itens: readonly string[] }
+  | {
+      /**
+       * Diagrama **nosso**, com as ideias que o livro também desenha.
+       *
+       * O livro tem figuras — a caixa da variável, os índices de uma string, as
+       * posições de uma lista. Elas são de terceiros e não podem ser copiadas. O
+       * que se aproveita é a **ideia**, e ela é redesenhada aqui como caixas de
+       * texto: cada parte tem um rótulo e um valor. Desenho em texto tem duas
+       * vantagens concretas além da licença — é lido em voz alta por leitor de
+       * tela, e é conferido por teste.
+       */
+      readonly tipo: 'diagrama'
+      readonly titulo: string
+      /** Uma frase dizendo o que o desenho mostra. */
+      readonly descricao: string
+      readonly partes: readonly ParteDoDiagrama[]
+      /**
+       * Mostra os espaços das pontas como um sinal visível na tela.
+       *
+       * Existe por um motivo concreto: num diagrama sobre espaços em branco, o
+       * espaço em branco é invisível — o desenho mostraria três resultados
+       * idênticos e não explicaria nada. Ligado, o espaço das pontas aparece
+       * como `·` e o diagrama ganha uma legenda dizendo isso. O valor guardado
+       * continua sendo o texto de verdade: quem troca o sinal é só o desenho.
+       */
+      readonly espacosVisiveis?: boolean
+    }
+
+/** Uma caixa do diagrama: o rótulo em cima, o valor dentro, a nota embaixo. */
+export type ParteDoDiagrama = {
+  readonly rotulo: string
+  readonly valor: string
+  /** Explicação curta daquela parte. Opcional. */
+  readonly nota?: string
+}
 
 /** Exercício de prática. Sempre pede código escrito pelo estudante. */
 export type Exercicio = {
@@ -69,6 +104,22 @@ export type ConteudoDaUnidade = {
     /** Qual parte do livro ler. Sem número de página (D-010). */
     readonly parte: string
     readonly porque: string
+    /**
+     * O que procurar naquela parte, em pontos curtos.
+     *
+     * Existe porque "leia o capítulo 2" não é instrução: quem nunca estudou
+     * programação lê as mesmas páginas e não sabe o que era para ficar. Estes
+     * pontos são o que o estudante deve conseguir **reconhecer ao voltar**.
+     */
+    readonly oQueObservar: readonly string[]
+    /**
+     * O que fazer quando o livro não está em mãos.
+     *
+     * O projeto não pode supor que o estudante tenha o livro por perto — nem que
+     * tenha o livro. Este texto diz, sem drama, que a leitura pode ficar para
+     * depois e que a explicação original cobre o assunto.
+     */
+    readonly semOLivro: string
   }
   readonly explicacao: readonly Bloco[]
   readonly pratica: readonly Exercicio[]

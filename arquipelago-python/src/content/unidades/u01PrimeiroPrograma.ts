@@ -17,6 +17,14 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       'Capítulo 1 do livro — a parte sobre instalar o Python, conferir se a instalação funcionou e rodar o primeiro programa.',
     porque:
       'O caminho de instalação muda de sistema para sistema, e o livro mostra o seu. Aqui vamos cuidar do que é igual em qualquer máquina: como se fala com o Python e como se lê o que ele responde.',
+    oQueObservar: [
+      'Onde o livro manda abrir o terminal no seu sistema. É o único ponto do capítulo que muda entre Windows, macOS e Linux — e é onde a maior parte das pessoas trava.',
+      'Como o livro confere se a instalação deu certo. É o mesmo teste feito aqui: pedir a versão ao Python e ler a resposta.',
+      'Como se pede ajuda ao próprio Python, no fim do capítulo. Quase todo mundo pula essa parte, e é a que mais serve depois.',
+      'O tom com que o livro trata as mensagens de erro: ele não as apresenta como fracasso, e sim como a resposta do programa.',
+    ],
+    semOLivro:
+      'Sem o livro em mãos, o que se perde é o passo a passo de instalação — que muda por sistema e envelhece, porque cada versão nova muda detalhes. O resto está aqui: o que é o interpretador, como se pede ajuda a ele, como se roda um programa e como se lê o que ele responde. A prática funciona com o Python que já estiver instalado na sua máquina, e você pode voltar ao capítulo 1 quando tiver o livro.',
   },
 
   explicacao: [
@@ -29,6 +37,34 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       tipo: 'paragrafo',
       texto:
         'Para conversar com ele, você usa o terminal — uma janela onde se digita comandos como texto puro. Parece tarefa de outro século, e é mesmo: o terminal é a ferramenta mais direta que existe para falar com o computador, e é onde a maior parte do trabalho real em programação acontece.',
+    },
+    {
+      tipo: 'diagrama',
+      titulo: 'O caminho de uma linha',
+      descricao:
+        'O que acontece entre você digitar uma linha e ver o resultado na tela. São quatro passos, e o terceiro é o que as pessoas esquecem que existe.',
+      partes: [
+        {
+          rotulo: 'Você digita',
+          valor: 'print("Olá")',
+          nota: 'no terminal, ou dentro de um arquivo .py',
+        },
+        {
+          rotulo: 'O interpretador lê',
+          valor: 'print("Olá")',
+          nota: 'linha por linha, de cima para baixo',
+        },
+        {
+          rotulo: 'Ele executa',
+          valor: 'põe o texto na tela',
+          nota: 'print é a ordem de mostrar algo',
+        },
+        {
+          rotulo: 'Você lê a resposta',
+          valor: 'Olá',
+          nota: 'e nada mais: o interpretador não elogia nem reclama',
+        },
+      ],
     },
     {
       tipo: 'codigo',

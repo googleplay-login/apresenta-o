@@ -20,15 +20,34 @@ import {
   type ResultadoDeAvaliacao,
 } from './avaliacao'
 
-/** Versão do formato de progresso. Muda quando o formato muda (migração na Etapa 8). */
-export const VERSAO_DO_PROGRESSO = 1
+/**
+ * Versão do formato de progresso.
+ *
+ * A versão 2 acrescentou `leituraFeita` a cada unidade. A migração da 1 para a 2
+ * preserva o que já estava guardado e é feita na leitura
+ * (`persistence/progressoSalvo.ts`): quem aprovou uma ilha antes desta mudança
+ * **não perde nada** por causa de um marcador de leitura.
+ */
+export const VERSAO_DO_PROGRESSO = 2
 
 export type ProgressoDaUnidade = {
   readonly aprovada: boolean
   readonly tentativas: number
   /** Melhor nota já obtida. `null` quando ainda não houve tentativa. */
   readonly melhorNota: ResultadoDeAvaliacao | null
+  /**
+   * `true` quando o estudante marcou a leitura recomendada como feita.
+   *
+   * É um **marcador pessoal**, escrito pela própria pessoa: não é prova de
+   * leitura e não entra em nenhuma conta de aprovação. Guardá-lo importa porque
+   * a trilha tem quatro unidades com quatro leituras, e "onde eu parei" é
+   * exatamente o tipo de coisa que se esquece entre uma sessão e outra.
+   */
+  readonly leituraFeita: boolean
 }
+
+/** Registro de unidade como ele era na versão 1 do formato — sem `leituraFeita`. */
+export type ProgressoDaUnidadeAntigo = Omit<ProgressoDaUnidade, 'leituraFeita'>
 
 /**
  * Progresso do estudante. Estrutura **serializável e versionada**: apenas
@@ -189,6 +208,7 @@ export function registrarResultado(
     aprovada: false,
     tentativas: 0,
     melhorNota: null,
+    leituraFeita: false,
   }
 
   const melhorNota =
@@ -200,6 +220,8 @@ export function registrarResultado(
     aprovada: anterior.aprovada || foiAprovado(resultado),
     tentativas: anterior.tentativas + 1,
     melhorNota,
+    // Registrar nota não mexe no marcador de leitura: são coisas diferentes.
+    leituraFeita: anterior.leituraFeita,
   }
 
   return {
@@ -228,4 +250,59 @@ export function resumoDaUnidade(
 
   const tentativas = registro.tentativas === 1 ? '1 tentativa' : `${registro.tentativas} tentativas`
   return { estado, texto: `${descreverEstado(estado)} · ${tentativas} · melhor nota: ${descreverNota(registro.melhorNota)}` }
+}
+
+/**
+ * Marca (ou desmarca) a leitura recomendada de uma unidade.
+ *
+ * O que esta função **não** faz, e é o ponto principal dela:
+ *
+ *  - não aprova nada, não conta tentativa e não muda nota;
+ *  - não abre a unidade seguinte. Quem abre é `registrarResultado`, e só ela. Um
+ *    marcador de leitura não pode ser atalho para o portão — se fosse, a regra
+ *    dos 80% viraria enfeite: bastaria clicar "li" quatro vezes;
+ *  - não cria progresso de unidade bloqueada: unidade bloqueada não tem leitura
+ *    a marcar, porque o estudante ainda não chegou lá.
+ *
+ * Chamar duas vezes com o mesmo valor não muda nada: marcar de novo o que já
+ * está marcado é o gesto mais comum que existe.
+ */
+export function marcarLeituraFeita(
+  progresso: Progresso,
+  unidades: readonly UnidadeDoPercurso[],
+  unidadeId: string,
+  feita = true,
+): Progresso {
+  const ordenadas = ordenarUnidades(unidades)
+  exigirUnidade(ordenadas, unidadeId)
+
+  if (estadoDaUnidade(progresso, ordenadas, unidadeId) === 'bloqueada') {
+    throw new Error(
+      `A unidade ${unidadeId} está bloqueada. Não há leitura a marcar antes de aprovar a unidade anterior.`,
+    )
+  }
+
+  const anterior: ProgressoDaUnidade = progressoDaUnidade(progresso, unidadeId) ?? {
+    aprovada: false,
+    tentativas: 0,
+    melhorNota: null,
+    leituraFeita: false,
+  }
+
+  if (anterior.leituraFeita === feita) {
+    return progresso
+  }
+
+  return {
+    versao: progresso.versao,
+    unidades: {
+      ...progresso.unidades,
+      [unidadeId]: { ...anterior, leituraFeita: feita },
+    },
+  }
+}
+
+/** Verdadeiro se o estudante já marcou a leitura desta unidade como feita. */
+export function leituraFoiFeita(progresso: Progresso, unidadeId: string): boolean {
+  return progressoDaUnidade(progresso, unidadeId)?.leituraFeita ?? false
 }

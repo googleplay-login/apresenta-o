@@ -14,12 +14,14 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 > ciclo de estudo completo das quatro primeiras unidades (missão, estudo, prática, avaliação e
 > resultado), 5 perguntas por ilha, aprovação com 80% e progresso salvo no próprio navegador.
 >
-> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), leitura do livro na tela
-> (Etapa 6), animação de caminhada do avatar e som.
+> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), animação de caminhada do
+> avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
+> nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
+> linha reproduzida e sem número de página, porque o PDF não está em mãos.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 30 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 36 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -33,7 +35,7 @@ funciona, não aparece como botão.
 
 Outros comandos:
 
-    npm test         # 462 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, interface e acentuação
+    npm test         # 505 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 
@@ -50,6 +52,11 @@ o mouse gira a câmera em volta dela, clicar numa ilha liberada abre a missão e
 inteira leva a pessoa a pé até a ilha seguinte. `Voo livre` (com `Q`/`E` para subir e descer) e
 `Vista de mapa` ficam no HUD. Com o painel aberto, as teclas de movimento param de mover quem quer
 que seja, e `Esc` fecha o painel.
+
+No painel, a aba **Estudo** tem duas seções: *1. Ler no livro* — a parte indicada, o porquê, o que
+procurar e um botão que registra a leitura como feita — e *2. Entender do nosso jeito* — a explicação
+original, com diagramas desenhados em texto. O marcador de leitura é **registro, não permissão**:
+ele não aprova a ilha, não abre a ponte e não muda nota nenhuma (D-033).
 
 ## Documentação
 

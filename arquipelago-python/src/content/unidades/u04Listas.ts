@@ -17,6 +17,14 @@ export const u04Listas: ConteudoDaUnidade = {
       'Capítulo 3 do livro — as partes sobre listas: acessar elementos, alterar, acrescentar, remover, ordenar, e o erro de índice fora do intervalo.',
     porque:
       'O capítulo inteiro é sobre listas, e o livro insiste em um ponto que vale a pena ler devagar: a diferença entre ordenar a lista de verdade e apenas mostrar uma versão ordenada dela.',
+    oQueObservar: [
+      'A parte sobre índice negativo: o livro mostra que dá para chegar ao último item sem saber quantos itens a lista tem. É o atalho que você vai usar sempre que escrever código de verdade.',
+      'As formas de acrescentar e remover: acrescentar ao fim, inserir no meio, apagar por posição e retirar devolvendo o item. Repare no livro que uma delas *devolve* o item — dá para guardar o que saiu.',
+      'O trecho sobre ordenar: uma forma muda a lista, a outra devolve uma cópia ordenada. A mesma distinção reaparece na inversão, e é onde quase todo mundo confunde uma com a outra.',
+      'O erro de índice fora do intervalo, com a mensagem que o livro mostra. Ela vai aparecer na sua tela mais cedo ou mais tarde, e reconhecê-la economiza meia hora.',
+    ],
+    semOLivro:
+      'Sem o livro em mãos, esta unidade continua inteira: o diagrama abaixo mostra os índices dos dois lados — contando do começo e contando do fim —, e a explicação cobre criar, acessar, acrescentar, remover e ordenar. O que o livro acrescenta é a repetição com listas maiores, que aqui ficaram de fora para o texto caber numa tela.',
   },
 
   explicacao: [
@@ -37,6 +45,18 @@ export const u04Listas: ConteudoDaUnidade = {
       titulo: 'A contagem começa em zero',
       texto:
         'O primeiro item está na posição 0, não na 1. Isso não é capricho: é assim na maioria das linguagens, por razões que vêm de como a memória é endereçada. O efeito prático é que o último índice de uma lista de três itens é 2. Enquanto isso não vira automático, conferir sempre vale a pena.',
+    },
+
+    {
+      tipo: 'diagrama',
+      titulo: 'Os dois sentidos da contagem',
+      descricao:
+        'A mesma lista lida pelos dois lados: de cima para baixo, começando em 0; de baixo para cima, começando em -1. Duas formas de chegar ao mesmo item — e a segunda não precisa saber o tamanho da lista.',
+      partes: [
+        { rotulo: '0 e -3', valor: 'banana', nota: 'o primeiro item' },
+        { rotulo: '1 e -2', valor: 'manga', nota: 'o item do meio' },
+        { rotulo: '2 e -1', valor: 'uva', nota: 'o último, alcance por -1 sem contar nada' },
+      ],
     },
     {
       tipo: 'paragrafo',

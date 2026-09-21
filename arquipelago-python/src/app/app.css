@@ -923,8 +923,133 @@ kbd {
 }
 
 .leitura__porque,
-.leitura__nota {
+.leitura__nota,
+.leitura__referencia {
   margin: 0 0 var(--espaco-xs);
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.leitura__referencia {
+  font-variant-numeric: tabular-nums;
+}
+
+.leitura--resumo {
+  margin-top: var(--espaco-md);
+}
+
+/* ---------- Leitura no livro: o que procurar, sem o livro, o marcador ---------- */
+
+.leitura__observar,
+.leitura__sem-livro {
+  margin: var(--espaco-sm) 0 0;
+}
+
+.leitura__rotulo {
+  margin: 0 0 var(--espaco-xs);
+  font-size: 0.875rem;
+}
+
+.leitura__lista {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.leitura__lista li {
+  margin-bottom: var(--espaco-xs);
+}
+
+.leitura__sem-livro {
+  border-left: 3px solid var(--painel-borda);
+  padding-left: var(--espaco-sm);
+}
+
+.leitura__sem-livro p {
+  margin: 0;
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.leitura__marcador {
+  margin-top: var(--espaco-md);
+  border-top: 1px dashed var(--painel-borda);
+  padding-top: var(--espaco-sm);
+}
+
+.leitura__aviso {
+  margin: var(--espaco-xs) 0 0;
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.entendendo {
+  margin-top: var(--espaco-lg);
+}
+
+/* ---------- Diagramas do estudo ---------- */
+
+.diagrama {
+  margin: 0 0 var(--espaco-md);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-painel);
+  padding: var(--espaco-sm) var(--espaco-md) var(--espaco-md);
+  background: var(--painel-fundo-elevado);
+}
+
+.diagrama__titulo {
+  font-weight: 700;
+  margin-bottom: var(--espaco-xs);
+}
+
+.diagrama__descricao {
+  margin: 0 0 var(--espaco-sm);
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.diagrama__partes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.diagrama__parte {
+  display: flex;
+  flex-direction: column;
+  min-width: 8.5rem;
+  max-width: 13rem;
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-chip);
+  padding: var(--espaco-xs) var(--espaco-sm);
+  background: var(--painel-fundo);
+}
+
+.diagrama__rotulo {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texto-secundario);
+}
+
+.diagrama__valor {
+  /* O valor é texto de programa: não se quebra no meio e o espaço conta. */
+  font-family: var(--fonte-mono);
+  font-size: 0.9375rem;
+  white-space: pre-wrap;
+  margin: var(--espaco-xs) 0;
+  overflow-wrap: anywhere;
+}
+
+.diagrama__nota {
+  font-size: var(--fonte-legenda);
+  color: var(--texto-secundario);
+}
+
+.diagrama__legenda {
+  margin: var(--espaco-sm) 0 0;
   font-size: var(--fonte-legenda);
   color: var(--texto-secundario);
 }

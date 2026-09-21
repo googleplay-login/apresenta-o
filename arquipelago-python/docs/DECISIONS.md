@@ -548,3 +548,64 @@ o avatar chegou.
 boas ao lado das estruturas? O passo parece passo? Isso é do roteiro manual, e não está marcado como
 aprovado em lugar nenhum. O avatar também não tem animação de caminhada — as pernas ficam paradas —,
 e isso está dito no código e no relatório.
+
+---
+
+## D-033 — A leitura faz parte do ciclo, e o marcador não é permissão
+**21/09/2026** — decisão de produto e de domínio, na Etapa 6.
+
+**Decisão:** a leitura recomendada do livro é um passo visível do ciclo, com a parte indicada, o
+porquê daquela parte, o que procurar nela e o caminho para quem não tem o livro em mãos. E existe um
+marcador — "leitura feita" — que a pessoa liga e desliga. O marcador é **registro**: ele não entra em
+nenhuma regra de aprovação, não abre ponte e não muda nota.
+
+**Contexto:** dizer "leia o capítulo 2" e deixar a pessoa seguir sem que isso apareça em lugar nenhum
+transforma a leitura em enfeite; por outro lado, fazer da leitura um **requisito** de aprovação
+criaria uma regra que o programa não tem como verificar — ele não sabe se alguém leu. Requisito não
+verificável ou é mentira ou vira obstáculo: quem já sabe o assunto ficaria travado num botão.
+
+**Consequência:** `marcarLeituraFeita()` recusa unidade bloqueada e não toca em `aprovada`,
+`tentativas`, `melhorNota` nem em `sessao.passo`. A tela diz, com todas as letras, que marcar a
+leitura **não aprova a ilha, não abre a ponte e não muda nota nenhuma**. O teste percorre "zero a
+três aprovações" e confere que a nota não se mexe em nenhum caso. E o texto da leitura nunca promete
+página: fala em capítulo e seção, porque toda página continua `null` (D-010).
+
+## D-034 — O diagrama é desenhado em texto, e o espaço vira sinal
+**21/09/2026** — decisão de conteúdo e de arte, na Etapa 6.
+
+**Decisão:** os diagramas da explicação são **dados**, não imagens: um título, uma descrição e uma
+lista de partes rotuladas. Quando o assunto é o que o espaço em branco faz numa string, o diagrama
+liga `espacosVisiveis` e as pontas dos valores passam a aparecer com um sinal visível (`·`),
+explicado em legenda.
+
+**Contexto:** uma imagem por diagrama significaria arquivo a mais, peso a mais, licença a mais e
+texto que ninguém lê em voz alta — além de não acompanhar a tipografia da página. E o espaço em
+branco é justamente o que "se vê" pior numa tela: `" Ilha "` e `"Ilha"` parecem iguais, e é essa
+diferença que a unidade das strings discute.
+
+**Consequência:** `marcarEspacosDasPontas()` marca só o começo e o fim do valor — depois da aspa de
+abertura e antes da de fechar —, e **não** toca nos espaços do meio: marcar tudo deixaria o diagrama
+ilegível e sugeriria um problema que não existe. O sinal é `·`, e não um espaço sublinhado ou um
+realce colorido, porque precisa sobreviver a copiar-e-colar e a leitor de tela. O diagrama é um
+`<figure>` com `figcaption` e `<ol>`: quem não vê a caixa lê a lista na ordem. Sem `espacosVisiveis`
+ligado, nenhum sinal aparece — nada de sinal decorativo onde não há espaço a mostrar (D-009).
+
+## D-035 — O progresso guardado chegou à versão 2, com migração de verdade
+**21/09/2026** — decisão de persistência, na Etapa 6.
+
+**Decisão:** o campo `leituraFeita` obrigou a subir o formato guardado para a **versão 2**. A versão
+1 é **migrada**, não descartada: aprovação, tentativas e melhor nota atravessam intactas, e o
+marcador de leitura começa desmarcado.
+
+**Contexto:** a alternativa — apagar o que estava guardado quando o formato muda — custaria a alguém
+que já tinha aprovado ilhas o progresso inteiro por causa de um campo novo. E a outra alternativa,
+marcar `leituraFeita: true` na migração, seria pior: inventaria um registro de leitura que ninguém
+fez.
+
+**Consequência:** `VERSOES_ACEITAS = [1, 2]`, `migrarProgresso()` devolve sempre um `Progresso` da
+versão atual, e o aviso de migração diz o que foi aproveitado e o que recomeçou. Versão **mais nova**
+que a atual tem mensagem própria ("por cima"): o arquivo não é apagado, e a pessoa é avisada em vez
+de perder dados em silêncio. Versão não numérica ou atual corrompida continua sendo "formato
+inesperado". `ehProgressoValido` é guardião de `ProgressoGuardado` — com `leituraFeita` opcional —, e
+**não** de `Progresso`: só a migração produz a versão completa (o `tsc` já foi enganado por essa
+tentação uma vez, e está registrado em `TEST_REPORT.md`).

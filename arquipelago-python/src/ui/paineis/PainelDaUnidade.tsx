@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ConteudoDaUnidade } from '../../content/tiposDeConteudo'
+import type { ReferenciaLivro } from '../../content/referenciaLivro'
 import type { Resposta, ResultadoDeAvaliacao } from '../../learning/avaliacao'
 import { PASSOS, proximoPasso, type Passo } from '../../state/sessao'
 import { AvaliacaoDaUnidade } from './AvaliacaoDaUnidade'
@@ -25,6 +26,11 @@ import { ResultadoDaUnidade } from './ResultadoDaUnidade'
 
 export type PropsDoPainel = {
   readonly conteudo: ConteudoDaUnidade
+  /** Referência ao livro desta unidade, com o status de página. */
+  readonly referencia: ReferenciaLivro | null
+  /** `true` quando o estudante já marcou a leitura recomendada como feita. */
+  readonly leituraFeita: boolean
+  readonly aoMarcarLeitura: (feita: boolean) => void
   readonly passo: Passo
   readonly respostas: readonly Resposta[]
   readonly resultado: ResultadoDeAvaliacao | null
@@ -98,9 +104,18 @@ export function PainelDaUnidade(props: PropsDoPainel) {
       </nav>
 
       <div className="painel__corpo">
-        {passo === 'missao' ? <MissaoDaUnidade conteudo={conteudo} /> : null}
+        {passo === 'missao' ? (
+          <MissaoDaUnidade conteudo={conteudo} aoIrParaEstudo={() => aoIrPara('estudo')} />
+        ) : null}
 
-        {passo === 'estudo' ? <EstudoDaUnidade conteudo={conteudo} /> : null}
+        {passo === 'estudo' ? (
+          <EstudoDaUnidade
+            conteudo={conteudo}
+            referencia={props.referencia}
+            leituraFeita={props.leituraFeita}
+            aoMarcarLeitura={props.aoMarcarLeitura}
+          />
+        ) : null}
 
         {passo === 'pratica' ? <PraticaDaUnidade exercicios={conteudo.pratica} /> : null}
 

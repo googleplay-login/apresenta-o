@@ -6,6 +6,94 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 6 (o estudo com o livro na tela)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com o conteúdo tipado novo (`oQueObservar`, `semOLivro`, `diagrama`) e a migração de
+formato. Dois ajustes apareceram durante a escrita e foram feitos na hora: `ehProgressoValido` passou
+a devolver `ProgressoGuardado` (a versão antiga não tem `leituraFeita`, e o guardião antigo mentia
+sobre o tipo), e as fixtures de teste passaram a importar `VERSAO_DO_PROGRESSO` em vez de repetir um
+número solto.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 505 testes, 30 arquivos, todos aprovados** (eram 462/28 antes desta etapa).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| Marcar a leitura não muda aprovação, tentativas, melhor nota nem passo | `src/learning/percurso.test.ts` |
+| Marcar leitura em unidade bloqueada é recusado, com erro | `src/learning/percurso.test.ts` |
+| Idempotência: marcar duas vezes devolve o mesmo objeto, e nada mais se move | `src/learning/percurso.test.ts` |
+| Zero a três aprovações na conta: o marcador nunca altera nota em nenhum caso | `src/learning/percurso.test.ts` |
+| Versão 1 do arquivo guardado é migrada, preservando aprovação, tentativas e melhor nota | `src/persistence/progressoSalvo.test.ts` |
+| A migração deixa o marcador de leitura **desmarcado**, e diz isso no aviso | `src/persistence/progressoSalvo.test.ts` |
+| Versão futura tem aviso próprio ("por cima"), sem apagar o arquivo | `src/persistence/progressoSalvo.test.ts` |
+| A ação `marcarLeitura` não move o passo nem mexe em respostas e resultado | `src/state/sessao.test.ts` |
+| Com o painel aberto no estudo, o teclado do mundo continua desligado | `src/state/sessao.test.ts` |
+| Todas as unidades têm `oQueObservar` e `semOLivro`, e a leitura continua sem página | `src/content/conteudo.test.ts` |
+| Cada diagrama tem duas ou mais partes, rótulos únicos e nenhum valor vazio | `src/content/conteudo.test.ts` |
+| Só a unidade das strings liga `espacosVisiveis` — e ela tem espaço de sobra para mostrar | `src/content/conteudo.test.ts` |
+| A leitura aparece como passo do estudo, com o porquê e o que observar na tela | `src/ui/paineis/EstudoDaUnidade.test.tsx` (12 testes) |
+| O marcador muda de estado na tela e diz que não aprova nada | `src/ui/paineis/EstudoDaUnidade.test.tsx` |
+| O diagrama desenha as partes na ordem, com rótulo e valor | `src/ui/paineis/EstudoDaUnidade.test.tsx` |
+| Só as pontas ganham o sinal de espaço; o miolo do texto fica intacto | `src/ui/paineis/EstudoDaUnidade.test.tsx` |
+| Toda `var(--…)` usada no CSS existe entre os tokens, e o nome não tem ponto | `qa/estilos.test.ts` (4 testes) |
+| O painel do projeto não afirma que recurso pronto está ausente | `src/app/App.test.tsx` |
+| O painel avisa que ninguém viu o desenho 3D, e que a leitura marcada não aprova | `src/app/App.test.tsx` |
+
+**Defeito real encontrado nesta etapa:** `app.css` usava `var(--painel.fundo-elevado)` — nome com
+ponto, que `tokensComoVariaveisCss()` nunca produz. A declaração era simplesmente ignorada pelo
+navegador, e o fundo do diagrama ficava com a cor de baixo. O teste de estilos pegou na primeira
+execução; virou `--painel-fundo-elevado`.
+
+**Terceiro defeito, de texto:** a página **Painel do projeto** (`#/painel`) continuava dizendo, desde
+a Etapa 2, que "nenhuma ilha, nenhuma ponte, nenhum avatar" existia, que "nada é gravado no
+navegador" e que não havia "nenhuma pergunta escrita". Tudo isso passou a ser falso nas Etapas 3, 4 e
+5, e a página seguiu mentindo por três etapas — ninguém tinha motivo para reler aquele texto. A lista
+foi refeita com o estado real (inclusive o aviso de que **ninguém viu o desenho 3D**), e três testes
+novos em `src/app/App.test.tsx` travam o retorno do texto velho.
+
+**Segundo defeito, na própria trava de testes:** a regra de "só as pontas" ganharam sinal precisou
+mudar de ideia uma vez. A primeira versão marcava o começo e o fim **da string inteira** e deixava
+`"  Ilha  "` intacto, porque as pontas do valor são aspas, não espaços. O teste escrito para essa
+regra falhou por motivo certo, a função passou a olhar também o que está logo dentro das aspas, e a
+regra ficou: espaços depois da aspa de abertura e antes da de fechamento aparecem; os do meio, não.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       20.26 kB │ gzip:   3.52 kB
+    dist/assets/index-*.js       298.06 kB │ gzip:  94.42 kB
+    dist/assets/Cena-*.js        912.10 kB │ gzip: 242.34 kB
+
+A cena continua em bloco separado (D-022). O pacote principal cresceu ~3,6 kB comprimidos: a leitura
+orientada, os diagramas e o marcador entraram no bloco que a pessoa já carrega.
+
+### 4. Servidor de desenvolvimento — EXECUTADO
+
+    curl -H 'Host: 5173-x.e2b.app' http://127.0.0.1:5173/<caminho>
+
+`/`, `/src/ui/paineis/LeituraDaUnidade.tsx`, `/src/ui/paineis/DiagramaDaExplicacao.tsx`,
+`/src/ui/paineis/EstudoDaUnidade.tsx`, `/src/ui/paineis/MissaoDaUnidade.tsx`,
+`/src/ui/paineis/PainelDaUnidade.tsx`, `/src/state/sessao.ts`, `/src/persistence/progressoSalvo.ts`,
+`/src/learning/percurso.ts` e `/src/content/unidades/u03.ts` → todos **200**, nenhum
+"Internal server error". Isto prova que os módulos novos compilam e são servidos; **não** prova
+aparência.
+
+### 5. O que continua NÃO executado
+
+Aparência da leitura e dos diagramas na tela, a legibilidade do sinal de espaço (`·`) em tamanho
+real, o contraste do diagrama, a leitura por leitor de tela das seções novas, e **a migração da
+versão 1 aplicada sobre um `localStorage` de navegador de verdade**. Nenhum desses itens está marcado
+como aprovado. O roteiro manual abaixo ganhou os itens 31 a 36.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 5 (navegação e avatar)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -393,7 +481,27 @@ item, sem presumir sucesso.
     modesto. Sem medida neste ambiente, isto é o item mais frágil do roteiro — e o único que pede
     olhar um contador de quadros.
 
-Resultado esperado: 30 de 30 conferidos. Qualquer item que falhe deve ser registrado aqui.
+### Roteiro manual — o estudo com o livro na tela (Etapa 6)
+
+31. **A leitura é um passo**: abrir a primeira ilha e ir até a aba **Estudo**. A seção **1. Ler no
+    livro** deve vir **antes** da explicação, com a parte indicada (capítulo e seção), o porquê e a
+    lista do que procurar. Nenhum número de página deve aparecer.
+32. **O caminho sem livro**: logo abaixo, "Se você não tem o livro agora" deve trazer uma saída que
+    ensine sem o livro. Não pode haver botão de abrir PDF nem link para arquivo que não existe.
+33. **O marcador não mente**: clicar em "Marcar esta leitura como feita". O botão deve passar a
+    "Leitura marcada como feita", e o texto ao lado deve dizer que isso **não** aprova a ilha, não
+    abre a ponte e não muda nota. Conferir no painel: a nota e o placar não podem ter mudado.
+34. **O marcador sobrevive**: recarregar a página e voltar ao estudo. O marcador deve continuar
+    marcado, e a nota, igual. Desmarcar e recarregar: deve continuar desmarcado.
+35. **Os diagramas são legíveis**: percorrer as quatro ilhas e conferir que os diagramas aparecem com
+    título, descrição e as partes na ordem, que o texto das partes não é cortado, e que a lista é lida
+    em voz alta por leitor de tela sem perder rótulos.
+36. **O sinal de espaço se entende**: na unidade das strings, o diagrama com `espacosVisiveis` deve
+    mostrar `·` só nas pontas dos valores (depois da aspa de abertura e antes da de fechar), com uma
+    legenda dizendo o que o sinal significa — e **nenhum** `·` nos espaços do meio das frases. Num
+    navegador com leitor de tela, a legenda precisa ser lida.
+
+Resultado esperado: 36 de 36 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

@@ -4,7 +4,7 @@ import { PainelDaUnidade } from '../../ui/paineis/PainelDaUnidade'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
-import { progressoInicial, proximaUnidade } from '../../learning/percurso'
+import { leituraFoiFeita, progressoInicial, proximaUnidade } from '../../learning/percurso'
 import { criarRedutor, estadoInicial, podeMoverCamera, type Passo } from '../../state/sessao'
 import { useProgressoPersistido } from '../../persistence/useProgressoPersistido'
 import { useSuporteWebgl } from '../../world/suporteWebgl'
@@ -86,6 +86,15 @@ export function Mundo() {
 
   const unidadeAbertaId = estado.sessao.unidadeId
   const conteudo = unidadeAbertaId === null ? null : conteudoDaUnidade(unidadeAbertaId)
+  // A referência ao livro vive no plano de unidades, não no conteúdo: é lá que
+  // ela existe desde a Etapa 1, com o status de página. Aqui só se busca a da
+  // unidade aberta, para o painel poder dizer onde a leitura está — inclusive
+  // quando ela ainda está pendente.
+  const referencia =
+    unidadeAbertaId === null
+      ? null
+      : UNIDADES.find((unidade) => unidade.id === unidadeAbertaId)?.referencia ?? null
+  const leituraFeita = unidadeAbertaId === null ? false : leituraFoiFeita(estado.progresso, unidadeAbertaId)
 
   const abrirUnidade = useCallback(
     (unidadeId: string) => {
@@ -417,6 +426,9 @@ export function Mundo() {
         ) : (
           <PainelDaUnidade
             conteudo={conteudo}
+            referencia={referencia}
+            leituraFeita={leituraFeita}
+            aoMarcarLeitura={(feita) => despachar({ tipo: 'marcarLeitura', feita })}
             passo={estado.sessao.passo}
             respostas={estado.sessao.respostas}
             resultado={estado.sessao.resultado}

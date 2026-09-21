@@ -16,6 +16,43 @@ import type { ConteudoDaUnidade, Pergunta } from './tiposDeConteudo'
 
 const LINGUAGENS = ['python', 'terminal'] as const
 
+/**
+ * Problemas de um diagrama.
+ *
+ * Um diagrama com uma caixa só não desenha nada, e um com rótulos repetidos
+ * confunde mais do que explica. Estas duas coisas são forma, e forma erra em
+ * silêncio no meio de um texto longo — por isso são conferidas por teste.
+ */
+function problemasNoDiagrama(
+  bloco: { readonly titulo: string; readonly descricao: string; readonly partes: readonly { readonly rotulo: string; readonly valor: string }[] },
+  onde: string,
+): readonly string[] {
+  const problemas: string[] = []
+
+  if (bloco.titulo.trim() === '') {
+    problemas.push(`${onde}: sem título`)
+  }
+  if (bloco.descricao.trim() === '') {
+    problemas.push(`${onde}: sem descrição do que o desenho mostra`)
+  }
+  if (bloco.partes.length < 2) {
+    problemas.push(`${onde}: precisa de ao menos duas caixas para mostrar alguma coisa`)
+  }
+
+  const rotulos = new Set<string>()
+  for (const parte of bloco.partes) {
+    if (parte.rotulo.trim() === '' || parte.valor.trim() === '') {
+      problemas.push(`${onde}: caixa com rótulo ou valor vazio`)
+    }
+    if (rotulos.has(parte.rotulo)) {
+      problemas.push(`${onde}: rótulo repetido (${parte.rotulo})`)
+    }
+    rotulos.add(parte.rotulo)
+  }
+
+  return problemas
+}
+
 /** Reclamações encontradas. Vazio significa conteúdo consistente. */
 export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string[] {
   const problemas: string[] = []
@@ -29,6 +66,15 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
   }
   if (unidade.leitura.parte.trim() === '' || unidade.leitura.porque.trim() === '') {
     problemas.push(`${onde}: leitura recomendada incompleta`)
+  }
+  if (unidade.leitura.oQueObservar.length === 0) {
+    problemas.push(`${onde}: leitura recomendada sem pontos de observação`)
+  }
+  if (unidade.leitura.oQueObservar.some((ponto) => ponto.trim() === '')) {
+    problemas.push(`${onde}: ponto de observação vazio na leitura recomendada`)
+  }
+  if (unidade.leitura.semOLivro.trim().length < 20) {
+    problemas.push(`${onde}: texto de "sem o livro" curto demais ou vazio`)
   }
   if (unidade.explicacao.length === 0) {
     problemas.push(`${onde}: explicação vazia`)
@@ -46,6 +92,8 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
       if (bloco.itens.length === 0) {
         problemas.push(`${onde}: lista ${indice + 1} sem itens`)
       }
+    } else if (bloco.tipo === 'diagrama') {
+      problemas.push(...problemasNoDiagrama(bloco, `${onde}: diagrama ${indice + 1}`))
     } else if (bloco.texto.trim() === '') {
       problemas.push(`${onde}: bloco ${indice + 1} com texto vazio`)
     }

@@ -18,6 +18,14 @@ export const u03Strings: ConteudoDaUnidade = {
       'Capítulo 2 do livro — as partes sobre strings: aspas simples e duplas, mudança de maiúsculas e minúsculas, remoção de espaços em branco, concatenação e interpolação.',
     porque:
       'É onde o livro apresenta os primeiros métodos, com exemplos bem escolhidos. Preste atenção especial na parte sobre espaços em branco: é o assunto que mais causa confusão silenciosa em quem está começando.',
+    oQueObservar: [
+      'A forma como o livro escreve um método: o nome do texto, um ponto, o nome do método e os parênteses. O ponto é a instrução "faça isto com este texto", e essa forma volta na linguagem inteira.',
+      'A diferença entre `rstrip()`, `lstrip()` e `strip()`: os três tiram espaços, e cada um tira de um lado. Confira no livro o que cada um devolve, e não só o nome deles.',
+      'A parte sobre interpolação: o livro ensina `.format()`, e hoje se escreve f-string. Guarde as duas formas — a do livro continua funcionando e aparece em código por aí.',
+      'O trecho sobre apóstrofo dentro de aspas: é o caso em que escolher aspas simples ou duplas deixa de ser estilo e passa a ser obrigatório.',
+    ],
+    semOLivro:
+      'Sem o livro em mãos, esta unidade continua inteira: os métodos aparecem aqui com exemplos, o diagrama abaixo mostra o que cada um dos três faz com um texto que tem espaços nas pontas, e a prática exercita cada caso. O que o livro acrescenta é a lista mais longa de exemplos, com variações que aqui ficaram de fora para o texto caber numa tela.',
   },
 
   explicacao: [
@@ -91,6 +99,23 @@ export const u03Strings: ConteudoDaUnidade = {
       tipo: 'paragrafo',
       texto:
         'A segunda forma se chama f-string. O `f` antes das aspas avisa que ali dentro existem chaves a serem substituídas pelo valor das variáveis. Repare que o número entrou sem `str()`: a f-string converte sozinha. É mais curta de escrever e muito mais fácil de ler depois.',
+    },
+    {
+      tipo: 'diagrama',
+      titulo: 'O que cada método de limpeza devolve',
+      descricao:
+        'Todos partem do mesmo texto, com dois espaços de cada lado. O sinal · marca um espaço — sem ele, os três resultados pareceriam iguais na tela, e é exatamente essa a confusão que este diagrama existe para desfazer.',
+      espacosVisiveis: true,
+      partes: [
+        {
+          rotulo: 'O texto',
+          valor: '"  Ilha  "',
+          nota: 'com dois espaços em cada ponta',
+        },
+        { rotulo: 'rstrip()', valor: '"  Ilha"', nota: 'tira só da direita' },
+        { rotulo: 'lstrip()', valor: '"Ilha  "', nota: 'tira só da esquerda' },
+        { rotulo: 'strip()', valor: '"Ilha"', nota: 'tira dos dois lados' },
+      ],
     },
     {
       tipo: 'avisoDeVersao',

@@ -37,7 +37,7 @@ function criarArmazenamento(inicial: Record<string, string> = {}): Armazenamento
 const PROGRESSO_VALIDO: Progresso = {
   versao: VERSAO_DO_PROGRESSO,
   unidades: {
-    u01: { aprovada: true, tentativas: 2, melhorNota: { acertos: 5, total: 5 } },
+    u01: { aprovada: true, tentativas: 2, melhorNota: { acertos: 5, total: 5 }, leituraFeita: false },
   },
 }
 
@@ -106,15 +106,80 @@ describe('falhas de leitura não quebram a aplicação', () => {
     expect(resultado.aviso).toContain('formato inesperado')
   })
 
-  it('avisa quando o progresso é de outra versão, sem fingir que migrou', () => {
+  it('recusa progresso de versão mais nova, e diz que é do futuro — não que está estragado', () => {
     const armazenamento = criarArmazenamento({
       [CHAVE_DO_PROGRESSO]: JSON.stringify({ versao: 99, unidades: {} }),
     })
     const resultado = lerProgresso(armazenamento)
 
     expect(resultado.progresso.versao).toBe(VERSAO_DO_PROGRESSO)
-    expect(resultado.aviso).toContain('versão anterior')
+    expect(resultado.aviso).toContain('versão mais nova')
     expect(resultado.aviso).toContain('99')
+    // O aviso não pode prometer que o dado antigo está a salvo.
+    expect(resultado.aviso).toContain('por cima')
+  })
+
+  it('acusa formato inesperado quando a versão nem é número', () => {
+    const armazenamento = criarArmazenamento({
+      [CHAVE_DO_PROGRESSO]: JSON.stringify({ versao: 'um', unidades: {} }),
+    })
+
+    expect(lerProgresso(armazenamento).aviso).toContain('formato inesperado')
+  })
+
+  it('migra o progresso da versão 1: a aprovação continua, a leitura começa desmarcada', () => {
+    // Como era o arquivo antes do marcador de leitura existir.
+    const antigo = {
+      versao: 1,
+      unidades: {
+        u01: { aprovada: true, tentativas: 2, melhorNota: { acertos: 5, total: 5 } },
+        u02: { aprovada: false, tentativas: 1, melhorNota: { acertos: 3, total: 5 } },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(antigo) })
+    const resultado = lerProgresso(armazenamento)
+
+    expect(resultado.progresso.versao).toBe(VERSAO_DO_PROGRESSO)
+    expect(resultado.progresso.unidades.u01?.aprovada).toBe(true)
+    expect(resultado.progresso.unidades.u01?.tentativas).toBe(2)
+    expect(resultado.progresso.unidades.u02?.melhorNota).toEqual({ acertos: 3, total: 5 })
+    // A migração não atribui ao estudante um ato que ele não praticou.
+    expect(resultado.progresso.unidades.u01?.leituraFeita).toBe(false)
+    expect(resultado.progresso.unidades.u02?.leituraFeita).toBe(false)
+    // E o estudante fica sabendo que o arquivo dele veio de outra versão.
+    expect(resultado.aviso).toContain('versão anterior')
+    expect(resultado.aviso).toContain('aproveitado')
+  })
+
+  it('migra também o progresso da versão 1 já com o marcador, sem perder o que estava marcado', () => {
+    // Arquivo híbrido: versão 1, mas com o campo do marcador dentro. É o que sai
+    // de uma versão intermediária, e recusá-lo seria perder trabalho de alguém.
+    const hibrido = {
+      versao: 1,
+      unidades: {
+        u01: { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 }, leituraFeita: true },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(hibrido) })
+
+    expect(lerProgresso(armazenamento).progresso.unidades.u01?.leituraFeita).toBe(true)
+  })
+
+  it('recusa registro com leituraFeita de tipo errado, em vez de adivinhar', () => {
+    const errado = {
+      versao: VERSAO_DO_PROGRESSO,
+      unidades: {
+        u01: {
+          aprovada: true,
+          tentativas: 1,
+          melhorNota: { acertos: 5, total: 5 },
+          leituraFeita: 'sim',
+        },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(errado) })
+
+    expect(lerProgresso(armazenamento).aviso).toContain('formato inesperado')
   })
 
   it('erro do próprio armazenamento ao ler vira aviso', () => {

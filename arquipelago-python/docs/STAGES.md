@@ -13,8 +13,8 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 2 | Domínio e progressão, testados | **concluída** |
 | 3 | Uma ilha 3D, com o ciclo funcionando de ponta a ponta | **concluída** |
 | 4 | Três ilhas e as pontes | **concluída** |
-| 5 | Navegação e avatar | não iniciada |
-| 6 | Estudo e leitura do livro na tela | não iniciada |
+| 5 | Navegação e avatar | **concluída** |
+| 6 | Estudo e leitura do livro na tela | **concluída** |
 | 7 | Avaliação | não iniciada |
 | 8 | Persistência local e protótipo jogável | não iniciada |
 | 9 | Prova de conceito de Pyodide | não iniciada |
@@ -189,11 +189,48 @@ possível, porque o chão não tem paredes internas.
 
 ---
 
+## Etapa 6 — O estudo com o livro na tela (concluída em 21/09/2026)
+
+A aba de estudo mostrava a explicação e os exercícios, mas a leitura recomendada do livro não existia
+em lugar nenhum. Agora ela é um passo visível do ciclo — **e o que ela não é ficou dito.**
+
+- **A leitura tem quatro partes**: qual parte do livro ler, **por que** aquela parte, **o que
+  procurar** nela (quatro pontos por unidade) e **o caminho de quem não tem o livro em mãos**, que
+  aprende a mesma coisa sem ele. Sem PDF nesta máquina, a referência fala em capítulo e seção e
+  **nunca em página** (D-010).
+- **O marcador de leitura é registro, não permissão.** `marcarLeituraFeita()` liga e desliga o
+  registro naquela unidade, recusa unidade bloqueada, e **não** mexe em aprovação, tentativas, melhor
+  nota nem passo. A própria tela diz: marcar a leitura não aprova a ilha, não abre a ponte e não muda
+  nota nenhuma (D-033).
+- **A aba de estudo virou duas seções declaradas**: *1. Ler no livro* e *2. Entender do nosso jeito*.
+  A missão anuncia o que a leitura vai pedir, e o botão leva direto para lá.
+- **Os diagramas da explicação são dados, não imagens**: título, descrição e partes rotuladas, em
+  `<figure>` com legenda e lista ordenada. Seis diagramas entraram no conteúdo — o caminho de uma
+  linha, a variável como etiqueta, por que número e texto não se somam, o que cada método de limpeza
+  devolve, os espaços que não se veem, e os dois sentidos da contagem (D-034).
+- **Quando o assunto é o espaço em branco, ele aparece.** `marcarEspacosDasPontas()` troca os espaços
+  das pontas do valor por um sinal (`·`), com legenda dizendo o que o sinal significa — e **não**
+  toca nos espaços do meio, que não são o assunto.
+- **O progresso guardado subiu para a versão 2, com migração de verdade** (D-035): quem tinha
+  aprovação, tentativas e melhor nota guardados não perde nada; o marcador de leitura começa
+  desmarcado, porque marcá-lo sozinho inventaria um ato que não aconteceu.
+- **Trava nova:** `qa/estilos.test.ts` compara as `var(--…)` do CSS com os tokens reais, e recusou um
+  token com ponto no nome (`--painel.fundo-elevado`) que não existia de verdade.
+
+**Corrigido de passagem:** a página `#/painel` ainda descrevia o projeto como na Etapa 2 — dizia que
+não havia ilha, ponte, avatar, pergunta escrita nem gravação no navegador. Passou três etapas
+mentindo sobre o próprio estado. A lista foi refeita, e três testes a impedem de voltar atrás.
+
+**Limite explícito:** não há texto do livro na tela — nenhuma linha, nenhum trecho, nenhum PDF. O que
+aparece é orientação de leitura escrita por nós e explicação original. E o marcador não altera
+nenhuma regra: ele é a pessoa anotando o que fez, não o programa liberando o que ela pode fazer.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **6** — estudo: leitura recomendada, explicação original, diagrama do livro.
 - **7** — avaliação: as perguntas de verdade, exigir resposta em todas, corrigir após envio.
 - **8** — persistência local versionada e protótipo jogável.
 - **9** — prova de conceito de Pyodide em Web Worker, carregado sob demanda.

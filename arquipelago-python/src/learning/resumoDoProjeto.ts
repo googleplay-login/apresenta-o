@@ -30,4 +30,8 @@ export const ESTADO_DO_PROJETO = {
   semAtalho:
     'Nenhuma dessas regras aceita rota, hash ou parâmetro de URL. Abrir um painel ou clicar numa ' +
     'ponte não muda o estado: só um resultado de avaliação válido muda.',
+
+  leitura:
+    'Marcar a leitura do livro como feita é registro, não permissão: não aprova a unidade, não ' +
+    'abre a ponte e não muda nota nenhuma. Quem decide se a pessoa segue é a nota da avaliação.',
 } as const

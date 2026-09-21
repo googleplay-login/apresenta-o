@@ -8,6 +8,7 @@ import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
 import { CHAVE_DO_PROGRESSO } from '../../persistence/progressoSalvo'
+import { VERSAO_DO_PROGRESSO } from '../../learning/percurso'
 
 /**
  * O ciclo de estudo inteiro, com cliques de verdade, num DOM de verdade.
@@ -87,7 +88,10 @@ describe('abrir e fechar ilhas', () => {
 
     const painel = await screen.findByRole('region', { name: `Unidade ${primeira?.id ?? ''}` })
     expect(within(painel).getByText('Sua missão nesta ilha')).toBeTruthy()
-    expect(within(painel).getByText(/referência de página está pendente/i)).toBeTruthy()
+
+    // A missão aponta para a leitura; a pendência de página é dita no passo
+    // Estudo, onde a leitura acontece (D-010).
+    expect(within(painel).getByText(/A leitura desta ilha/)).toBeTruthy()
 
     // O foco entra no painel: com ele aberto, as teclas de movimento não podem
     // continuar chegando à câmera (decisão D-012).
@@ -325,7 +329,7 @@ describe('progresso guardado no navegador', () => {
       unidades?: Record<string, { aprovada?: boolean; tentativas?: number }>
     }
 
-    expect(guardado.versao).toBe(1)
+    expect(guardado.versao).toBe(VERSAO_DO_PROGRESSO)
     expect(guardado.unidades?.[primeira?.id ?? '']?.aprovada).toBe(true)
     expect(guardado.unidades?.[primeira?.id ?? '']?.tentativas).toBe(1)
     // Somente dado simples: nada de função, componente ou objeto do Three.js.

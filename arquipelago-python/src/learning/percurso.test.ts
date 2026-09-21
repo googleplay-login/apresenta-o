@@ -7,6 +7,8 @@ import {
   progressoDaUnidade,
   progressoInicial,
   proximaUnidade,
+  leituraFoiFeita,
+  marcarLeituraFeita,
   registrarResultado,
   resumoDaUnidade,
   unidadeEstaAcessivel,
@@ -249,5 +251,96 @@ describe('texto de exibição', () => {
       estado: 'disponivel',
       texto: 'Disponível',
     })
+  })
+})
+
+describe('marcador de leitura', () => {
+  it('marca a leitura da unidade acessível sem tocar em nota nem em tentativa', () => {
+    const comLeitura = marcarLeituraFeita(progressoInicial(), UNIDADES, 'u01')
+
+    expect(leituraFoiFeita(comLeitura, 'u01')).toBe(true)
+    expect(progressoDaUnidade(comLeitura, 'u01')).toEqual({
+      aprovada: false,
+      tentativas: 0,
+      melhorNota: null,
+      leituraFeita: true,
+    })
+  })
+
+  it('não aprova a unidade e não abre a seguinte: quem abre é a nota', () => {
+    // Esta é a garantia central do marcador. Se ele liberasse a ilha seguinte, a
+    // regra dos 80% viraria enfeite: bastaria clicar "li" quatro vezes.
+    const soComLeitura = marcarLeituraFeita(progressoInicial(), UNIDADES, 'u01')
+
+    expect(estadoDaUnidade(soComLeitura, UNIDADES, 'u01')).toBe('disponivel')
+    expect(estadoDaUnidade(soComLeitura, UNIDADES, 'u02')).toBe('bloqueada')
+    expect(unidadeEstaAcessivel(soComLeitura, UNIDADES, 'u02')).toBe(false)
+    expect(proximaUnidade(soComLeitura, UNIDADES)?.id).toBe('u01')
+  })
+
+  it('marcar duas vezes não muda nada', () => {
+    const uma = marcarLeituraFeita(progressoInicial(), UNIDADES, 'u01')
+    const duas = marcarLeituraFeita(uma, UNIDADES, 'u01')
+
+    expect(duas).toBe(uma)
+  })
+
+  it('desmarca quando pedido, e voltar ao começo não apaga a aprovação', () => {
+    const aprovada = aprovando(progressoInicial(), 'u01')
+    const marcada = marcarLeituraFeita(aprovada, UNIDADES, 'u01')
+    const desmarcada = marcarLeituraFeita(marcada, UNIDADES, 'u01', false)
+
+    expect(leituraFoiFeita(desmarcada, 'u01')).toBe(false)
+    expect(progressoDaUnidade(desmarcada, 'u01')?.aprovada).toBe(true)
+    expect(progressoDaUnidade(desmarcada, 'u01')?.melhorNota).toEqual(APROVADO)
+  })
+
+  it('recusa marcar leitura de unidade bloqueada', () => {
+    expect(() => marcarLeituraFeita(progressoInicial(), UNIDADES, 'u02')).toThrow(/bloqueada/)
+  })
+
+  it('recusa unidade fora do percurso', () => {
+    expect(() => marcarLeituraFeita(progressoInicial(), UNIDADES, 'u99')).toThrow(/não existe/)
+  })
+
+  it('registrar nota depois da leitura preserva o marcador', () => {
+    const comLeitura = marcarLeituraFeita(progressoInicial(), UNIDADES, 'u01')
+    const comNota = registrarResultado(comLeitura, UNIDADES, 'u01', APROVADO)
+
+    expect(progressoDaUnidade(comNota, 'u01')?.leituraFeita).toBe(true)
+    expect(progressoDaUnidade(comNota, 'u01')?.aprovada).toBe(true)
+  })
+
+  it('não existe caminho que marque leitura em unidade bloqueada e abra o portão', () => {
+    // Varredura: para todo progresso possível com zero, uma, duas e três
+    // aprovações, marcar leitura nas unidades acessíveis não muda o estado de
+    // nenhuma unidade — só o marcador.
+    const acessiveis = (progresso: Progresso): readonly string[] =>
+      UNIDADES.filter((unidade) => unidadeEstaAcessivel(progresso, UNIDADES, unidade.id)).map(
+        (unidade) => unidade.id,
+      )
+
+    const construir = (quantas: number): Progresso => {
+      let progresso = progressoInicial()
+      for (let indice = 0; indice < quantas; indice += 1) {
+        progresso = aprovando(progresso, UNIDADES[indice]?.id ?? '')
+      }
+      return progresso
+    }
+
+    for (let quantas = 0; quantas <= 3; quantas += 1) {
+      const antes = construir(quantas)
+      let depois = antes
+      for (const id of acessiveis(antes)) {
+        depois = marcarLeituraFeita(depois, UNIDADES, id)
+      }
+
+      for (const unidade of UNIDADES) {
+        expect(estadoDaUnidade(depois, UNIDADES, unidade.id)).toBe(
+          estadoDaUnidade(antes, UNIDADES, unidade.id),
+        )
+      }
+      expect(proximaUnidade(depois, UNIDADES)?.id).toBe(proximaUnidade(antes, UNIDADES)?.id)
+    }
   })
 })

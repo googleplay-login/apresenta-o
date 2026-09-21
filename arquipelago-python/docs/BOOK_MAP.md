@@ -55,6 +55,20 @@ Decisão D-001: o capítulo 2 foi dividido em dois recortes.
 Todas com `status: 'referencia-pendente'`. A interface mostra "página: referência pendente" em
 vez de um número não verificado.
 
+### O que cada unidade diz da leitura, sem citar o livro
+
+Desde a Etapa 6, cada uma das quatro unidades carrega, além de `parte` (capítulo e seção) e `porque`:
+
+| Campo | O que é | Estado |
+|---|---|---|
+| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 4 unidades |
+| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 4 unidades |
+| `pagina` / `paginaPdf` | Número da página | `null` nas 4 — o PDF não está em mãos (D-010) |
+
+Nenhum dos dois campos novos cita o livro: eles dizem o que **procurar** e como seguir sem ele.
+Nem a interface nem o conteúdo copiam trecho, nome de exemplo ou exercício da obra
+(`CONTENT_GUIDE.md`).
+
 ## Única evidência de paginação existente
 
 O texto fornecido contém **referências cruzadas internas**, que são o único vestígio de
