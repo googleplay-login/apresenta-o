@@ -66,9 +66,28 @@ medida — a copa em 0,32 **sem** escurecer ficava a **12,0** do capim da ilha m
 misturada com o capim claro caía para **30,1**. O que passou está na tabela de D-063 (madeira 0,20 · pedra
 0,16 · copa 0,18 + escurecer 0,8 · arbusto 0,30 · flor âmbar puro).
 
+### 4.1 Os objetos do tema, medidos (segunda queixa da captura)
+
+O usuário escreveu também que *"as ilhas poderiam ter caracteristicas do tema que ta sendo abordado"*.
+Cada trilha ganhou um objeto do tema, repetido pelo capim, e as medidas são:
+
+| | valor |
+| --- | --- |
+| objetos no mundo | **49**, em 18 ilhas |
+| por trilha | conceitos-basicos **30** · invasao-alienigena **8** · visualizacao-de-dados **11** |
+| por ilha | **2 a 4** (faixa sorteada, como a vegetação) |
+| escala do objeto na ilha | **0,872 a 1,162** (o raio do topo dividido por 6) |
+| malhas por objeto | **1** (pintada por vértice, com pedra e madeira da ilha e acento da trilha) |
+| menor distância de um objeto até uma estrutura | **2,101** (limite cobrado: 1,6) |
+| pior seno em relação à linha da ponte | **0,299** (limite cobrado: 0,24) |
+| raio declarado da torre de barras | **0,84**, e a peça mede **0,8319** — nasceu 0,83, e o teste pegou |
+
 ### 5. Testes executados
 
-- **`npx vitest run`** — **43 arquivos, 785 testes, todos aprovados** (eram 43 e 779). Os novos cobram: a
+- **`npx vitest run`** — **44 arquivos, 792 testes, todos aprovados** (eram 43 e 779). Os novos cobram: os
+  objetos do tema (um por trilha, com as quatro trilhas declaradas; altura e raio declarados contra a
+  malha medida; malha pintada por vértice com os três papéis de cor; e, na cena, o objeto certo na ilha
+  certa, longe das estruturas e fora da linha da ponte); a
   trilha de dados escrita e coerente com o conteúdo; os três marcos com declarado ≥ medido e o eixo de
   giro certo; as cores por ilha (dezoito madeiras, dezoito pedras, dezoito copas distintas, todas dentro do
   orçamento de luz e sem sumir no capim); a ponte ancorada no capim desenhado (as duas pontas dentro do
@@ -97,6 +116,10 @@ as cores estão dentro do orçamento de luz. O que depende de olhar, com o rotei
 3. **Ilhas diferentes** — de longe: madeira, pedra e folhagem mudam de ilha para ilha, e a bandeira da
    trilha é visível antes do nome.
 4. **Vida no capim** — de perto: arbustos e flores, e a árvore com tronco e copa bem separados.
+5. **Objetos do tema** — o que se procura é a **diferença entre as trilhas**: pilha de livros nas ilhas da
+   Parte I, disco voador nas do jogo, torre de barras nas de dados. Se os três parecerem a mesma coisa
+   colorida, o que falta é silhueta, e o número a medir é a altura e o raio de cada um (0,88 e 0,80 da
+   pilha; 0,94 e 0,95 do disco; 1,41 e 0,84 da torre).
 
 ---
 

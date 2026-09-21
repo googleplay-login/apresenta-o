@@ -16,6 +16,7 @@ import {
 import { Malha3D } from './Malha'
 import { gerarBandeira } from './geometria/solidos'
 import type { FormaDeBandeira } from './geometria/solidos'
+import { gerarObjetoDoTema, tipoDeObjetoDaTrilha } from './geometria/objetosDoTema'
 import type { IdDeTrilha } from '../content/planoDeUnidades'
 import type { IlhaVisivel } from './mundoVisivel'
 import { criarSorteador, entre } from './geometria/aleatorio'
@@ -83,6 +84,19 @@ const TOM_NO_CAPIM = 0.22
 const ALTURA_DO_FAROL = 7.4
 
 /**
+ * Folga mínima, em radianos, entre um objeto do tema e as estruturas da ilha.
+ *
+ * O objeto do tema é do tamanho de uma árvore pequena, e as estruturas ficam em
+ * lugares fixos (`LUGARES_NA_ILHA`). Sem esta folga, um disco voador podia nascer
+ * dentro da biblioteca ou em cima do tabuleiro da ponte — e o defeito apareceria
+ * só na captura de tela, que é o caminho mais caro possível para descobrir.
+ */
+const FOLGA_DAS_ESTRUTURAS = 0.5
+
+/** Folga até a linha da ponte, em radianos: as ilhas se ligam ao longo de x. */
+const FOLGA_DA_PONTE = 0.32
+
+/**
  * A forma do pano de cada trilha (D-063).
  *
  * Quatro silhuetas, uma por parte do livro: quem olha o arquipélago de longe
@@ -104,6 +118,62 @@ const LARGURA_DO_MASTRO = 0.09
 const FUNDO_DO_MASTRO = 0.3
 
 
+
+/** A menor diferença entre dois ângulos, no intervalo de −π a π. */
+function diferencaDeAngulo(um: number, outro: number): number {
+  const volta = Math.PI * 2
+  let diferenca = (um - outro) % volta
+  if (diferenca > Math.PI) {
+    diferenca -= volta
+  }
+  if (diferenca < -Math.PI) {
+    diferenca += volta
+  }
+  return diferenca
+}
+
+/** Os ângulos já ocupados por uma estrutura, e o da linha da ponte (0 e π). */
+function folgasDoAngulo(angulo: number): { readonly estruturas: number; readonly ponte: number } {
+  let estruturas = Infinity
+  for (const lugar of Object.values(LUGARES_NA_ILHA)) {
+    estruturas = Math.min(estruturas, Math.abs(diferencaDeAngulo(angulo, lugar.angulo)))
+  }
+  const ponte = Math.min(
+    Math.abs(diferencaDeAngulo(angulo, 0)),
+    Math.abs(diferencaDeAngulo(angulo, Math.PI)),
+  )
+  return { estruturas, ponte }
+}
+
+/**
+ * Um ângulo livre no capim para um objeto do tema.
+ *
+ * Sorteia e confere: dezesseis tentativas, e a primeira que respeitar as duas
+ * folgas (das estruturas e da linha da ponte) é a escolhida. Se nenhuma passar —
+ * o que é possível numa ilha pequena —, fica a **melhor** das dezesseis, e não a
+ * última: usar a última poderia pôr o disco voador dentro da biblioteca.
+ */
+function escolherAnguloLivre(sortear: () => number): number {
+  let melhor = 0
+  let melhorFolga = -Infinity
+
+  for (let tentativa = 0; tentativa < 16; tentativa += 1) {
+    const angulo = entre(sortear, 0, Math.PI * 2)
+    const folga = folgasDoAngulo(angulo)
+    // A folga da ponte vale um pouco mais na escolha: encostar na linha da ponte
+    // é pior do que encostar numa estrutura, porque a ponte é por onde se anda.
+    const nota = Math.min(folga.estruturas, folga.ponte + 0.18)
+    if (nota > melhorFolga) {
+      melhor = angulo
+      melhorFolga = nota
+    }
+    if (folga.estruturas >= FOLGA_DAS_ESTRUTURAS && folga.ponte >= FOLGA_DA_PONTE) {
+      break
+    }
+  }
+
+  return melhor
+}
 
 export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const [sobre, setSobre] = useState(false)
@@ -245,7 +315,21 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       }
     })
 
+    // Os objetos do tema entram por último, e por dois motivos: os sorteios de
+    // árvore, pedra, arbusto e flor não se movem (D-063), e o ângulo deles ainda
+    // passa por um teste de folga contra as estruturas — o que só é possível
+    // depois de todos os lugares conhecidos.
     const escala = formato.raioDoTopo / 6
+    const objetos = Array.from({ length: identidade.vegetacao.objetos }, () => {
+      const angulo = escolherAnguloLivre(sortear)
+      const distancia =
+        entre(sortear, distanciaMinima * 1.02, Math.min(distanciaMaxima + 0.02, 0.92)) * formato.raioDoTopo
+      return {
+        x: Math.cos(angulo) * distancia,
+        z: Math.sin(angulo) * distancia,
+        rotacaoY: entre(sortear, 0, Math.PI * 2),
+      }
+    })
 
     return {
       rocha,
@@ -277,6 +361,9 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       pedras: pedrasSoltas.map((pedra) => ({ ...pedra, malha: gerarPedra({ raio: pedra.raio }) })),
       arbustos: arbustos.map((arbusto) => ({ ...arbusto, malha: gerarPedra({ raio: arbusto.raio }) })),
       flores: flores.map((flor) => ({ ...flor, malha: gerarPedra({ raio: flor.raio }) })),
+      objetos,
+      objeto: tipoDeObjetoDaTrilha(ilha.trilha),
+      escala,
       enfeites,
     }
     // As dependências são **números**, e não o objeto da identidade: a identidade
@@ -309,6 +396,29 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const corDoTronco = corNoOrcamentoDeLuz(cores.tronco)
   const corDoArbusto = corNoOrcamentoDeLuz(cores.arbusto)
   const corDaFlor = corNoOrcamentoDeLuz(cores.flor)
+  // O acento dos objetos do tema é a cor da trilha — a mesma da bandeira e a
+  // mesma do título do grupo na lista: uma cor por parte do livro (D-063).
+  const corDoAcento = corNoOrcamentoDeLuz(corDaTrilha(ilha.trilha))
+
+  /**
+   * As malhas dos objetos do tema: **uma por objeto**, com as cores por vértice.
+   *
+   * São montadas aqui, e não no `useMemo` da ilha, porque dependem de cores que só
+   * existem depois do orçamento de luz (D-060) — e o teste de cor do mundo cobra
+   * que nada chegue à tela acima do teto. Cada objeto tem três papéis de cor: a
+   * pedra e a madeira da ilha, mais o acento da trilha.
+   */
+  const objetosDoTema = useMemo(
+    () =>
+      pecas.objetos.map(() =>
+        gerarObjetoDoTema({
+          tipo: pecas.objeto,
+          escala: pecas.escala,
+          cores: { pedra: corDaPedra, madeira: corDaMadeira, acento: corDoAcento },
+        }),
+      ),
+    [pecas.objetos, pecas.objeto, pecas.escala, corDaPedra, corDaMadeira, corDoAcento],
+  )
 
   useFrame((_, delta) => {
     if (farol.current !== null) {
@@ -437,6 +547,26 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
             <Malha3D malha={flor.malha} cor={corDaFlor} />
           </group>
         ))}
+
+        {/* Os objetos do tema da trilha: uma pilha de livros nas ilhas dos
+            conceitos, um disco voador pousado nas do jogo, uma torre de barras nas
+            de dados. É o que a segunda captura pediu — ilhas com características do
+            assunto que está sendo ensinado, e não só ilhas diferentes entre si.
+            Vão **pintados por vértice** (pedra e madeira da ilha, acento da
+            trilha), que é o que mantém um desenho por objeto. */}
+        {objetosDoTema.map((objeto, indice) => {
+          const lugar = pecas.objetos[indice]
+          return (
+            <group
+              key={`objeto-${indice}`}
+              name={`objeto:${objeto.tipo}:${indice}`}
+              position={[lugar?.x ?? 0, 0, lugar?.z ?? 0]}
+              rotation={[0, lugar?.rotacaoY ?? 0, 0]}
+            >
+              <Malha3D malha={objeto.malha} duasFaces />
+            </group>
+          )
+        })}
       </group>
 
       {/* Farol de estado: gira devagar acima da ilha, no alto do mastro. Cor diz o

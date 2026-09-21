@@ -1624,6 +1624,42 @@ quadrada) e quatro cores tiradas dos tokens da marca. A cor é a mesma que a lis
 grupo (`corDaTrilha`, `paraCss`), e o lugar da bandeira foi escolhido para **não** ficar na linha da ponte
 (ângulo −0,3π, contra 0,42π da placa, 0,15π da mesa, 0,85π da biblioteca e −0,58π do marco).
 
+**6. As ilhas não tinham nada do assunto que ensinam.** A segunda queixa da captura foi específica:
+*"as ilhas poderiam ter caracteristicas do tema que ta sendo abordado"*. Até aqui, toda ilha tinha o
+mesmo **tipo** de coisa — capim, árvore, pedra, uma biblioteca, uma mesa, uma placa e um marco —, e o que
+mudava era a forma, o marco, a cor e a vegetação. Nada no chão dizia que a ilha 16 é a dos dados, e não a
+dos arquivos. Agora cada trilha tem um **objeto do tema**, repetido algumas vezes pelo capim:
+
+| trilha | objeto | quantos no mundo, medido |
+| --- | --- | --- |
+| `conceitos-basicos` | pilha de livros | 30, nas 12 ilhas da Parte I |
+| `invasao-alienigena` | disco voador pousado | 8, nas 3 ilhas do jogo |
+| `visualizacao-de-dados` | torre de barras | 11, nas 3 ilhas de dados |
+| `aplicacoes-web` | armário de servidor | 0: não há ilha desta trilha ainda (lote 7) |
+
+**49 objetos** em 18 ilhas, de 2 a 4 por ilha (a faixa é sorteada, como a vegetação), com a escala da
+ilha entre **0,872** e **1,162** — o objeto encolhe na ilha pequena, como o resto dos enfeites. Três
+decisões de construção, todas por custo ou por defeito real:
+
+1. **Um objeto do tema por trilha, e não por unidade.** A trilha é a parte do livro que o estudante
+   atravessa por várias ilhas, e é ela que tem cor e bandeira desde o conserto anterior. Assim a
+   biblioteca de objetos é finita e tem teste: **todas** as quatro trilhas têm o seu, e o mapa é do tipo
+   completo — uma trilha nova que entrasse sem objeto não compila.
+2. **Uma malha por objeto, pintada por vértice.** O objeto tem duas ou três cores (a pedra e a madeira
+   **da ilha**, mais o acento **da trilha**) e sai como **um** desenho por quadro, e não um por peça —
+   são 49 objetos no mundo inteiro. É a mesma escolha que a pedra e o capim já faziam.
+3. **O lugar do objeto é conferido, e não sorteado e esquecido.** O ângulo passa por dezesseis
+   tentativas com duas folgas obrigatórias — 0,5 rad das estruturas e 0,32 rad da linha da ponte —, e
+   fica com a melhor delas quando nenhuma passa. Medido na cena: a menor distância de um objeto até uma
+   estrutura é **2,101** (o limite é 1,6), e o pior seno em relação à linha da ponte é **0,299** (o
+   limite é 0,24). Sem isso, o disco voador podia nascer dentro da biblioteca ou debaixo do tabuleiro, e
+   o defeito só apareceria na captura seguinte.
+
+**E uma conta errada, a terceira da mesma família.** O raio declarado da torre de barras nasceu **0,83**
+quando a peça ocupa **0,8319**: a quina da laje passa mais longe do centro do que a barra mais larga. É a
+mesma armadilha que pegou os marcos do lote 4 (D-058) e o funil do lote 6 — declarar menos do que a peça
+ocupa é o lado que morde, e é o teste que mede a malha montada, e não a intenção, quem pega.
+
 **O que fica declarado como não visto.** Nada disto foi visto em navegador: o sandbox não tem WebGL, e a
 verificação visual deste projeto depende das capturas do usuário. O que os testes provam está em
 `docs/TEST_REPORT.md`; o que depende de olhar está dito lá também, com o roteiro do que conferir na próxima

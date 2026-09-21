@@ -486,8 +486,10 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
     )
 
     let conferidas = 0
+    let objetosDoTema = 0
     for (const unidade of UNIDADES) {
       const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      objetosDoTema += ilha.findAll((filho) => comNome(filho).startsWith('objeto:')).length
       for (const malha of malhasComCorDeVertice(ilha)) {
         conferidas += 1
         expect(
@@ -497,8 +499,11 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
       }
     }
 
-    // Duas por ilha: a pedra e o capim.
-    expect(conferidas).toBe(UNIDADES.length * 2)
+    // Duas por ilha — a pedra e o capim — mais os objetos do tema, que também vêm
+    // pintados por vértice (D-063). O número de objetos é medido na cena, e não
+    // fixado aqui: ele é sorteado por ilha, entre dois e quatro.
+    expect(conferidas).toBe(UNIDADES.length * 2 + objetosDoTema)
+    expect(objetosDoTema).toBeGreaterThanOrEqual(UNIDADES.length * 2)
 
     await cena.unmount()
   })
@@ -602,6 +607,88 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
     }
 
     expect(bandeirasVistas.size).toBeGreaterThan(1)
+
+    await cena.unmount()
+  })
+
+  it('cada ilha tem os objetos do tema da sua trilha, longe das estruturas (D-063)', async () => {
+    // A segunda captura disse: *"as ilhas poderiam ter caracteristicas do tema que
+    // ta sendo abordado"*. O objeto do tema é a resposta — pilha de livros onde se
+    // estudam os conceitos, disco voador onde se escreve o jogo, torre de barras
+    // onde se trabalham os dados. Este teste cobra três coisas: que o objeto certo
+    // esteja na ilha certa, que ele não nasça dentro de uma estrutura e que ele não
+    // fique na linha da ponte, que é por onde se anda.
+    const OBJETO_ESPERADO: Readonly<Record<string, string>> = {
+      'conceitos-basicos': 'pilha-de-livros',
+      'invasao-alienigena': 'disco-voador',
+      'visualizacao-de-dados': 'torre-de-barras',
+    }
+    // Folga mínima medida desde a boca e o tabuleiro das estruturas: nenhum objeto
+    // tem mais de 1 de raio ocupado, e nenhuma estrutura passa de 1,1 do centro
+    // dela para fora. 1,6 é o que sobra com os dois encostados, sem se tocar.
+    const FOLGA_MINIMA = 1.6
+
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    let ilhasComObjeto = 0
+    let menorDistancia = Infinity
+    let menorSeno = Infinity
+
+    for (const unidade of UNIDADES) {
+      const esperado = OBJETO_ESPERADO[unidade.trilha]
+      if (esperado === undefined) {
+        continue
+      }
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const grupos = ilha.findAll((filho) => comNome(filho).startsWith('objeto:'))
+      expect(grupos.length, `«${unidade.titulo}» ficou sem objetos do tema`).toBeGreaterThanOrEqual(2)
+
+      const estruturas = ['biblioteca', 'mesa', 'placa']
+        .map((nome) => ilha.find((filho) => comNome(filho) === nome))
+        .concat([ilha.find((filho) => comNome(filho).startsWith('marco:'))])
+
+      for (const grupo of grupos) {
+        expect(comNome(grupo), `A ilha da trilha «${unidade.trilha}» recebeu o objeto errado`).toBe(
+          comNome(grupo).startsWith(`objeto:${esperado}:`)
+            ? comNome(grupo)
+            : `objeto:${esperado}:${comNome(grupo).split(':')[2]}`,
+        )
+
+        const onde = posicaoLocal(grupo)
+        for (const estrutura of estruturas) {
+          const alvo = posicaoLocal(estrutura)
+          const distancia = Math.hypot(onde.x - alvo.x, onde.z - alvo.z)
+          if (distancia < menorDistancia) {
+            menorDistancia = distancia
+          }
+          if (Math.abs(onde.z) / Math.max(Math.hypot(onde.x, onde.z), 0.001) < menorSeno) {
+            menorSeno = Math.abs(onde.z) / Math.max(Math.hypot(onde.x, onde.z), 0.001)
+          }
+          expect(
+            distancia,
+            `Um objeto do tema de «${unidade.titulo}» nasce a ${distancia.toFixed(2)} de ${comNome(estrutura)}`,
+          ).toBeGreaterThanOrEqual(FOLGA_MINIMA)
+        }
+
+        // A linha da ponte sai da ilha ao longo de x, para os dois lados: um objeto
+        // no eixo ficaria debaixo do tabuleiro.
+        const raioDoObjeto = Math.hypot(onde.x, onde.z)
+        expect(Math.abs(onde.z) / Math.max(raioDoObjeto, 0.001)).toBeGreaterThan(0.24)
+      }
+
+      ilhasComObjeto += 1
+    }
+
+    // Se nenhuma ilha entrou na conferência, ela não conferiu nada.
+    expect(ilhasComObjeto).toBe(UNIDADES.length)
+    // E as duas medidas do que foi conferido, para o limite não ficar no escuro:
+    // medido em 21/09/2026, a folga mínima é 2,101 e o pior seno é 0,299 — as duas
+    // acima do exigido (1,6 e 0,24), e registradas aqui porque um número medido é
+    // o que diz se o limite está apertado ou largado.
+    expect(menorDistancia).toBeGreaterThan(2)
+    expect(menorSeno).toBeGreaterThan(0.29)
 
     await cena.unmount()
   })

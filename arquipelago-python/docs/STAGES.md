@@ -455,7 +455,10 @@ meio, travessa de parada. As outras duas queixas eram de vida e de identidade: a
 **as mesmas cinco cores** (parede, poste, tronco, conífera, rocha clara), e agora cada uma tempera madeira,
 pedra e folhagem com o tom dela, com as frações medidas; o capim ganhou arbustos e flores; e cada ilha
 fincou a **bandeira da trilha**, com forma e cor próprias, a mesma cor que a lista de ilhas usa no título do
-grupo.
+grupo. E entrou a resposta à terceira queixa — *"as ilhas poderiam ter caracteristicas do tema que ta sendo
+abordado"*: cada trilha tem agora um **objeto do tema** repetido pelo capim (pilha de livros nos conceitos,
+disco voador no jogo, torre de barras nos dados), medido em **49 objetos** no mundo, com o lugar conferido
+por folga até as estruturas (2,101 de mínimo) e até a linha da ponte (pior seno 0,299).
 
 **Limite explícito:** nenhum lote foi visto em navegador — nenhum navegador com WebGL existe neste
 ambiente. O que eles provam está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real), e a verificação

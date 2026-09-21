@@ -11,7 +11,9 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
 > **O que existe hoje:** mundo 3D navegável com **dezoito** ilhas suspensas — cada uma com a própria
 > forma, o próprio marco, a própria vegetação e o próprio tom (D-053), e desde o lote 6.1 também com a
-> **madeira, a pedra e a folhagem no tom dela** e a **bandeira da trilha** fincada no capim (D-063) — e
+> **madeira, a pedra e a folhagem no tom dela**, a **bandeira da trilha** fincada no capim e os **objetos
+> do tema** de cada trilha (D-063): pilha de livros nas ilhas dos conceitos, disco voador nas do jogo e
+> torre de barras nas de dados — e
 > pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
 > ciclo de estudo completo das dezoito unidades escritas — a Parte I inteira do livro (capítulos 1 a 11)
@@ -62,7 +64,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 785 testes em 43 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
+    npm test         # 792 testes em 44 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção

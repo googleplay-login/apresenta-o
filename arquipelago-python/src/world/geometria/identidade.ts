@@ -129,6 +129,13 @@ export type IdentidadeDaIlha = {
     readonly arbustos: number
     /** Flores: pontinhos quentes no capim, ainda menores que os arbustos. */
     readonly flores: number
+    /**
+     * Objetos do tema da trilha: a pilha de livros, o disco voador, a torre de
+     * barras. Entraram depois da segunda captura, pela queixa de que as ilhas
+     * "estão todas sem vidas" (D-063) — são a parte do enfeite que diz **de que
+     * parte do livro é a ilha**, e não só que ela é diferente das outras.
+     */
+    readonly objetos: number
     /** Faixa onde os enfeites aparecem, medida em raios do capim. */
     readonly distanciaMinima: number
     readonly distanciaMaxima: number
@@ -158,6 +165,9 @@ export const FAIXAS = {
   pedras: { minimo: 3, maximo: 6 },
   arbustos: { minimo: 4, maximo: 9 },
   flores: { minimo: 3, maximo: 7 },
+  // Dois a quatro objetos do tema por ilha: com um só, a ilha parecia ter um
+  // enfeite perdido; com mais de quatro, o capim virava depósito.
+  objetos: { minimo: 2, maximo: 4 },
   distancia: { minimo: 0.55, maximo: 0.82 },
 } as const
 
@@ -228,6 +238,11 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
   const flores =
     FAIXAS.flores.minimo +
     Math.floor(sortear() * (FAIXAS.flores.maximo - FAIXAS.flores.minimo + 1))
+  // Pelo mesmo motivo dos dois acima: o sorteio novo vem depois dos que já
+  // existiam, para que nenhuma ilha antiga mude de árvore, pedra, arbusto ou flor.
+  const objetos =
+    FAIXAS.objetos.minimo +
+    Math.floor(sortear() * (FAIXAS.objetos.maximo - FAIXAS.objetos.minimo + 1))
   const distanciaMaxima = Math.min(distanciaMinima + 0.16, 0.92)
 
   const marco = MARCOS[((indice % MARCOS.length) + MARCOS.length) % MARCOS.length] ?? 'portal'
@@ -248,7 +263,7 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
       inclinacaoDoCapim,
       amplitudeDaBorda,
     },
-    vegetacao: { arvores, pedras, arbustos, flores, distanciaMinima, distanciaMaxima },
+    vegetacao: { arvores, pedras, arbustos, flores, objetos, distanciaMinima, distanciaMaxima },
   }
 }
 

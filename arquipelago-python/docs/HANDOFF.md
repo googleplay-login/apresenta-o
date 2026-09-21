@@ -14,7 +14,7 @@ e cada ilha fincou a bandeira da sua trilha. Antes, no mesmo dia: lote 5 (projet
 |---|---|
 | Etapa atual | 11 em andamento — lotes 1 a 6 entregues (capítulos 4 a 17, ilhas 5 a 18): a Parte I inteira e os projetos 1 e 2 da Parte II; o lote seguinte é o projeto 3 (aplicações web, capítulos 18 a 20), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: dezoito ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), e desde o lote 6.1 cada uma também com **madeira, pedra e folhagem no tom dela** e a **bandeira da trilha** fincada no capim (D-063); pontes ancoradas no capim desenhado, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
+| Mundo 3D | **existe**: dezoito ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), e desde o lote 6.1 cada uma também com **madeira, pedra e folhagem no tom dela**, a **bandeira da trilha** fincada no capim e os **objetos do tema** da sua trilha (D-063); pontes ancoradas no capim desenhado, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
 | Conteúdo pedagógico | **existe** para as 18 unidades escritas (capítulos 1 a 17: a Parte I inteira e os dois primeiros projetos): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada — e **todo** exercício com correção automática conferida no Python de verdade |
 | Trilhas | **declaradas**: cada unidade pertence a uma trilha, e cada trilha diz o que o console roda ali — a do jogo diz que roda a lógica, e não a biblioteca gráfica (D-061); a de dados diz que roda a parte de dados, e não o gráfico nem a busca pela rede (D-062). No mundo, cada trilha tem bandeira e cor próprias (D-063) |
 | Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060) |
@@ -560,6 +560,15 @@ frações medidas, com o desvio do token e o menor par entre ilhas na tabela de 
 
 **6. A marca da trilha.** Uma bandeira por ilha, com quatro formas e quatro cores (uma por trilha), e a
 mesma cor no título do grupo na lista de ilhas. O lugar da bandeira foi escolhido fora da linha da ponte.
+
+**7. As ilhas não tinham nada do assunto.** Toda ilha tinha o mesmo **tipo** de coisa (capim, árvore,
+pedra, biblioteca, mesa, placa, marco), e nada no chão dizia que a ilha 16 é a dos dados. Agora cada
+trilha tem um **objeto do tema** repetido pelo capim: pilha de livros nos conceitos, disco voador pousado
+no jogo, torre de barras nos dados e armário de servidor na trilha web (que ainda não tem ilha — o
+objeto existe para o mapa ficar completo, e é o tipo que garante isso). Medido: **49 objetos** em 18
+ilhas, 2 a 4 por ilha, um desenho por objeto (pintados por vértice com a pedra e a madeira da ilha e o
+acento da trilha), com a menor folga até as estruturas em **2,101** (limite 1,6) e o pior seno em relação
+à linha da ponte em **0,299** (limite 0,24).
 
 **O que não foi visto.** Nada disto foi visto em navegador nenhum: o sandbox não tem WebGL, e a
 verificação visual depende das capturas do usuário. O roteiro do que conferir na próxima captura está no
