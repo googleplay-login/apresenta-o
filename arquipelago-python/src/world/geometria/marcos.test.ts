@@ -196,6 +196,7 @@ describe('as partes animadas existem e giram no eixo certo', () => {
     'torre',
     'enxame',
     'mira',
+    'antena',
   ]
 
   it('todo marco animado tem parte giratória, e nenhum marco parado inventa uma', () => {
@@ -230,6 +231,11 @@ describe('as partes animadas existem e giram no eixo certo', () => {
       nave: null,
       enxame: 'y',
       mira: 'z',
+      // O funil e a prancheta são peças paradas; a bacia da antena varre o céu
+      // girando em torno do próprio mastro, como a direção de onde o sinal vem.
+      funil: null,
+      prancheta: null,
+      antena: 'y',
     }
 
     for (const { identidade, marco } of ILHAS) {

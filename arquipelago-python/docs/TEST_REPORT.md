@@ -6,6 +6,100 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — lote 6: o projeto de dados (capítulos 15 a 17, ilhas 16 a 18) e o conserto do lote 6.1
+
+Versão **0.20.0**. O lote 6 escreveu a trilha de visualização de dados; o 6.1 consertou o que a captura de
+tela do usuário mostrou. Os dois entraram no mesmo commit.
+
+### 1. O que o console roda na trilha de dados — medido, `import` por `import`
+
+Executado no Pyodide desta versão do projeto (`/tmp/sondas/dados.mjs`, Node v22.22.3), com o resultado do
+`import` e não com a expectativa:
+
+| módulo | resultado |
+| --- | --- |
+| `csv`, `json`, `random`, `datetime`, `statistics`, `math`, `collections`, `urllib.parse`, `os`, `pathlib`, `sqlite3` | **OK** |
+| `requests` | falha (não existe nesta distribuição) |
+| `matplotlib`, `numpy`, `pandas` | falham |
+
+As contas que os exercícios usam foram medidas na mesma execução: CSV escrito e lido (`2 9.5 9.5`),
+`json.dump`/`json.load` (`1 Ana 9.5`), `json.loads` de uma resposta (`2 10`), `urlencode`
+(`https://api.exemplo.com/procura?q=python&sort=stars`), `random.seed(7)` reproduzível na mesma execução
+(`[3, 2, 4, 6, 1, 1, 5, 1, 3, 5] 31`), `collections.Counter` (`{3: 3, 5: 1, 1: 1}` `[(3, 3)]`).
+
+### 2. A paleta de dezoito tons — escolhida pela distância desenhada
+
+A alternativa era deixar o tom **ciclar** em quinze. A sonda que varre todas as misturas de dois tokens
+respondeu, nos dois cenários:
+
+| | menor par **cru** | menor par **desenhado** | tons intocados pelo orçamento | pior radiação | pior escuridão visível |
+| --- | --- | --- | --- | --- | --- |
+| 15 tons (antes do lote 6) | 48,9 entre os dez originais | 32,1 (par 6 e 7) | 13 de 18 | 0,914 (teto 0,92) | 0,1175 |
+| **18 tons (lote 6)** | **46,5** | **32,1 (o mesmo par 6 e 7)** | **13** | **0,914** | **0,1175** |
+
+Ou seja: os três tons novos **não empilharam** nenhum tom — o par mais próximo dos dezoito é o mesmo dos
+doze originais. Foi essa medida que decidiu contra o ciclo.
+
+### 3. O mundo com dezoito ilhas e dezessete pontes
+
+| | valor |
+| --- | --- |
+| ilhas / pontes | **18 / 17** |
+| extensão em x | **−182,7 a 184,3** |
+| espalhamento | **355,1** |
+| câmera de mapa (altura) | **301,8** |
+| marcos distintos / tons distintos / silhuetas distintas | **18 / 18 / 18** |
+
+### 4. O conserto do lote 6.1 — a ponte, o chão e as cores, com número
+
+| | antes | depois |
+| --- | --- | --- |
+| pontas de ponte **no ar** (das 34) | **6** (a pior a 0,582 além da borda desenhada) | **0** |
+| pontas enterradas no capim | — | **0** |
+| maior desvio entre a âncora e a borda real | **0,941** | — (a âncora é a borda) |
+| folga mínima até a borda externa | — | **0,171** |
+| ponte bloqueada | metade do vão, a partir da origem | **dois tocos, vão de um quarto no meio** |
+
+As cores por ilha foram escolhidas medindo três coisas em cada fração: desvio máximo do token, menor par
+entre ilhas e distância mínima ao capim da própria ilha. Duas primeiras tentativas foram reprovadas pela
+medida — a copa em 0,32 **sem** escurecer ficava a **12,0** do capim da ilha mais clara, e a flor
+misturada com o capim claro caía para **30,1**. O que passou está na tabela de D-063 (madeira 0,20 · pedra
+0,16 · copa 0,18 + escurecer 0,8 · arbusto 0,30 · flor âmbar puro).
+
+### 5. Testes executados
+
+- **`npx vitest run`** — **43 arquivos, 785 testes, todos aprovados** (eram 43 e 779). Os novos cobram: a
+  trilha de dados escrita e coerente com o conteúdo; os três marcos com declarado ≥ medido e o eixo de
+  giro certo; as cores por ilha (dezoito madeiras, dezoito pedras, dezoito copas distintas, todas dentro do
+  orçamento de luz e sem sumir no capim); a ponte ancorada no capim desenhado (as duas pontas dentro do
+  polígono, e a prova de que a âncora antiga deixaria ponta no ar); a ponte bloqueada com vão no meio; o
+  chão caminhável seguindo o polígono; arbustos, flores e bandeira em cada ilha; e a árvore com duas cores,
+  madeira diferente por ilha.
+- **`npx tsc --noEmit`** — limpo.
+- **`npm run build`** — 606 ms; `index` 573,65 kB (gz 172,38), `Cena` 925,31 kB (gz 246,70), CSS 25,62 kB
+  (gz 4,15).
+- **Pyodide de verdade** — `pyodideDeVerdade.test.ts` executa as 9 respostas de referência dos exercícios
+  novos no Python real e confere a correção; foi ele que pegou os dois defeitos de gabarito do lote.
+- **`qa/acentuacao.test.ts`** — dentro da suíte: a trava de acentuação do português em código e
+  documentação passou (ela lê o texto dos arquivos e cobra as palavras que a língua exige).
+
+### 6. Verificação visual — **não executada**
+
+O sandbox **não tem navegador nem WebGL**: nenhuma captura foi produzida aqui, e nada nesta seção foi
+aprovado por olhar. O que se sabe é por medida: a ponte encosta (0 pontas no ar), o chão segue o capim, e
+as cores estão dentro do orçamento de luz. O que depende de olhar, com o roteiro da próxima captura:
+
+1. **Ponte** — de perto, no ponto de encontro com cada ilha: o tabuleiro tem de **encostar** no capim, sem
+   degrau nem vão, nas duas pontas. Se ainda houver fresta, o número a medir é a distância entre o fim do
+   tabuleiro e a borda do capim naquela direção.
+2. **Ponte bloqueada** — de longe: o que se vê é uma ponte **interrompida** (dois tocos, vão no meio), e
+   não uma tábua pendurada.
+3. **Ilhas diferentes** — de longe: madeira, pedra e folhagem mudam de ilha para ilha, e a bandeira da
+   trilha é visível antes do nome.
+4. **Vida no capim** — de perto: arbustos e flores, e a árvore com tronco e copa bem separados.
+
+---
+
 ## Execução de 21/09/2026 — lote 5: a Parte II vira trilha (capítulos 12 a 14, ilhas 13 a 15)
 
 Versão **0.19.0**. O lote começou por uma medição, porque a pergunta que o `HANDOFF` tinha deixado em

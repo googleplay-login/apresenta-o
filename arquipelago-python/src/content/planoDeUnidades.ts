@@ -104,9 +104,9 @@ export const TRILHAS: readonly Trilha[] = [
     capitulos: [15, 16, 17],
     resumo:
       'O segundo projeto do livro: gerar dados, ler arquivos CSV e JSON e desenhar gráficos (matplotlib, Pygal, mapas e APIs).',
-    situacao: 'planejada',
+    situacao: 'escrita',
     oConsoleRoda:
-      'A parte de **dados**, em Python puro: `csv`, `json`, `random`, `datetime` e as contas de estatística rodam. O desenho do gráfico não roda: medido, `import matplotlib` falha, e o `numpy` que ele precisa não está na cópia local — o `loadPackage` tentaria baixar do CDN e a rede está bloqueada (D-040).',
+      'A parte de **dados**, em Python puro — e ela é quase toda: medido, `csv`, `json`, `random`, `datetime`, `statistics`, `collections` e `urllib.parse` rodam neste console. Não rodam o desenho nem a busca: `import matplotlib` falha e o `numpy`/`pandas` que ele pede também (o `loadPackage` tentaria baixar do CDN, e a rede está bloqueada — D-040), e o `requests` do capítulo 17 não existe nesta distribuição. O que fica fora está declarado em cada unidade, e a resposta da API entra na ilha **já chegada**, como texto.',
   },
   {
     id: 'aplicacoes-web',
@@ -408,6 +408,60 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
     },
     situacao: 'pronta',
     trilha: 'invasao-alienigena',
+  },
+  {
+    id: 'u16-fabrica-de-dados',
+    ordem: 16,
+    titulo: 'A Fábrica de Dados',
+    tema:
+      'Dado produzido pelo programa: a caminhada que se acumula passo a passo, a contagem de frequências em um dicionário e a leitura do que apareceu.',
+    referencia: {
+      capitulo: 15,
+      tituloCapitulo: 'Gerando dados (do original; título em português a confirmar)',
+      recorteProposto:
+        'O primeiro recorte do projeto de dados: um laço que produz os valores, a caminhada aleatória acumulada em uma lista, a contagem de quantas vezes cada resultado apareceu e a leitura do resultado com maior, menor e ordem.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'visualizacao-de-dados',
+  },
+  {
+    id: 'u17-caderno-de-dados',
+    ordem: 17,
+    titulo: 'O Caderno de Dados',
+    tema:
+      'Dado que vem de arquivo: abrir, ler valores separados por vírgula, converter texto em número, calcular e guardar o resultado em JSON.',
+    referencia: {
+      capitulo: 16,
+      tituloCapitulo: 'Trabalhando com dados de arquivos (do original; título em português a confirmar)',
+      recorteProposto:
+        'O segundo recorte do projeto de dados: escrever e ler um arquivo de valores separados por vírgula, pular o cabeçalho, converter as colunas de texto para número, calcular a média e guardar e reler os registros em JSON.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'visualizacao-de-dados',
+  },
+  {
+    id: 'u18-estacao-de-escuta',
+    ordem: 18,
+    titulo: 'A Estação de Escuta',
+    tema:
+      'Dado que vem de fora: a resposta de uma API como texto, a estrutura aninhada, campos que faltam, resposta sem dado e a ordem que é do serviço.',
+    referencia: {
+      capitulo: 17,
+      tituloCapitulo: 'Trabalhando com APIs (do original; título em português a confirmar)',
+      recorteProposto:
+        'O fecho do projeto de dados: a resposta de um serviço no formato JSON, transformar a resposta em estrutura, entrar campo por campo na lista que veio dentro dela, contar os registros sem o campo esperado, reconhecer a resposta que não trouxe dado e reordenar a lista pelo campo que interessa.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'visualizacao-de-dados',
   },
 ]
 

@@ -55,6 +55,13 @@ export const MARCOS = [
   'nave',
   'enxame',
   'mira',
+  // Lote 6 (Etapa 11): a trilha do projeto de visualização de dados — os
+  // capítulos 15 a 17. As três construções são de famílias diferentes de
+  // silhueta, de propósito: um funil que estreita para baixo, um tabuleiro largo
+  // e fino de pé, e um mastro fino com a bacia no alto.
+  'funil',
+  'prancheta',
+  'antena',
 ] as const
 
 export type TipoDeMarco = (typeof MARCOS)[number]
@@ -76,6 +83,9 @@ export const NOMES_DOS_MARCOS: Readonly<Record<TipoDeMarco, string>> = {
   nave: 'Nave de três aletas',
   enxame: 'Enxame de discos',
   mira: 'Mira de anéis',
+  funil: 'Funil de dados',
+  prancheta: 'Prancheta de colunas',
+  antena: 'Antena de escuta',
 }
 
 /** O formato da pedra e do capim de uma ilha. */
@@ -108,6 +118,17 @@ export type IdentidadeDaIlha = {
   readonly vegetacao: {
     readonly arvores: number
     readonly pedras: number
+    /**
+     * Arbustos: moitas baixas, feitas da mesma pedra redonda das soltas.
+     *
+     * Entraram no lote 6.1 pelo motivo que a captura mostrou: o capim era uma
+     * pastagem lisa com meia dúzia de árvores, e a ilha parecia uma maquete sem
+     * vida. Arbusto é barato — é a mesma malha da pedra, com outra cor e outro
+     * tamanho — e enche o chão de volume (D-063).
+     */
+    readonly arbustos: number
+    /** Flores: pontinhos quentes no capim, ainda menores que os arbustos. */
+    readonly flores: number
     /** Faixa onde os enfeites aparecem, medida em raios do capim. */
     readonly distanciaMinima: number
     readonly distanciaMaxima: number
@@ -135,11 +156,13 @@ export const FAIXAS = {
   amplitudeDaBorda: { minimo: 0.08, maximo: 0.16 },
   arvores: { minimo: 2, maximo: 5 },
   pedras: { minimo: 3, maximo: 6 },
+  arbustos: { minimo: 4, maximo: 9 },
+  flores: { minimo: 3, maximo: 7 },
   distancia: { minimo: 0.55, maximo: 0.82 },
 } as const
 
 /** Quantos tons a paleta oferece para as ilhas. Ver `paleta3d.ts`. */
-export const TONS_DAS_ILHAS = 15
+export const TONS_DAS_ILHAS = 18
 
 /**
  * As três famílias de ponta de pedra: como a ilha termina embaixo.
@@ -196,6 +219,15 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
   const arvores = FAIXAS.arvores.minimo + Math.floor(sortear() * (FAIXAS.arvores.maximo - FAIXAS.arvores.minimo + 1))
   const pedras = FAIXAS.pedras.minimo + Math.floor(sortear() * (FAIXAS.pedras.maximo - FAIXAS.pedras.minimo + 1))
   const distanciaMinima = entre(sortear, FAIXAS.distancia.minimo, FAIXAS.distancia.maximo)
+  // Os dois sorteios novos vêm **depois** de tudo o que já existia: a ordem
+  // anterior fica intacta, e nenhuma ilha antiga muda de forma, de árvore ou de
+  // pedra por causa desta linha (D-063).
+  const arbustos =
+    FAIXAS.arbustos.minimo +
+    Math.floor(sortear() * (FAIXAS.arbustos.maximo - FAIXAS.arbustos.minimo + 1))
+  const flores =
+    FAIXAS.flores.minimo +
+    Math.floor(sortear() * (FAIXAS.flores.maximo - FAIXAS.flores.minimo + 1))
   const distanciaMaxima = Math.min(distanciaMinima + 0.16, 0.92)
 
   const marco = MARCOS[((indice % MARCOS.length) + MARCOS.length) % MARCOS.length] ?? 'portal'
@@ -216,7 +248,7 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
       inclinacaoDoCapim,
       amplitudeDaBorda,
     },
-    vegetacao: { arvores, pedras, distanciaMinima, distanciaMaxima },
+    vegetacao: { arvores, pedras, arbustos, flores, distanciaMinima, distanciaMaxima },
   }
 }
 
@@ -230,6 +262,15 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
  */
 export const LUGARES_NA_ILHA = {
   biblioteca: { raio: 0.45, angulo: Math.PI * 0.85, ocupacao: 0.2 },
+  /**
+   * Onde a bandeira da trilha finca (D-063).
+   *
+   * Fica de lado em relação ao percurso, e não na frente dele: as ilhas se ligam
+   * ao longo de x, então o ângulo de −0,3π (≈ −54°) sai da linha da ponte, do
+   * marco (−0,58π), da placa (0,42π), da mesa (0,15π) e da biblioteca (0,85π).
+   * Fincar a bandeira no caminho da ponte seria trocar um defeito por outro.
+   */
+  bandeira: { raio: 0.68, angulo: -Math.PI * 0.3, ocupacao: 0.12 },
   mesa: { raio: 0.32, angulo: Math.PI * 0.15, ocupacao: 0.2 },
   placa: { raio: 0.62, angulo: Math.PI * 0.42, ocupacao: 0.15 },
   marco: { raio: 0.4, angulo: -Math.PI * 0.58, ocupacao: 0 },

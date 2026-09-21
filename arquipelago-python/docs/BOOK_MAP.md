@@ -58,7 +58,7 @@ precisa saber disso na tela — antes de escrever a primeira linha —, e não n
 |---|---|---|---|---|
 | `conceitos-basicos` | — | 1 a 11 | escrita | Tudo, com uma exceção tratada: o `input()` é recusado (D-051) e os trechos que o usam trazem a versão que roda |
 | `invasao-alienigena` | 1 | 12 a 14 | escrita | A **lógica** do jogo em Python puro. O Pygame não existe nesta distribuição do Pyodide (medido) e não há como instalar sem baixar da internet (D-040) |
-| `visualizacao-de-dados` | 2 | 15 a 17 | planejada | A parte de dados (`csv`, `json`, `random`, estatística). O gráfico não: medido, `import matplotlib` falha |
+| `visualizacao-de-dados` | 2 | 15 a 17 | **escrita** | A parte de dados (`csv`, `json`, `random`, `statistics`, `collections`, `urllib.parse`), medida no console. O desenho do gráfico não (`matplotlib`, `numpy`, `pandas` não existem ali) e a busca pela rede não (`requests` não existe; a resposta entra já chegada) |
 | `aplicacoes-web` | 3 | 18 a 20 | planejada | A peça pura de lógica (pedido → resposta). O Django não roda (medido), e o projeto não levanta servidor |
 
 As duas trilhas planejadas estão na lista com `situacao: 'planejada'`, e um teste cobra a coerência nos
@@ -81,6 +81,9 @@ dois sentidos: trilha escrita tem unidade, trilha planejada não tem nenhuma.
 | 13 | O Estaleiro da Nave | 12 — *Invasão Alienígena*, primeira parte (título do original, a confirmar em português) | As configurações do jogo, a janela e o laço de quadros, a nave como objeto e o movimento preso às bordas | `null` | `null` |
 | 14 | O Enxame dos Discos | 13 — *Invasão Alienígena*, segunda parte (título do original, a confirmar em português) | As balas em lista e a limpeza das que saem da tela, o limite de tiros no ar, a frota em fileiras por laços aninhados, a frota que vira e desce | `null` | `null` |
 | 15 | O Placar da Batalha | 14 — *Invasão Alienígena*, terceira parte (título do original, a confirmar em português) | Colisão por retângulo, o que sai quando um tiro acerta, vidas, pontos, o nível que acelera e o jogo que recomeça | `null` | `null` |
+| 16 | A Fábrica de Dados | 15 — *Gerando dados* (título do original, a confirmar em português) | O dado produzido pelo programa: a caminhada acumulada passo a passo, a contagem de frequências em um dicionário e a leitura do resultado | `null` | `null` |
+| 17 | O Caderno de Dados | 16 — *Trabalhando com dados de arquivos* (título do original, a confirmar) | Abrir e ler valores separados por vírgula, pular o cabeçalho, converter texto em número, calcular a média e guardar e reler registros em JSON | `null` | `null` |
+| 18 | A Estação de Escuta | 17 — *Trabalhando com APIs* (título do original, a confirmar) | A resposta de um serviço como texto, a estrutura aninhada, os campos que faltam, a resposta sem dado e a ordem que é do serviço | `null` | `null` |
 
 Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 14 foram
 acrescentados na Etapa 11** sem esse material em mãos: o número do capítulo e o assunto são certos, e o

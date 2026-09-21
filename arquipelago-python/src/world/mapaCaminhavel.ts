@@ -1,4 +1,4 @@
-import { alturaDoTopo } from './geometria/ilha'
+import { alturaDoTopo, bordaDoTopoEmDirecao } from './geometria/ilha'
 import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 import type { IlhaVisivel, PonteVisivel } from './mundoVisivel'
 
@@ -48,6 +48,17 @@ export type ChaoDeIlha = {
    * do avatar flutua ou afunda.
    */
   readonly inclinacao: number
+  /**
+   * Os fatores da borda do capim, coluna a coluna (D-063).
+   *
+   * O raio acima é nominal; a borda desenhada recua e avança em volta dele. Com
+   * o disco do raio nominal, o avatar andava **no ar** onde a borda recuava — e a
+   * ponte, ancorada no mesmo raio, começava depois disso. O chão passou a ler a
+   * borda de verdade, a mesma que a malha e a ponte usam.
+   */
+  readonly fatoresDaBorda: readonly number[]
+  /** Quantas colunas a borda tem: o polígono do capim. */
+  readonly segmentosRadiais: number
 }
 
 /** O tabuleiro de uma ponte inteira, como superfície de caminhada. */
@@ -95,6 +106,8 @@ export function chaoDoMundo(
       x: ilha.centro[0],
       z: ilha.centro[2],
       raio: ilha.raio,
+      fatoresDaBorda: ilha.bordaDoCapim,
+      segmentosRadiais: ilha.identidade.formato.segmentosRadiais,
       altura: ilha.centro[1],
       inclinacao: ilha.identidade.formato.inclinacaoDoCapim,
     })),
@@ -148,12 +161,33 @@ function distanciaAoCentro(ilha: ChaoDeIlha, ponto: PontoNoPlano): number {
  * mesma função que gerou a malha, para que ninguém precise lembrar de duas
  * fórmulas.
  */
+/**
+ * Até onde o pé do avatar chega na direção de um ponto, dentro do capim.
+ *
+ * A borda do capim é um polígono: o alcance é medido na direção do ponto, e não
+ * pelo raio nominal. A margem do corpo é descontada depois, pelo chamador.
+ */
+function alcanceDoCapim(ilha: ChaoDeIlha, ponto: PontoNoPlano): number {
+  const dx = ponto.x - ilha.x
+  const dz = ponto.z - ilha.z
+  const distancia = Math.hypot(dx, dz)
+  if (distancia === 0) {
+    return ilha.raio
+  }
+  return bordaDoTopoEmDirecao({
+    raio: ilha.raio,
+    segmentosRadiais: ilha.segmentosRadiais,
+    fatores: ilha.fatoresDaBorda,
+    angulo: Math.atan2(dz, dx),
+  }).interno
+}
+
 export function chaoEm(chao: ChaoDoMundo, ponto: PontoNoPlano): number | null {
   let encontrado: number | null = null
 
   for (const ilha of chao.ilhas) {
     const distancia = distanciaAoCentro(ilha, ponto)
-    if (distancia <= ilha.raio - RAIO_DO_AVATAR + 1e-9) {
+    if (distancia <= alcanceDoCapim(ilha, ponto) - RAIO_DO_AVATAR + 1e-9) {
       const altura = ilha.altura + alturaDoTopo(ilha.raio, distancia, ilha.inclinacao)
       // Duas superfícies podem se sobrepor perto da ponte: vale a mais alta, que
       // é a que sustenta o pé.

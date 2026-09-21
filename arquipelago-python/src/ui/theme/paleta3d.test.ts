@@ -6,11 +6,28 @@ import {
   corDaIlha,
   corDaSituacao,
   corDeUnidadeBloqueada,
+  coresDaIlha,
   deHex,
   paraHex,
 } from './paleta3d'
+import { TONS_DAS_ILHAS } from '../../world/geometria/identidade'
 import { cores, coresDeEstado } from './tokens'
 import { misturar } from '../../world/geometria/pintura'
+import {
+  TETO_DE_MATERIAL,
+  corNoOrcamentoDeLuz,
+  piorEscuridaoVisivel,
+  piorRadiacao,
+} from './luzDoMundo'
+
+/** Distância entre duas cores em RGB, a mesma conta dos outros testes de tom. */
+function distancia(uma: number, outra: number): number {
+  return Math.hypot(
+    ((uma >> 16) & 0xff) - ((outra >> 16) & 0xff),
+    ((uma >> 8) & 0xff) - ((outra >> 8) & 0xff),
+    (uma & 0xff) - (outra & 0xff),
+  )
+}
 
 /** Todas as cores que o mundo 3D usa, com o nome de onde vieram. */
 function todasAsCores(): readonly { readonly nome: string; readonly cor: number }[] {
@@ -125,16 +142,29 @@ describe('os tons das ilhas', () => {
     expect(CORES_DAS_ILHAS[11]).toBe(
       misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.madeira), 0.5),
     )
-    // As três últimas são do lote 5: os tons da trilha do projeto de jogo.
+    // Os três do lote 5 — os tons da trilha do projeto de jogo. Eles não estão
+    // mais no fim da lista: o lote 6 acrescentou os da trilha de dados depois
+    // deles, e a posição passou a ser contada a partir do fim.
     const ultimo = CORES_DAS_ILHAS.length - 1
-    expect(CORES_DAS_ILHAS[ultimo - 2]).toBe(
+    expect(CORES_DAS_ILHAS[ultimo - 5]).toBe(
       misturar(deHex(cores.acento.ambar), deHex(cores.acento.vermelho), 0.7),
     )
-    expect(CORES_DAS_ILHAS[ultimo - 1]).toBe(
+    expect(CORES_DAS_ILHAS[ultimo - 4]).toBe(
       misturar(deHex(cores.mar.claro), deHex(cores.acento.ambar), 0.5),
     )
-    expect(CORES_DAS_ILHAS[ultimo]).toBe(
+    expect(CORES_DAS_ILHAS[ultimo - 3]).toBe(
       misturar(deHex(cores.mar.fundo), deHex(cores.terreno.capim), 0.6),
+    )
+    // As três últimas são do lote 6: os tons da trilha de visualização de dados,
+    // escolhidos pela distância **depois de desenhados** (D-062).
+    expect(CORES_DAS_ILHAS[ultimo - 2]).toBe(
+      misturar(deHex(cores.ceu.horizonte), deHex(cores.acento.ambar), 0.5),
+    )
+    expect(CORES_DAS_ILHAS[ultimo - 1]).toBe(
+      misturar(deHex(cores.mar.claro), deHex(cores.acento.vermelho), 0.5),
+    )
+    expect(CORES_DAS_ILHAS[ultimo]).toBe(
+      misturar(deHex(cores.mar.medio), deHex(cores.acento.verdeClaro), 0.2),
     )
   })
 
@@ -151,9 +181,11 @@ describe('os tons das ilhas', () => {
 
   it('dois tons vizinhos são distinguíveis: nenhum par é quase a mesma cor', () => {
     // Duas ilhas com tons praticamente iguais voltariam a parecer a mesma ilha.
-    // O limiar é medido, e não escolhido a dedo: o par mais próximo dos dez está
-    // a 48,9 de distância em RGB, e o limite de 40 deixa folga para um ajuste de
-    // token sem quebrar o teste por um ponto.
+    // O limiar é medido, e não escolhido a dedo: entre os **dezoito** tons, o par
+    // mais próximo está a 46,5 de distância em RGB cru (era 48,9 entre os dez), e
+    // o limite de 40 deixa folga para um ajuste de token sem quebrar o teste por
+    // um ponto. Depois do orçamento de luz a distância desenhada cai para 32,1 —
+    // medida em `luzDoMundo.test.ts`, que é onde ela é cobrada.
     const canais = (cor: number): readonly [number, number, number] => [
       (cor >> 16) & 0xff,
       (cor >> 8) & 0xff,
@@ -167,6 +199,80 @@ describe('os tons das ilhas', () => {
         expect(distancia, `Os tons ${um} e ${outro} ficaram parecidos`).toBeGreaterThan(40)
       }
     }
+  })
+})
+
+describe('as cores próprias de cada ilha (D-063)', () => {
+  it('cada ilha tem a sua madeira, a sua pedra e a sua folhagem', () => {
+    // Antes disto, as dezoito ilhas desenhavam a biblioteca com a mesma cor, a
+    // mesa com a mesma cor e as árvores com a mesma cor: o que variava era o
+    // capim e o marco, e a captura de tela disse o resultado — "elas estão todas
+    // sem vida". Aqui a conferência é a consequência direta: dezoito ilhas,
+    // dezoito madeiras.
+    const madeiras = new Set<number>()
+    const pedras = new Set<number>()
+    const copas = new Set<number>()
+
+    for (let indice = 0; indice < TONS_DAS_ILHAS; indice += 1) {
+      const cores = coresDaIlha(indice)
+      madeiras.add(cores.madeira)
+      pedras.add(cores.pedra)
+      copas.add(cores.copa)
+
+      // A estrutura continua sendo madeira e pedra: o tom entra como tempero, e
+      // não como tinta. Os limites são os **medidos** (D-063): 53,9 de desvio da
+      // madeira, 38,5 da pedra e 53,1 da copa escurecida — com uma folga de dois
+      // pontos para um ajuste de token não reprovar o teste por um fio.
+      expect(distancia(cores.madeira, CORES_DERIVADAS.poste)).toBeLessThan(56)
+      expect(distancia(cores.pedra, CORES_DERIVADAS.parede)).toBeLessThan(41)
+      expect(distancia(cores.copa, CORES_DO_MUNDO.conifera)).toBeLessThan(56)
+    }
+
+    expect(madeiras.size).toBe(TONS_DAS_ILHAS)
+    expect(pedras.size).toBe(TONS_DAS_ILHAS)
+    expect(copas.size).toBe(TONS_DAS_ILHAS)
+  })
+
+  it('toda cor de estrutura cabe no orçamento de luz da ilha dela', () => {
+    for (let indice = 0; indice < TONS_DAS_ILHAS; indice += 1) {
+      const cores = coresDaIlha(indice)
+      for (const [nome, cor] of Object.entries(cores)) {
+        const desenhada = corNoOrcamentoDeLuz(cor)
+        expect(
+          piorRadiacao(desenhada),
+          `A ${nome} da ilha ${indice + 1} estoura na luz do mundo`,
+        ).toBeLessThanOrEqual(TETO_DE_MATERIAL)
+        expect(
+          piorEscuridaoVisivel(desenhada),
+          `A ${nome} da ilha ${indice + 1} apaga nas direções visíveis`,
+        ).toBeGreaterThan(0.05)
+      }
+    }
+  })
+
+  it('a flor não se confunde com o capim, e a madeira não se confunde com a pedra', () => {
+    // Duas conferências de leitura, e não de gosto: a flor é o ponto quente do
+    // capim (se ela encostasse na cor da grama, não seria vista), e a madeira
+    // tem de continuar mais escura que a pedra em toda ilha — é o contraste que
+    // separa a mesa da biblioteca.
+    let menorFlor = Infinity
+    let menorMadeiraPedra = Infinity
+    let menorCopaCapim = Infinity
+
+    for (let indice = 0; indice < TONS_DAS_ILHAS; indice += 1) {
+      const cores = coresDaIlha(indice)
+      const capim = corDaIlha(indice)
+      menorFlor = Math.min(menorFlor, distancia(cores.flor, capim))
+      menorMadeiraPedra = Math.min(menorMadeiraPedra, distancia(cores.madeira, cores.pedra))
+      menorCopaCapim = Math.min(menorCopaCapim, distancia(cores.copa, capim))
+      // E o arbusto: perto do capim de propósito, mas não colado nele.
+      expect(distancia(cores.arbusto, capim)).toBeGreaterThan(20)
+    }
+
+    // Medidos (D-063): flor 42,9 · copa 35,1 · madeira contra pedra 158,3.
+    expect(menorFlor).toBeGreaterThan(40)
+    expect(menorCopaCapim).toBeGreaterThan(30)
+    expect(menorMadeiraPedra).toBeGreaterThan(30)
   })
 })
 

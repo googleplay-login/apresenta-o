@@ -756,6 +756,18 @@ kbd {
 .trilha__grupo-titulo {
   font-size: 1.15rem;
   margin-bottom: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* A marca da trilha: a mesma cor da bandeira que a ilha finca no capim (D-063).
+   É um quadrado cheio, e não um ponto, para continuar visível em tela pequena. */
+.trilha__grupo-marca {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--painel-borda);
 }
 
 .trilha__grupo-texto {

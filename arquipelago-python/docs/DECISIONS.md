@@ -1354,8 +1354,9 @@ captura:
    (`Avatar.tsx`) e na **parede da biblioteca** (`Ilha.tsx`). Dos doze tons, **oito não precisaram de
    nada**; quatro (ilhas 3, 6, 7 e 10) entraram no orçamento, e o mesmo passa a valer para o marco
    **bloqueado**, que era pior (a mistura com a névoa clareia mais). A paleta continua sendo a fonte da
-   verdade: a lista de tons não foi tocada, e o teste que mede a distância entre os doze continua valendo
-   (o menor par dos marcos **desenhados** fica em 33,2 — o par 6 e 7, dois tons claros e frios).
+   verdade: a lista de tons não foi tocada, e o teste que mede a distância entre eles continua valendo
+   (o menor par dos marcos **desenhados** — o par 6 e 7, dois tons claros e frios — está em 32,1; este
+   texto dizia 33,2, e a medida foi refeita com a sonda do lote 6, junto do teto de material).
 
 3. **O mar distante deixou de se chamar `vazio`, e deixou de receber luz.** O nome mentia: a laje é o mar
    visto de longe. E ela é desenhada **chapada** (`meshBasicMaterial`), como as nuvens: o mar que segue
@@ -1463,7 +1464,8 @@ desenhado: o teste do orçamento de luz mede a distância entre os tons **como e
 tom 6 (claro) é escurecido pelo orçamento na direção dele. Medido: 28,5 — abaixo do piso de 30 do
 projeto. O lugar foi ocupado por um **cáqui** (`mar claro + âmbar × 0,5`), e o par mais próximo dos
 quinze voltou a **32,1**, que é exatamente o par mais próximo dos doze originais: o lote não empilhou
-nenhum tom. Os matizes dos três (13°, 91° e 129°) caem nos buracos que os doze deixavam no círculo de
+nenhum tom. Os matizes dos três (13°, 91° e 144° — o terceiro foi conferido por medida no lote 6, e este texto
+dizia 129°) caem nos buracos que os doze deixavam no círculo de
 cores — os antigos vão de 3° a 34°, passam por 120° e vão de 167° a 210°.
 
 **Os três marcos, e as medidas que os acompanham.** `nave` (um corpo que afina em três degraus com três
@@ -1475,3 +1477,154 @@ real é **2,9913** — as barras dos aros são caixas giradas, e são as **quina
 círculo, não a espessura no ponto mais alto. Declarar menos do que a peça ocupa é o lado que morde: a
 peça sairia do capim sem ninguém ver no código.
 
+
+---
+
+## D-062 — O projeto de dados, os dezoito tons e o que o console roda ali
+
+**Contexto medido.** Antes de escrever a trilha de visualização de dados (capítulos 15 a 17), a pergunta
+era a mesma que abriu a trilha do jogo: **o que o console roda nesta parte do livro?** Medido no Pyodide
+desta versão do projeto, executando os `import` um a um:
+
+| módulo | resultado |
+| --- | --- |
+| `csv`, `json`, `random`, `datetime`, `statistics`, `math`, `collections`, `urllib.parse`, `os`, `pathlib`, `sqlite3` | **rodam** |
+| `requests` | **não existe** nesta distribuição |
+| `matplotlib`, `numpy`, `pandas` | **não existem** — e o `loadPackage` que os traria depende do CDN, que esta rede não alcança (D-040) |
+
+E os exercícios da trilha foram escritos **contra esse resultado**, não contra a expectativa: cada um foi
+executado no Python de verdade (é o que `pyodideDeVerdade.test.ts` faz) antes de entrar no conteúdo.
+
+**As cinco decisões.**
+
+1. **A trilha de dados tem as três unidades do livro, e todas rodam a parte de dados.** O capítulo 15
+   (gerar dado), o 16 (ler arquivo) e o 17 (receber de API) viram `u16`, `u17` e `u18`. O que fica fora é
+   o desenho do gráfico (`matplotlib`, Pygal, o mapa-múndi do Pygal, que deixou de existir) e a chamada de
+   rede do capítulo 17 — os dois estão declarados no texto da unidade, com o motivo, e a resposta da API
+   entra na ilha **já chegada**, como texto, para que o trabalho com ela (virar estrutura, atravessar
+   campos aninhados, lidar com o que falta, ordenar) seja feito inteiro.
+2. **Todo exercício da trilha tem correção conferida no Python real.** Os nove exercícios (três por
+   unidade) foram executados antes de entrar no conteúdo, e as saídas medidas são as que a correção
+   declara:
+
+   | exercício | saídas medidas | valores medidos |
+   | --- | --- | --- |
+   | 16.1 | `terminou em 2` · `o mais alto foi 2` · `o mais baixo foi -1` | passos 10 · soma 2 · maior 2 · menor −1 |
+   | 16.2 | `faces diferentes: 5` · `a mais comum foi 3 com 4 vezes` | face mais comum 3 · contagem 4 · soma das contagens 9 |
+   | 16.3 | `lançamentos: 100` | 100 lançamentos · todas entre 1 e 6 · soma das contagens 100 |
+   | 17.1 | `linhas no arquivo: 4` · `primeiro aluno: Ana` | 4 linhas · 2 colunas · cabeçalho `'nome'` |
+   | 17.2 | `notas lidas: 3` · `média: 8.17` | 3 notas · todas números · soma 24.5 · média 8.17 |
+   | 17.3 | `registros: 3` · `o segundo é Bruno` | 3 registros · campos `['nome', 'nota']` · a nota voltou número |
+   | 18.1 | `itens: 2` · `o maior número de estrelas: 7100` | o texto virou `dict` · 2 itens · maior 7100 |
+   | 18.2 | `itens: 3` · `com descrição: 1` · `sem descrição: 2` | 3 registros · 1 com descrição · 2 sem · o primeiro é `'b'` |
+   | 18.3 | `o mais popular é c` | o mais popular `'c'` · limite 47 · `False` · a resposta sem itens diz `'limite de uso atingido'` |
+
+   Quem confere isso a cada execução da suíte é `pyodideDeVerdade.test.ts`, que roda as nove respostas de
+   referência no Python de verdade e cobra que cada uma **passe** na correção declarada ao lado dela.
+3. **A paleta foi até dezoito tons — e foi a medida que decidiu isso.** A alternativa era deixar o tom
+   **ciclar** em quinze (as ilhas 16 a 18 repetiriam os tons 0, 1 e 2). A sonda que procura o melhor trio
+   entre todas as misturas de dois tokens respondeu: com os dezoito, o menor par **desenhado** continua em
+   **32,1** (o par 6 e 7), que é exatamente o menor par dos doze originais. A paleta aguentava; repetir cor
+   em ilha vizinha é o que D-053 mandou evitar. Ficaram o **areia dourada** (`ceu.horizonte + âmbar × 0,5`),
+   o **malva** (`mar claro + vermelho × 0,5`) e o **turquesa vivo** (`mar médio + verde claro × 0,2`).
+   O que separa o malva do terracota do lote 5 não é o matiz (10° contra 13°): é a claridade e a
+   saturação, e é por isso que a escolha foi feita pela distância **desenhada** — a mesma lição do sálvia.
+4. **Cada trilha declara o que o console roda, e a declaração é medida.** A trilha
+   `visualizacao-de-dados` passou de `'planejada'` para `'escrita'`, e o texto dela saiu da tabela acima.
+   Um teste cobra que trilha escrita tenha unidade e trilha planejada não tenha nenhuma; outro cobra que
+   toda trilha diga o que o console roda, com mais de 60 caracteres de motivo.
+5. **Os três marcos são de famílias de silhueta diferentes.** `funil` (a única construção que estreita
+   para baixo: oito anéis empilhados, pernas curtas e a pilha do dado contado), `prancheta` (a mais larga
+   e mais fina: tabuleiro de pé com a grade de células em relevo e a mola no alto) e `antena` (mastro fino
+   com a bacia de três anéis de barras, girando devagar em `y` para varrer o céu). As medidas conferidas:
+   funil **2,0200** de altura e **1,5556** de raio (a quina do último bloco da pilha, não a boca), prancheta
+   **2,8527** e **1,2672**, antena **3,7053** e **1,3883** (a bacia tombada sobe e se abre; a medida é da
+   malha montada). Com dezoito marcos para dezoito ilhas, **nenhuma ilha repete a construção de outra**.
+
+**Duas contas erradas do texto anterior, corrigidas por medida.** O `luzDoMundo.test.ts` dizia que o menor
+par de tons desenhados estava em **33,2**; medido de novo (e igual nos lotes 5 e 6), é **32,1** — o par
+6 e 7 continua sendo o mais próximo. E o comentário do tom alga dizia matiz **129°**; medido, é **144°**.
+As duas correções estão no texto de D-060 e de D-061, com a nota de que foram refeitas.
+
+**O que a conferência automática ensinou sobre ela mesma.** Dois defeitos foram pegos pelos testes e
+corrigidos antes do commit: (a) as cinco perguntas de cada unidade nova concentravam as respostas certas em
+três posições (o teste exige quatro, e cobra cada uma), e (b) a `estrutura.linhasNaoVazias` que eu havia
+declarado para dois exercícios da unidade 18 contava linhas de **código**, quando o campo mede linhas
+**impressas** — o Python de verdade reprovou a resposta de referência, que é exatamente o que esse teste
+existe para pegar.
+
+**O lote 6, entregue com esta decisão:** as três unidades do projeto 2 (capítulos 15, 16 e 17), as ilhas
+16, 17 e 18, os marcos `funil`, `prancheta` e `antena`, os tons 16 a 18, e a trilha
+`visualizacao-de-dados` declarada escrita.
+
+---
+
+## D-063 — O conserto que a captura pediu: a ponte encosta, o chão acaba onde o capim acaba, e a ilha ganha vida
+
+**O que a captura mostrou.** Quatro capturas depois de D-054, o usuário abriu o preview e escreveu: *"temos
+alguns problemas com graficos ruins e as pontes não encostam nas ilhas"*, *"as ilhas poderiam ter
+caracteristicas do tema que ta sendo abordado, elas estão todas sem vidas, sem falar nos graficos"*. Três
+queixas distintas, e as três estavam certas.
+
+**1. A ponte estava ancorada no raio nominal, e o capim não é um círculo.** A borda do topo é um
+**polígono**: cada coluna tem um fator sorteado entre `1 − amplitude` e `1 + amplitude` (a amplitude do
+topo é **0,12**, ou seja, a borda vai de 0,88 a 1,12 do raio), e entre duas colunas a borda é a corda que
+liga os dois vértices. `ponteEntre`
+ancorava as duas pontas em `raio` — o valor nominal —, e por isso a tábua ficava **no ar** onde a borda
+recuava e **enterrada no capim** onde ela avançava.
+
+- **Medido, antes:** das **34 pontas** das 17 pontes, **6 estavam no ar**, a pior a **0,582** além da borda
+  desenhada; o maior desvio entre a âncora nominal e a borda real chega a **0,941** — e a ilha tem raio
+  **6**, ou seja, o vão chegava a quase um sexto do raio. É o vão que a captura mostrou.
+- **Medido, depois:** **0 pontas no ar** e **0 enterradas**, com folga mínima de **0,171** até a borda
+  externa.
+- **Como.** `fatoresDaBorda` saiu de dentro de `gerarTopo` e virou função própria (mesma semente, mesma
+  ordem de sorteios — a borda desenhada não mudou em nenhuma ilha), e `bordaDoTopoEmDirecao` devolve as
+  duas medidas de uma direção: o fator **externo** (nenhum ponto da ilha passa disso) e o **interno** (a
+  corda encolhida pelo cosseno do meio-ângulo — um ponto até aqui está dentro do polígono em qualquer
+  coluna). A ponte ancora no interno; o teste cobra que cada ponta esteja entre os dois.
+- **O chão caminhável foi atrás.** `mapaCaminhavel.ts` tratava o capim como um **disco** de raio nominal, e
+  o avatar andava no ar onde a borda recuava. Agora o alcance é medido na direção do ponto, pelo mesmo
+  polígono, e o pé passa do capim para o tabuleiro sem degrau nem vão.
+
+**2. A ponte bloqueada parecia quebrada, e não interrompida.** A versão anterior construía metade do vão a
+partir da ilha de origem: de longe, o que se via era uma tábua pendurada no ar. Agora as tábuas saem das
+**duas** pontas e o que falta é um trecho no meio (um quarto do total, no mínimo duas tábuas), com um par
+de postes e uma travessa de parada em cada beirada do vão. O gerador passou a devolver **dado**, e não só
+malha: `tabuasConstruidas` e `vaoAberto` — quem quiser dizer em palavras onde a ponte para não precisa
+varrer a geometria.
+
+**3. As ilhas eram dezoito vezes a mesma ilha.** Toda ilha desenhava a biblioteca com `parede`, a mesa e o
+mastro com `poste`, as árvores com `conifera` e as pedras com `rochaClara`: as **mesmas cinco cores** nas
+dezoito. O que variava era o capim e o marco. Agora `coresDaIlha(tom)` mistura cada uma dessas cores com o
+**tom da própria ilha**, e as frações foram medidas (a sonda mediu desvio do token, menor par entre ilhas e
+distância mínima ao capim):
+
+| peça | fração do tom | desvio máximo do token | menor par entre ilhas | distância mínima ao capim |
+| --- | --- | --- | --- | --- |
+| madeira (mesa, mastro) | 0,20 | 53,9 | 9,0 | — |
+| pedra (biblioteca, pedras) | 0,16 | 38,5 | 6,8 | — |
+| copa da árvore | 0,18 + escurecer 0,8 | 26,9 | 6,8 | **35,1** |
+| arbusto | 0,30 | — | 13,4 | 26,7 |
+| flor | âmbar puro | — | 0,0 (é a mesma em todas) | **42,9** |
+
+Duas dessas linhas nasceram de uma medida que reprovou a primeira tentativa: com a copa em 0,32 **sem**
+escurecer, a folhagem da ilha mais clara ficava a **12,0** do capim dela (árvore invisível em cima da
+grama), e a flor misturada com o capim claro caía para **30,1**. Ficaram a copa escurecida e a flor âmbar
+puro.
+
+**4. O capim era uma pastagem vazia.** Entraram **arbustos** (4 a 9 por ilha) e **flores** (3 a 7), ambos
+feitos da mesma malha da pedra solta — sem geometria nova, sem custo novo de geração —, com cor e tamanho
+próprios. Os dois sorteios entram **depois** de todos os que já existiam, e é por isso que árvores e pedras
+de nenhuma ilha mudaram de lugar.
+
+**5. A trilha ganhou marca, no mundo e na lista.** Uma **bandeira** é fincada no capim de cada ilha: mesmo
+pano e mesma cor para as ilhas da mesma parte do livro, quatro formas (flâmula, retangular, duas caudas,
+quadrada) e quatro cores tiradas dos tokens da marca. A cor é a mesma que a lista de ilhas usa no título do
+grupo (`corDaTrilha`, `paraCss`), e o lugar da bandeira foi escolhido para **não** ficar na linha da ponte
+(ângulo −0,3π, contra 0,42π da placa, 0,15π da mesa, 0,85π da biblioteca e −0,58π do marco).
+
+**O que fica declarado como não visto.** Nada disto foi visto em navegador: o sandbox não tem WebGL, e a
+verificação visual deste projeto depende das capturas do usuário. O que os testes provam está em
+`docs/TEST_REPORT.md`; o que depende de olhar está dito lá também, com o roteiro do que conferir na próxima
+captura.

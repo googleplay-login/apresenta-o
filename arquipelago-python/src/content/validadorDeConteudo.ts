@@ -56,6 +56,33 @@ const EXPRESSOES_PROIBIDAS = [
  *  - exercício sem correção precisa dizer por que — o motivo é o que a tela
  *    mostra no lugar do botão que não existiria.
  */
+/**
+ * As bibliotecas que este console **não** tem — medidas, e não lembradas.
+ *
+ * `import pygame` falha na distribuição do Pyodide que o projeto usa (D-061), e
+ * `matplotlib`, `numpy`, `pandas`, `requests`, `django` e `tkinter` também
+ * (D-062). A lista é o que dá sentido à regra abaixo: um trecho de código que
+ * importa uma destas bibliotecas precisa dizer, na própria tela, por que ele não
+ * roda aqui. Sem a lista, a regra seria uma impressão.
+ */
+export const BIBLIOTECAS_QUE_NAO_RODAM_AQUI: readonly string[] = [
+  'import pygame',
+  'import matplotlib',
+  'import numpy',
+  'import pandas',
+  'import requests',
+  'import django',
+  'import tkinter',
+  'from matplotlib',
+  'from django',
+  'from requests',
+]
+
+/** Qual das bibliotecas que não rodam aparece neste código, se alguma aparecer. */
+function bibliotecaQueNaoRodaNoCodigo(codigo: string): string | undefined {
+  return BIBLIOTECAS_QUE_NAO_RODAM_AQUI.find((marca) => codigo.includes(marca))
+}
+
 function problemasNaCorrecao(
   exercicio: {
     readonly id: string
@@ -266,6 +293,14 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
           `${onde}: bloco de código ${indice + 1}`,
         ),
       )
+      // Um trecho que importa o que o console não tem precisa avisar na tela —
+      // senão o estudante digita, o erro aparece, e ele conclui que errou.
+      const biblioteca = bibliotecaQueNaoRodaNoCodigo(bloco.codigo)
+      if (biblioteca !== undefined && bloco.naoRodaNoConsole === undefined) {
+        problemas.push(
+          `${onde}: bloco de código ${indice + 1} usa «${biblioteca}», que não roda neste console, e não diz por quê`,
+        )
+      }
     } else if (bloco.tipo === 'lista') {
       if (bloco.itens.length === 0) {
         problemas.push(`${onde}: lista ${indice + 1} sem itens`)
@@ -312,6 +347,16 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
         `${onde}: exercício ${exercicio.id}`,
       ),
     )
+    const bibliotecaNaSolucao = bibliotecaQueNaoRodaNoCodigo(exercicio.solucao)
+    if (
+      bibliotecaNaSolucao !== undefined &&
+      exercicio.naoRodaNoConsole === undefined &&
+      exercicio.solucaoQueRodaNoConsole === undefined
+    ) {
+      problemas.push(
+        `${onde}: exercício ${exercicio.id} usa «${bibliotecaNaSolucao}», que não roda neste console, sem motivo escrito nem versão que rode`,
+      )
+    }
     problemas.push(...problemasNaCorrecao(exercicio, onde))
   }
 

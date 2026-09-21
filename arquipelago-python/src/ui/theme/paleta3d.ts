@@ -1,3 +1,4 @@
+import type { IdDeTrilha } from '../../content/planoDeUnidades'
 import type { Cor3D } from '../../world/geometria/pintura'
 import { ajustar, misturar } from '../../world/geometria/pintura'
 import { cores, coresDeEstado } from './tokens'
@@ -216,15 +217,35 @@ export const CORES_DAS_ILHAS: readonly Cor3D[] = [
   // para **32,1**, que é o par mais próximo dos doze originais: o lote não
   // empilhou nenhum tom.
   //
-  // O matiz dos três (13°, 91° e 129°) cai nos buracos que os doze deixavam no
-  // círculo de cores: os antigos vão de 3° a 34° (quentes), 120° (um verde) e
-  // 167° a 210° (azuis e turquesas).
+  // O matiz dos três, medido: 13°, 91° e 144°. Eles caem nos buracos que os doze
+  // deixavam no círculo de cores: os antigos vão de 3° a 34° (quentes), 120° (um
+  // verde) e 167° a 210° (azuis e turquesas).
   /** Terracota queimada: âmbar com vermelho — o tom do fogo que sai da nave. */
   misturar(deHex(cores.acento.ambar), deHex(cores.acento.vermelho), 0.7),
   /** Cáqui esverdeado: o mar claro com o âmbar — claro e dessaturado. */
   misturar(deHex(cores.mar.claro), deHex(cores.acento.ambar), 0.5),
   /** Verde profundo de alga: o mar fundo com o capim — escuro e saturado. */
   misturar(deHex(cores.mar.fundo), deHex(cores.terreno.capim), 0.6),
+  // Lote 6 (Etapa 11): os três tons da trilha do projeto de visualização de
+  // dados. Saíram da mesma varredura por medida do lote 5, agora procurando o
+  // trio que **mantém o piso** com dezoito tons: o menor par dos dezoito
+  // desenhados é **32,1**, exatamente o menor par dos doze originais — a paleta
+  // aguentou os dezoito sem empilhar nenhum tom (D-062). Foi essa medida que
+  // decidiu contra a alternativa de deixar o tom **ciclar** em quinze: a paleta
+  // tinha espaço, e repetir cor em ilha vizinha é o que D-053 mandou evitar.
+  //
+  // O que separa os três dos anteriores **não** é só o matiz: o do meio
+  // (`#98807b`, medido a 10°) é vizinho do terracota do lote 5 (13°), e o que o
+  // afasta dele é a claridade e a saturação — o mesmo par de coisas que o
+  // orçamento de luz transforma de forma diferente em cada tom (D-060). A
+  // distância mínima foi conferida **depois de desenhados**, e não na cor crua:
+  // foi assim que o sálvia do lote 5 caiu para 28,5.
+  /** Areia dourada: o horizonte do céu com o âmbar — claro e quente. */
+  misturar(deHex(cores.ceu.horizonte), deHex(cores.acento.ambar), 0.5),
+  /** Malva acinzentado: o mar claro com o vermelho — quase neutro, escuro. */
+  misturar(deHex(cores.mar.claro), deHex(cores.acento.vermelho), 0.5),
+  /** Turquesa viva: o mar médio com o verde claro — o tom mais frio dos dezoito. */
+  misturar(deHex(cores.mar.medio), deHex(cores.acento.verdeClaro), 0.2),
 ] as const
 
 /** O tom de uma ilha, pelo índice. Índices fora da lista dão a volta. */
@@ -232,6 +253,86 @@ export function corDaIlha(tom: number): Cor3D {
   const quantidade = CORES_DAS_ILHAS.length
   const escolhido = ((Math.trunc(tom) % quantidade) + quantidade) % quantidade
   return CORES_DAS_ILHAS[escolhido] ?? CORES_DERIVADAS.aprovada
+}
+
+/**
+ * As cores de uma ilha: as estruturas também vestem o tom dela.
+ *
+ * O problema que isto resolve está na captura do lote 6.1: **toda** ilha desenhava
+ * a biblioteca com `parede`, a mesa e o mastro com `poste`, as árvores com
+ * `conifera` e as pedras com `rochaClara` — as mesmas cinco cores nas dezoito. O
+ * que variava era o capim e o marco, e por isso as ilhas pareciam a mesma ilha
+ * repetida, mesmo com silhueta e marco diferentes (D-053). A captura disse o
+ * resto: "elas estão todas sem vida".
+ *
+ * Aqui cada peça dessas é misturada com o **tom da própria ilha**. A fração é
+ * pequena de propósito — a estrutura continua sendo madeira e pedra, e não vira
+ * um bloco colorido —, mas é suficiente para duas ilhas vizinhas não terem a
+ * mesma madeira. Quem desenha aplica o orçamento de luz depois (D-060).
+ */
+export function coresDaIlha(tom: number): {
+  readonly madeira: number
+  readonly pedra: number
+  readonly copa: number
+  readonly arbusto: number
+  readonly flor: number
+  readonly tronco: number
+} {
+  const cor = corDaIlha(tom)
+  return {
+    // As quatro frações abaixo foram **medidas**, e não escolhidas a dedo. Para
+    // cada uma, a sonda mediu três coisas nas dezoito ilhas: o desvio máximo do
+    // token (a peça continua sendo madeira, pedra, folhagem), o menor par entre
+    // ilhas (duas ilhas diferentes têm de ter cores diferentes) e a distância
+    // mínima ao capim da própria ilha (a peça não pode sumir no chão).
+    //
+    //  - madeira em 0,2: desvio até 53,9 do token, menor par de ilhas 9,0, e as
+    //    dezoito continuam quentes (r ≥ g ≥ b). Em 0,26 o par entre ilhas subia
+    //    para 12,1, mas o desvio ia a 69,7 — e madeira que perde o marrom deixa
+    //    de ser madeira;
+    //  - pedra em 0,16: desvio até 38,5, menor par 6,8. A pedra pode esfriar (9
+    //    das 18 ficam frias), e é isso que a separa da madeira;
+    //  - copa em 0,18 **e escurecida em 0,8**: sem o escurecimento, a folhagem
+    //    da ilha mais clara ficava a 12,0 do capim dela — árvore invisível em
+    //    cima da grama. Escurecida, a distância mínima sobe para 35,1;
+    //  - arbusto em 0,3: distância mínima ao capim 26,7. O arbusto é a folhagem
+    //    clara, e ficar perto da grama é o que ele quer — mas não a ponto de
+    //    desaparecer;
+    //  - a flor é âmbar **puro** (42,9 de distância mínima ao capim). Com o
+    //    capim claro na mistura, como estava antes de medir, o menor caso caía
+    //    para 30,1 e a flor se perdia no verde da ilha mais clara.
+    madeira: misturar(CORES_DERIVADAS.poste, cor, 0.2),
+    pedra: misturar(CORES_DERIVADAS.parede, cor, 0.16),
+    copa: ajustar(misturar(CORES_DO_MUNDO.conifera, cor, 0.18), 0.8),
+    arbusto: misturar(CORES_DERIVADAS.capimClaro, cor, 0.3),
+    flor: deHex(cores.acento.ambar),
+    tronco: misturar(CORES_DERIVADAS.tronco, cor, 0.16),
+  }
+}
+
+/**
+ * A cor de cada trilha do livro.
+ *
+ * É a mesma cor na bandeira da ilha (no mundo) e na marca do grupo de trilhas
+ * (na lista de ilhas): quem vê a bandeira verde sabe em que grupo procurar. As
+ * quatro saem dos tokens da marca, uma por família — verde, âmbar, turquesa e
+ * terracota —, e passam pelo orçamento de luz quando viram material.
+ */
+export const CORES_DAS_TRILHAS: Readonly<Record<IdDeTrilha, number>> = {
+  'conceitos-basicos': deHex(cores.acento.verde),
+  'invasao-alienigena': deHex(cores.acento.ambar),
+  'visualizacao-de-dados': deHex(cores.mar.medio),
+  'aplicacoes-web': deHex(cores.acento.vermelho),
+}
+
+/** A cor de uma trilha, pronta para virar material ou `background` de CSS. */
+export function corDaTrilha(id: IdDeTrilha): number {
+  return CORES_DAS_TRILHAS[id]
+}
+
+/** A cor como texto `#rrggbb`, para onde a tela não é o WebGL (CSS, painel). */
+export function paraCss(cor: number): string {
+  return `#${(cor & 0xffffff).toString(16).padStart(6, '0')}`
 }
 
 /**

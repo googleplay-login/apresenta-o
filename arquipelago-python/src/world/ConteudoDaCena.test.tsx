@@ -533,37 +533,75 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
     // copa — era desenhada com a cor da madeira. Na tela, a copa saía marrom, e a
     // árvore virava um torrão de terra em pé, confundível com a pedra solta ao
     // lado. Este teste cobra as duas partes e a cor de cada uma.
+    //
+    // Desde o lote 6.1 as duas cores são **misturas com o tom da ilha** (D-063),
+    // e por isso o teste não procura mais o token exato: ele entra pela estrutura
+    // (o grupo `arvore:*`), confere que são duas cores distintas e que a da copa
+    // é verde. E cobra a consequência da mudança: tronco de ilha diferente é
+    // cor diferente.
     const cena = await ReactThreeTestRenderer.create(
       <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
     )
 
+    const troncosDasIlhas = new Set<number>()
+
     for (const unidade of UNIDADES) {
       const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
-      const malhas = ilha
-        .findAll((filho) => filho.instance.type === 'Mesh')
-        .filter((filho) => {
-          const geometria = (filho.instance as unknown as { geometry?: { attributes?: Record<string, unknown> } })
-            .geometry
-          return geometria?.attributes?.color === undefined
-        })
-      const cor = (malha: No) => corDoMaterial(malha)
-      const troncos = malhas.filter((malha) => cor(malha) === CORES_DERIVADAS.tronco)
-      const copas = malhas.filter((malha) => cor(malha) === CORES_DO_MUNDO.conifera)
+      const arvores = ilha.findAll((filho) => comNome(filho).startsWith('arvore:'))
+      expect(arvores.length, `«${unidade.titulo}» ficou sem árvore`).toBeGreaterThan(0)
+      const malhas = arvores[0]!.findAll((filho) => filho.instance.type === 'Mesh')
 
-      expect(troncos.length, `«${unidade.titulo}» ficou sem tronco de árvore`).toBeGreaterThan(0)
-      expect(copas.length, `«${unidade.titulo}» ficou sem copa de árvore`).toBeGreaterThan(0)
-      // Cada árvore tem um tronco e uma copa.
-      expect(copas.length).toBe(troncos.length)
+      expect(malhas.length, `«${unidade.titulo}» ficou sem tronco e copa`).toBeGreaterThan(1)
 
-      for (const copa of copas) {
-        const [r, g, b] = corLinear(cor(copa))
-        expect(
-          g,
-          `A copa de «${unidade.titulo}» não é verde: r=${r?.toFixed(3)} g=${g?.toFixed(3)} b=${b?.toFixed(3)}`,
-        ).toBeGreaterThan(r ?? 0)
-        expect(g).toBeGreaterThan(b ?? 0)
-      }
+      const cores = malhas.map((malha) => corDoMaterial(malha))
+      expect(new Set(cores).size, `«${unidade.titulo}» desenha a árvore de uma cor só`).toBe(cores.length)
+
+      // A copa é a mais clara das duas, e verde: g acima de r e de b.
+      const [tronco, copa] = [...malhas].sort(
+        (uma, outra) => corLinear(corDoMaterial(uma))[1]! - corLinear(corDoMaterial(outra))[1]!,
+      )
+      const [r, g, b] = corLinear(corDoMaterial(copa!))
+      expect(
+        g,
+        `A copa de «${unidade.titulo}» não é verde: r=${r?.toFixed(3)} g=${g?.toFixed(3)} b=${b?.toFixed(3)}`,
+      ).toBeGreaterThan(r ?? 0)
+      expect(g).toBeGreaterThan(b ?? 0)
+
+      troncosDasIlhas.add(corDoMaterial(tronco!))
     }
+
+    // A prova de que a ilha tem cor própria: dezoito ilhas, dezoito madeiras.
+    expect(troncosDasIlhas.size).toBe(UNIDADES.length)
+
+    await cena.unmount()
+  })
+
+  it('cada ilha tem arbustos, flores e a bandeira da sua trilha (D-063)', async () => {
+    // O que a captura mostrou: o capim era uma pastagem lisa com meia dúzia de
+    // árvores, e a ilha parecia uma maquete sem vida. O lote 6.1 encheu o capim
+    // de arbustos e flores, e fincou a bandeira da trilha no lado de chegada.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const bandeirasVistas = new Set<string>()
+
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const nomes = ilha.findAll(() => true).map((filho) => comNome(filho))
+
+      expect(nomes.some((nome) => nome.startsWith('arbusto:')), `«${unidade.titulo}» sem arbusto`).toBe(true)
+      expect(nomes.some((nome) => nome.startsWith('flor:')), `«${unidade.titulo}» sem flor`).toBe(true)
+
+      const bandeira = nomes.find((nome) => nome.startsWith('bandeira:'))
+      expect(bandeira, `«${unidade.titulo}» ficou sem a bandeira da trilha`).toBeDefined()
+      bandeirasVistas.add(bandeira ?? '')
+      // Uma bandeira por trilha da unidade: é ela que diz de que parte do livro
+      // a ilha é, tanto no mundo quanto na lista.
+      expect(bandeira).toBe(`bandeira:${unidade.trilha}`)
+    }
+
+    expect(bandeirasVistas.size).toBeGreaterThan(1)
 
     await cena.unmount()
   })

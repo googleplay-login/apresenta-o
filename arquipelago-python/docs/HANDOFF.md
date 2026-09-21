@@ -1,20 +1,22 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, depois do **lote 5 da Etapa 11** (versão 0.19.0) — o lote que começa a
-**Parte II** do livro e que transformou os três projetos em **trilhas**: cada unidade declara a que parte
-do livro pertence, e cada trilha declara, na tela, **o que o console roda ali**. O lote trouxe o projeto
-1 (capítulos 12 a 14, ilhas 13 a 15). Antes dele, no mesmo dia, entraram o lote 4 (capítulos 10 e 11, que
-fechou a Parte I) e o conserto da cor do mundo (D-060).
+Atualizado em **21/09/2026**, depois do **lote 6 da Etapa 11** (versão 0.20.0) — o lote do **projeto 2,
+visualização de dados** (capítulos 15 a 17, ilhas 16 a 18), e do **conserto visual que a captura de tela
+pediu** (D-063): a ponte passou a encostar no capim desenhado, o chão caminhável passou a acabar onde o
+capim acaba, a ponte bloqueada virou uma ponte **interrompida** (dois tocos, vão no meio) em vez de uma
+tábua no ar, cada ilha ganhou madeira, pedra e folhagem com o tom dela, o capim ganhou arbustos e flores,
+e cada ilha fincou a bandeira da sua trilha. Antes, no mesmo dia: lote 5 (projeto 1, ilhas 13 a 15), lote 4
+(capítulos 10 e 11, que fechou a Parte I) e o conserto da cor do mundo (D-060).
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lotes 1 a 5 entregues (capítulos 4 a 14, ilhas 5 a 15): a Parte I inteira e o primeiro projeto da Parte II; o lote seguinte é o projeto 2 (visualização de dados, capítulos 15 a 17), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1 a 6 entregues (capítulos 4 a 17, ilhas 5 a 18): a Parte I inteira e os projetos 1 e 2 da Parte II; o lote seguinte é o projeto 3 (aplicações web, capítulos 18 a 20), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: doze ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
-| Conteúdo pedagógico | **existe** para as 15 unidades escritas (capítulos 1 a 14: a Parte I inteira e o primeiro projeto): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
-| Trilhas | **declaradas**: cada unidade pertence a uma trilha, e cada trilha diz o que o console roda ali — a do jogo diz que roda a lógica, e não a biblioteca gráfica (D-061) |
+| Mundo 3D | **existe**: dezoito ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), e desde o lote 6.1 cada uma também com **madeira, pedra e folhagem no tom dela** e a **bandeira da trilha** fincada no capim (D-063); pontes ancoradas no capim desenhado, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
+| Conteúdo pedagógico | **existe** para as 18 unidades escritas (capítulos 1 a 17: a Parte I inteira e os dois primeiros projetos): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada — e **todo** exercício com correção automática conferida no Python de verdade |
+| Trilhas | **declaradas**: cada unidade pertence a uma trilha, e cada trilha diz o que o console roda ali — a do jogo diz que roda a lógica, e não a biblioteca gráfica (D-061); a de dados diz que roda a parte de dados, e não o gráfico nem a busca pela rede (D-062). No mundo, cada trilha tem bandeira e cor próprias (D-063) |
 | Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060) |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
@@ -509,6 +511,60 @@ Verificação:
   parava em 520 e não em 340, e a solução de `e15-3` pedia o nível 4 com a variável já em 3. É para isso
   que o teste roda as soluções no Pyodide de verdade.
 
+### Etapa 11 — lote 6: o projeto 2 vira trilha (capítulos 15 a 17 nas ilhas 16 a 18)
+
+**O que entrou.** As três unidades do projeto de dados — 16 (gerar dado), 17 (ler arquivo) e 18 (receber
+de fora) —, os marcos `funil`, `prancheta` e `antena`, os tons 16 a 18, e a trilha
+`visualizacao-de-dados` declarada **escrita** (D-062). Com dezoito marcos para dezoito ilhas, nenhuma ilha
+repete a construção de outra; com dezoito tons, nenhuma repete a cor.
+
+**O que foi medido antes de escrever.** Os `import` no Pyodide desta versão, um a um: `csv`, `json`,
+`random`, `datetime`, `statistics`, `math`, `collections`, `urllib.parse`, `os`, `pathlib` e `sqlite3`
+rodam; `requests`, `matplotlib`, `numpy` e `pandas` **não existem**. `loadPackage` tentaria o CDN, que
+esta rede não alcança (D-040) e resolve sem lançar — o teste honesto é o `import`, e foi ele que decidiu o
+que cada unidade promete. A trilha, o texto de cada unidade e a tabela do `BOOK_MAP.md` saíram daí.
+
+**Os nove exercícios foram executados no Python de verdade** antes de entrar no conteúdo, e as saídas
+medidas estão no `TEST_REPORT.md`. Dois defeitos foram pegos por teste antes do commit: as respostas
+certas das unidades novas se concentravam em três posições (o teste exige as quatro), e a
+`estrutura.linhasNaoVazias` de dois exercícios contava linhas de **código** quando o campo mede linhas
+**impressas** — o Pyodide reprovou a resposta de referência, que é o que esse teste existe para pegar.
+
+### Conserto depois do lote 6: a ponte no ar, o chão no ar e as ilhas sem vida (D-063)
+
+**O que a captura mostrou.** *"temos alguns problemas com graficos ruins e as pontes não encostam nas
+ilhas"*; *"as ilhas poderiam ter caracteristicas do tema que ta sendo abordado, elas estão todas sem
+vidas"*. As três queixas foram medidas e as três tinham causa.
+
+**1. A ponte.** `ponteEntre` ancorava as pontas no **raio nominal**, e a borda do capim é um **polígono**
+que recua e avança 12% em volta dele. Medido: das 34 pontas, **6 estavam no ar**, a pior a 0,582 além da
+borda desenhada, com desvio máximo de **0,941** entre a âncora antiga e a borda real — na ilha de raio 6,
+quase um sexto do raio. Agora `fatoresDaBorda` (extraída de `gerarTopo`, mesma semente) e
+`bordaDoTopoEmDirecao` dão a borda na direção da ponte, e o teste cobra cada ponta entre a corda mínima e
+a borda externa: **0 no ar, 0 enterradas**.
+
+**2. O chão caminhável ia atrás do mesmo erro**, e foi consertado junto: o alcance do pé passou a ser
+medido na direção do ponto, pelo mesmo polígono — antes o avatar andava no ar onde a borda recuava.
+
+**3. A ponte bloqueada.** Construía metade do vão a partir da origem, e o que se via era uma tábua
+pendurada. Agora as tábuas saem das **duas** pontas, o vão fica no meio (um quarto do total), com travessa
+de parada, e o gerador devolve `tabuasConstruidas` e `vaoAberto` como dado.
+
+**4. As ilhas eram a mesma ilha dezoito vezes.** Cinco cores compartilhadas (parede, poste, tronco,
+conífera, rocha clara) em todas. Agora `coresDaIlha(tom)` tempera cada uma com o tom da própria ilha —
+frações medidas, com o desvio do token e o menor par entre ilhas na tabela de D-063 —, e a copa da árvore
+é escurecida, porque sem isso a folhagem da ilha mais clara ficava a 12,0 do capim dela.
+
+**5. O capim vazio.** Arbustos (4 a 9 por ilha) e flores (3 a 7), da mesma malha da pedra solta, sorteados
+**depois** dos enfeites que já existiam — árvores e pedras de nenhuma ilha mudaram de lugar.
+
+**6. A marca da trilha.** Uma bandeira por ilha, com quatro formas e quatro cores (uma por trilha), e a
+mesma cor no título do grupo na lista de ilhas. O lugar da bandeira foi escolhido fora da linha da ponte.
+
+**O que não foi visto.** Nada disto foi visto em navegador nenhum: o sandbox não tem WebGL, e a
+verificação visual depende das capturas do usuário. O roteiro do que conferir na próxima captura está no
+`TEST_REPORT.md`.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -557,11 +613,13 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11, lote 6 — o projeto 2: visualização de dados (capítulos 15 a 17, ilhas 16 a 18).** O lote 5
-respondeu a pergunta que faltava (D-061) e entregou o projeto 1 inteiro. O que vem agora já tem forma
-decidida: a trilha `visualizacao-de-dados` está declarada em `TRILHAS` com `situacao: 'planejada'` e com
-o que o console roda ali, e o lote 6 é escrever as três unidades dela — **e virar a situação para
-`'escrita'`**, que é o que o teste cobra.
+**Etapa 11, lote 7 — o projeto 3: aplicações web (capítulos 18 a 20, ilhas 19 a 21).** O lote 6
+escreveu o projeto 2 inteiro e virou a trilha dele para `'escrita'` (D-062); o conserto do lote 6.1
+(D-063) tratou o que a captura de tela mostrou. O que vem agora já está declarado em `TRILHAS`: a trilha
+`aplicacoes-web` está como `'planejada'`, com o que o console roda ali (o Django **não** roda — medido —, e
+o projeto não levanta servidor nenhum: a parte que se escreve é a função que recebe os dados de um pedido
+e devolve a resposta). O lote 7 é escrever as três unidades dela, marcos, tons, e virar a situação para
+`'escrita'`.
 
 O recorte que já se sabe, pela medição do lote 5: a parte de **dados** roda (`csv`, `json`, `random`,
 estatística em Python puro), e o **desenho do gráfico** não (`import matplotlib` falha; o `numpy` que ela

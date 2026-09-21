@@ -146,11 +146,43 @@ describe('ponte', () => {
     expect(caixa.x[1]).toBeGreaterThan(9.5)
   })
 
-  it('deixa o vão aberto quando bloqueada', () => {
-    const { estrutura } = gerarPonte({ ...base, liberada: false })
-    const fim = limites(estrutura).x[1]
-    expect(fim).toBeLessThan(10)
-    expect(fim).toBeGreaterThan(0)
+  it('a ponte bloqueada sai das duas pontas, com o vão no meio', () => {
+    // O que a captura de tela mostrou (D-063): a versão anterior construía
+    // metade do vão a partir da origem, e o resultado era uma tábua pendurada no
+    // ar — o arquipélago parecia quebrado em vez de bloqueado. Agora os dois
+    // tocos existem, e o que falta é o meio.
+    const bloqueada = gerarPonte({ ...base, liberada: false })
+    const liberada = gerarPonte({ ...base, liberada: true })
+
+    // A ponte inteira tem todas as tábuas; a bloqueada tem menos — e as que
+    // faltam são um trecho contínuo no meio, com tábua de sobra dos dois lados.
+    expect(liberada.tabuasConstruidas).toHaveLength(base.tabuas)
+    expect(bloqueada.tabuasConstruidas.length).toBeLessThan(base.tabuas)
+    expect(bloqueada.tabuasConstruidas.length).toBeGreaterThanOrEqual(4)
+    expect(bloqueada.tabuasConstruidas[0]).toBe(0)
+    expect(bloqueada.tabuasConstruidas.at(-1)).toBe(base.tabuas - 1)
+
+    const vao = bloqueada.vaoAberto
+    expect(vao).not.toBeNull()
+    if (vao === null) {
+      return
+    }
+    // O vão fica no meio, e não encostado em nenhuma das pontas.
+    expect(vao.de).toBeGreaterThan(base.comprimento * 0.2)
+    expect(vao.ate).toBeLessThan(base.comprimento * 0.8)
+    expect(vao.ate).toBeGreaterThan(vao.de)
+    // E ele é largo o bastante para ser lido de longe: um quarto do vão.
+    expect(vao.ate - vao.de).toBeGreaterThanOrEqual(base.comprimento * 0.2)
+
+    // A malha acompanha: as duas pontas da ponte estão construídas. O poste do
+    // fim é um cilindro centrado na última coluna, então ele passa um dedo além
+    // do comprimento — o que importa é que nada **falte** nas pontas.
+    const caixa = limites(bloqueada.estrutura)
+    expect(caixa.x[0]).toBeLessThanOrEqual(0)
+    expect(caixa.x[1]).toBeGreaterThanOrEqual(base.comprimento)
+
+    // A travessa de parada passa da altura da tábua: é ela que diz "para aqui".
+    expect(caixa.y[1]).toBeGreaterThan(1)
   })
 
   it('tem corrimão só quando liberada, e o corrimão é uma malha válida', () => {

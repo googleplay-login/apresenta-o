@@ -272,9 +272,9 @@ describe('nenhuma peça vira buraco preto', () => {
 describe('os tons das ilhas, depois do orçamento de luz', () => {
   it('nenhum marco chega queimado à tela, nem bloqueado nem liberado', () => {
     // O marco é desenhado com o tom da ilha. Antes do orçamento de luz (D-060),
-    // quatro dos doze estouravam: o tom quase branco da ilha 6 chegava a 1,46 e o
-    // marco virava silhueta chapada; o tom da ilha 3, bloqueado, chegava a 1,17,
-    // porque a mistura com a névoa clareia ainda mais.
+    // quatro dos doze tons de então estouravam: o quase branco da ilha 6 chegava a
+    // 1,46 e o marco virava silhueta chapada; o da ilha 3, bloqueado, chegava a
+    // 1,17, porque a mistura com a névoa clareia ainda mais.
     for (let indice = 0; indice < CORES_DAS_ILHAS.length; indice += 1) {
       const tom = corDaIlha(indice)
       const liberado = corNoOrcamentoDeLuz(tom)
@@ -289,8 +289,8 @@ describe('os tons das ilhas, depois do orçamento de luz', () => {
       ).toBeLessThanOrEqual(TETO_DE_MATERIAL)
       // Nenhum marco apaga nas direções que a peça **mostra**. A face de baixo
       // fica fora: o marco está em pé no capim, e o lado que encosta no chão não
-      // aparece — o tom mais escuro das doze, o da ilha 9, mede 0,117 nas
-      // direções visíveis contra 0,02 na face de baixo.
+      // aparece — o tom mais escuro da paleta mede **0,1175** nas direções
+      // visíveis (medido com os dezoito tons), contra 0,02 na face de baixo.
       expect(
         piorEscuridaoVisivel(liberado),
         `O marco da ilha ${indice + 1} apagou`,
@@ -299,20 +299,26 @@ describe('os tons das ilhas, depois do orçamento de luz', () => {
   })
 
   it('o orçamento de luz não mexe na cor quando ela já cabe', () => {
-    // A maioria dos tons já cabia: oito dos doze saem iguais ao tom. O conserto
-    // mexe no que não cabe, e não em tudo — isso mantém a paleta aprovada.
+    // A maioria dos tons já cabia: medido com os dezoito, **treze** saem iguais
+    // ao tom (oito dos doze, quando a paleta tinha doze). O conserto mexe no que
+    // não cabe, e não em tudo — isso mantém a paleta aprovada.
     const intocados = Array.from({ length: CORES_DAS_ILHAS.length }, (_, indice) =>
       corDaIlha(indice),
     ).filter((tom) => corNoOrcamentoDeLuz(tom) === tom)
     expect(intocados.length).toBeGreaterThanOrEqual(8)
   })
 
-  it('os doze marcos continuam distinguíveis entre si', () => {
+  it('os marcos das ilhas continuam distinguíveis entre si, com o tom já desenhado', () => {
     // O preço do orçamento: os tons mais claros se aproximam ao serem trazidos
-    // para dentro do teto. Medido, o par mais próximo é o 6 e o 7 (dois tons
-    // claros e frios), que ficam a 33,2 de distância — bem acima do que a tela
-    // distingue, e as ilhas se separam também por silhueta, marco e vegetação.
+    // para dentro do teto. Medido com os dezoito tons (lote 6), o par mais
+    // próximo continua sendo o 6 e o 7 — dois tons claros e frios —, a 32,1 de
+    // distância **desenhada**, contra 46,5 de distância crua. A distância cai um
+    // terço ao passar pelo orçamento, e mesmo assim fica acima do que a tela
+    // distingue; as ilhas se separam também por silhueta, marco e vegetação.
     // Este teste trava o piso para um reajuste futuro não empilhar tons.
+    //
+    // O texto de D-060 trazia 33,2 para este mesmo par; medido de novo, dá 32,1.
+    // O número que vale é o que está aqui, porque é daqui que ele é cobrado.
     const desenhados = Array.from({ length: CORES_DAS_ILHAS.length }, (_, indice) =>
       corNoOrcamentoDeLuz(corDaIlha(indice)),
     )

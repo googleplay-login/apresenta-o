@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { progressoInicial, registrarResultado, type Progresso } from '../../learning/percurso'
 import { SEM_TECLAS, type TeclasDeMovimento } from '../camera/movimento'
+import { bordaDoTopoEmDirecao } from '../geometria/ilha'
 import {
   RAIO_DO_AVATAR,
   chaoDoMundo,
@@ -135,8 +136,20 @@ describe('o passo a pé', () => {
     // Muito mais tempo do que o necessário para atravessar a ilha inteira.
     const depois = andar(mapa, inicio, teclas({ frente: true }), 8)
 
+    // O limite agora é a borda **desenhada** do capim na direção em que o avatar
+    // foi (D-063): o disco do raio nominal deixava o pé andar no ar onde a borda
+    // recuava, e segurava o pé antes da hora onde ela avançava.
     const distancia = Math.hypot(depois.x - primeira.x, depois.z - primeira.z)
-    expect(distancia).toBeLessThanOrEqual(primeira.raio - RAIO_DO_AVATAR + 0.01)
+    const borda =
+      distancia === 0
+        ? primeira.raio
+        : bordaDoTopoEmDirecao({
+            raio: primeira.raio,
+            segmentosRadiais: primeira.segmentosRadiais,
+            fatores: primeira.fatoresDaBorda,
+            angulo: Math.atan2(depois.z - primeira.z, depois.x - primeira.x),
+          }).interno
+    expect(distancia).toBeLessThanOrEqual(borda - RAIO_DO_AVATAR + 0.01)
     expect(chaoEm(mapa, depois)).not.toBeNull()
   })
 

@@ -14,6 +14,9 @@ import {
   gerarPlaca,
 } from './geometria/solidos'
 import { Malha3D } from './Malha'
+import { gerarBandeira } from './geometria/solidos'
+import type { FormaDeBandeira } from './geometria/solidos'
+import type { IdDeTrilha } from '../content/planoDeUnidades'
 import type { IlhaVisivel } from './mundoVisivel'
 import { criarSorteador, entre } from './geometria/aleatorio'
 import {
@@ -21,6 +24,8 @@ import {
   CORES_DO_MUNDO,
   corDaIlha,
   corDaSituacao,
+  corDaTrilha,
+  coresDaIlha,
   corDeUnidadeBloqueada,
 } from '../ui/theme/paleta3d'
 import { corNoOrcamentoDeLuz } from '../ui/theme/luzDoMundo'
@@ -76,6 +81,21 @@ const TOM_NO_CAPIM = 0.22
  * agora se vê que está em cima de um poste, e não solto no ar.
  */
 const ALTURA_DO_FAROL = 7.4
+
+/**
+ * A forma do pano de cada trilha (D-063).
+ *
+ * Quatro silhuetas, uma por parte do livro: quem olha o arquipélago de longe
+ * separa os grupos pela forma, e a cor da trilha (a mesma do painel) confirma.
+ * A trilha de aplicações web ainda não tem ilha, mas já tem forma: quando as
+ * unidades dela existirem, não falta nada do lado do mundo.
+ */
+const FORMAS_DE_BANDEIRA: Readonly<Record<IdDeTrilha, FormaDeBandeira>> = {
+  'conceitos-basicos': 'flamula',
+  'invasao-alienigena': 'retangular',
+  'visualizacao-de-dados': 'duas-caudas',
+  'aplicacoes-web': 'quadrada',
+}
 
 /** Largura do mastro do farol. Fino o bastante para parecer um poste. */
 const LARGURA_DO_MASTRO = 0.09
@@ -203,6 +223,28 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       }
     })
 
+    // Arbustos e flores entram por último no sorteio: as árvores e as pedras de
+    // cada ilha continuam exatamente onde estavam (D-063).
+    const arbustos = Array.from({ length: identidade.vegetacao.arbustos }, () => {
+      const angulo = entre(sortear, 0, Math.PI * 2)
+      const distancia = entre(sortear, distanciaMinima, Math.min(distanciaMaxima + 0.04, 0.9)) * formato.raioDoTopo
+      return {
+        x: Math.cos(angulo) * distancia,
+        z: Math.sin(angulo) * distancia,
+        raio: entre(sortear, 0.34, 0.72) * (formato.raioDoTopo / 6),
+      }
+    })
+
+    const flores = Array.from({ length: identidade.vegetacao.flores }, () => {
+      const angulo = entre(sortear, 0, Math.PI * 2)
+      const distancia = entre(sortear, distanciaMinima * 0.9, distanciaMaxima) * formato.raioDoTopo
+      return {
+        x: Math.cos(angulo) * distancia,
+        z: Math.sin(angulo) * distancia,
+        raio: entre(sortear, 0.09, 0.16) * (formato.raioDoTopo / 6),
+      }
+    })
+
     const escala = formato.raioDoTopo / 6
 
     return {
@@ -212,6 +254,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       marco,
       tom,
       posicoes: {
+        bandeira: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.bandeira),
         biblioteca: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.biblioteca),
         mesa: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.mesa),
         placa: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.placa),
@@ -220,6 +263,11 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       biblioteca: gerarBiblioteca({ largura: 2.1 * escala, altura: 1.7 * escala, profundidade: 1.6 * escala }),
       mesa: gerarMesa({ largura: 2.2 * escala, altura: 1.0 * escala }),
       placa: gerarPlaca({ altura: 2.2 * escala, largura: 1.5 * escala }),
+      bandeira: gerarBandeira({
+        forma: FORMAS_DE_BANDEIRA[ilha.trilha],
+        altura: 2.6 * escala,
+        largura: 1.15 * escala,
+      }),
       mastro: gerarCaixa({
         largura: LARGURA_DO_MASTRO,
         altura: ALTURA_DO_FAROL + FUNDO_DO_MASTRO,
@@ -227,6 +275,8 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       }),
       arvores: enfeites.map((enfeite) => gerarArvore({ altura: enfeite.altura, raio: enfeite.raio })),
       pedras: pedrasSoltas.map((pedra) => ({ ...pedra, malha: gerarPedra({ raio: pedra.raio }) })),
+      arbustos: arbustos.map((arbusto) => ({ ...arbusto, malha: gerarPedra({ raio: arbusto.raio }) })),
+      flores: flores.map((flor) => ({ ...flor, malha: gerarPedra({ raio: flor.raio }) })),
       enfeites,
     }
     // As dependências são **números**, e não o objeto da identidade: a identidade
@@ -248,6 +298,17 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       ? misturar(pecas.tom, CORES_DO_MUNDO.nevoa, 0.4)
       : pecas.tom,
   )
+
+  // As estruturas vestem o tom da ilha (D-063): sem isto, as dezoito ilhas
+  // desenhavam a mesma madeira e a mesma pedra, e a única coisa que mudava de uma
+  // para a outra era o capim. Tudo passa pelo orçamento de luz, como o marco.
+  const cores = coresDaIlha(identidade.tom)
+  const corDaMadeira = corNoOrcamentoDeLuz(cores.madeira)
+  const corDaPedra = corNoOrcamentoDeLuz(cores.pedra)
+  const corDaCopa = corNoOrcamentoDeLuz(cores.copa)
+  const corDoTronco = corNoOrcamentoDeLuz(cores.tronco)
+  const corDoArbusto = corNoOrcamentoDeLuz(cores.arbusto)
+  const corDaFlor = corNoOrcamentoDeLuz(cores.flor)
 
   useFrame((_, delta) => {
     if (farol.current !== null) {
@@ -321,11 +382,11 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         <group name="biblioteca" position={[pecas.posicoes.biblioteca.x, 0, pecas.posicoes.biblioteca.z]}>
           {/* A parede é a cor mais clara do mundo e chega a 1,001 de radiação: passa
               pelo orçamento de luz como o marco e o avatar (D-060). */}
-          <Malha3D malha={pecas.biblioteca} cor={corNoOrcamentoDeLuz(CORES_DERIVADAS.parede)} />
+          <Malha3D malha={pecas.biblioteca} cor={corDaPedra} />
         </group>
 
         <group name="mesa" position={[pecas.posicoes.mesa.x, 0, pecas.posicoes.mesa.z]}>
-          <Malha3D malha={pecas.mesa} cor={CORES_DERIVADAS.poste} />
+          <Malha3D malha={pecas.mesa} cor={corDaMadeira} />
         </group>
 
         <group name="placa" position={[pecas.posicoes.placa.x, 0, pecas.posicoes.placa.z]}>
@@ -335,19 +396,45 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         {pecas.arvores.map((arvore, indice) => {
           const enfeite = pecas.enfeites[indice]
           return (
-            <group key={`arvore-${indice}`} position={[enfeite?.x ?? 0, 0, enfeite?.z ?? 0]}>
+            <group key={`arvore-${indice}`} name={`arvore:${indice}`} position={[enfeite?.x ?? 0, 0, enfeite?.z ?? 0]}>
               {/* Duas cores, e não uma (D-060): o tronco é madeira e a copa é o
                   verde da conífera. Com uma cor só, a copa saía marrom e a árvore
                   virava um torrão de terra em pé. */}
-              <Malha3D malha={arvore.tronco} cor={CORES_DERIVADAS.tronco} />
-              <Malha3D malha={arvore.copa} cor={CORES_DO_MUNDO.conifera} />
+              <Malha3D malha={arvore.tronco} cor={corDoTronco} />
+              <Malha3D malha={arvore.copa} cor={corDaCopa} />
             </group>
           )
         })}
 
+        {/* A bandeira da trilha: mesma forma e mesma cor para as ilhas da mesma
+            parte do livro. O pano aponta para o lado de fora da ilha, e é a
+            primeira coisa que se vê de longe. */}
+        <group
+          name={`bandeira:${ilha.trilha}`}
+          position={[pecas.posicoes.bandeira.x, 0, pecas.posicoes.bandeira.z]}
+        >
+          <Malha3D malha={pecas.bandeira.mastro} cor={corDaMadeira} />
+          <Malha3D malha={pecas.bandeira.pano} cor={corNoOrcamentoDeLuz(corDaTrilha(ilha.trilha))} />
+        </group>
+
         {pecas.pedras.map((pedra, indice) => (
-          <group key={`pedra-${indice}`} position={[pedra.x, 0, pedra.z]}>
-            <Malha3D malha={pedra.malha} cor={CORES_DO_MUNDO.rochaClara} />
+          <group key={`pedra-${indice}`} name={`pedra:${indice}`} position={[pedra.x, 0, pedra.z]}>
+            <Malha3D malha={pedra.malha} cor={corDaPedra} />
+          </group>
+        ))}
+
+        {/* Arbustos e flores: o que enche o capim e tira a cara de pastagem
+            vazia que a captura mostrou (D-063). São a mesma malha da pedra solta
+            — barata de gerar e de desenhar —, com outra cor e outro tamanho. */}
+        {pecas.arbustos.map((arbusto, indice) => (
+          <group key={`arbusto-${indice}`} name={`arbusto:${indice}`} position={[arbusto.x, 0, arbusto.z]}>
+            <Malha3D malha={arbusto.malha} cor={corDoArbusto} />
+          </group>
+        ))}
+
+        {pecas.flores.map((flor, indice) => (
+          <group key={`flor-${indice}`} name={`flor:${indice}`} position={[flor.x, 0, flor.z]}>
+            <Malha3D malha={flor.malha} cor={corDaFlor} />
           </group>
         ))}
       </group>
@@ -360,7 +447,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
             então ela é deslocada para baixo o comprimento inteiro: assim a base
             fica enterrada no capim e o topo encosta no farol. */}
         <group position={[0, -(ALTURA_DO_FAROL + FUNDO_DO_MASTRO), 0]}>
-          <Malha3D malha={pecas.mastro} cor={CORES_DERIVADAS.poste} />
+          <Malha3D malha={pecas.mastro} cor={corDaMadeira} />
         </group>
         <mesh>
           <octahedronGeometry args={[ilha.acessivel ? 0.62 : 0.42, 0]} />

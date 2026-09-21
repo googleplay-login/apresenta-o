@@ -1,7 +1,7 @@
 import type { IdDeTrilha, UnidadePlanejada } from '../content/planoDeUnidades'
 import type { Vetor3 } from './camera/movimento'
 import { sementeDeTexto } from './geometria/aleatorio'
-import { alturaDoTopo } from './geometria/ilha'
+import { alturaDoTopo, bordaDoTopoEmDirecao, fatoresDaBorda, TOPO_PADRAO } from './geometria/ilha'
 import { identidadeDaIlha, type IdentidadeDaIlha } from './geometria/identidade'
 import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 
@@ -71,6 +71,15 @@ export type IlhaDoMundo = {
   /** Ponto no **topo do capim**, no centro da ilha. */
   readonly centro: Vetor3
   readonly raio: number
+  /**
+   * Os fatores da borda do capim, coluna a coluna (D-063).
+   *
+   * O raio acima é o **nominal**: a borda de verdade recua e avança em volta
+   * dele, e quem precisa encostar na ilha — a ponte — tem de ler esta lista. Ela
+   * sai da mesma semente e da mesma ordem de sorteios que o capim desenhado, e
+   * por isso é a borda que está na tela, e não uma segunda conta parecida.
+   */
+  readonly bordaDoCapim: readonly number[]
 }
 
 /**
@@ -130,8 +139,53 @@ export function ilhasDoMundo(unidades: readonly UnidadePlanejada[]): readonly Il
       centro: [x - mediaX, y, z - mediaZ],
       // O raio que vale é o desta ilha: é ele que a ponte procura para encostar.
       raio: identidade.formato.raioDoTopo,
+      // A borda de verdade do capim, e não o círculo do raio nominal (D-063).
+      // Sai da mesma semente e da mesma faixa de irregularidade que o capim
+      // desenhado em `Ilha.tsx`; aqui a `bordaMinima` fica de fora de propósito,
+      // porque ela só **alarga** a borda (o capim nunca é mais estreito que a
+      // pedra) — e a ponte ancora na medida mais conservadora das duas.
+      bordaDoCapim: fatoresDaBorda({
+        ...TOPO_PADRAO,
+        semente,
+        segmentosRadiais: identidade.formato.segmentosRadiais,
+        amplitude: identidade.formato.amplitudeDaBorda,
+      }),
     }
   })
+}
+
+/**
+ * Onde o capim de uma ilha termina, na direção dada.
+ *
+ * Devolve o raio do ponto mais **interior** da borda naquela direção (a corda
+ * entre as duas colunas vizinhas — ver `bordaDoTopoEmDirecao`): ancorar aqui
+ * garante que a peça está sobre o capim, e não no ar. É esta conta que a ponte
+ * usa nas duas pontas, no lugar do raio nominal que ela usava antes (D-063).
+ */
+export function bordaDaIlhaEmDirecao(ilha: IlhaDoMundo, ux: number, uz: number): number {
+  const { interno } = bordaDoTopoEmDirecao({
+    raio: ilha.raio,
+    segmentosRadiais: ilha.identidade.formato.segmentosRadiais,
+    fatores: ilha.bordaDoCapim,
+    angulo: Math.atan2(uz, ux),
+  })
+  return interno
+}
+
+/**
+ * A borda **externa** do capim naquela direção: nenhum ponto da ilha passa daqui.
+ *
+ * Serve para medir, não para ancorar: é o limite que uma peça ancorada não pode
+ * ultrapassar, e é o que o teste da ponte cobra.
+ */
+export function bordaExternaDaIlhaEmDirecao(ilha: IlhaDoMundo, ux: number, uz: number): number {
+  const { externo } = bordaDoTopoEmDirecao({
+    raio: ilha.raio,
+    segmentosRadiais: ilha.identidade.formato.segmentosRadiais,
+    fatores: ilha.bordaDoCapim,
+    angulo: Math.atan2(uz, ux),
+  })
+  return externo
 }
 
 /** A ponte que sai de `uma` e chega em `outra`, com a transformação pronta. */
@@ -185,10 +239,16 @@ export function ponteEntre(uma: IlhaDoMundo, outra: IlhaDoMundo): TrechoDePonte 
   const ux = dx / distancia
   const uz = dz / distancia
 
-  const inicioX = x1 + ux * uma.raio
-  const inicioZ = z1 + uz * uma.raio
-  const fimX = x2 - ux * outra.raio
-  const fimZ = z2 - uz * outra.raio
+  // A âncora é a borda **real** do capim, e não o raio nominal: a diferença entre
+  // as duas chega a 12% do raio, e era ela que deixava a tábua no ar de um lado e
+  // enterrada no capim do outro (D-063).
+  const bordaDeOrigem = bordaDaIlhaEmDirecao(uma, ux, uz)
+  const bordaDeDestino = bordaDaIlhaEmDirecao(outra, -ux, -uz)
+
+  const inicioX = x1 + ux * bordaDeOrigem
+  const inicioZ = z1 + uz * bordaDeOrigem
+  const fimX = x2 - ux * bordaDeDestino
+  const fimZ = z2 - uz * bordaDeDestino
 
   const horizontal = Math.hypot(fimX - inicioX, fimZ - inicioZ)
   if (horizontal <= 0) {

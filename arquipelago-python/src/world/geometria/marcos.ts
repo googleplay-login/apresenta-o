@@ -988,11 +988,278 @@ function mira(escala: number): MarcoGerado {
 }
 
 /**
+ * Anel de barras: um círculo feito de caixas curtas na direção **tangente**.
+ *
+ * É a peça com que se desenha roda, aro e bacia sem gastar um vértice de cilindro
+ * achatado — e é o que faz a antena parecer **vazada** de perto, em vez de um
+ * disco cheio. O comprimento de cada barra sai do perímetro dividido pelo número
+ * de barras, com uma sobra para duas barras vizinhas se encostarem.
+ */
+function anelDeBarras(opcoes: {
+  readonly raio: number
+  readonly quantidade: number
+  readonly espessura: number
+  readonly profundidade: number
+  readonly altura: number
+}): Malha {
+  const { raio, quantidade, espessura, profundidade, altura } = opcoes
+  const partes: Malha[] = []
+  const comprimento = (2 * Math.PI * raio) / quantidade + espessura * 0.8
+
+  for (let parte = 0; parte < quantidade; parte += 1) {
+    const angulo = (parte / quantidade) * Math.PI * 2
+    const barra = caixa(comprimento, espessura, profundidade, { x: 0, y: 0, z: 0 })
+    partes.push(
+      deslocarMalha(rotacionarMalha(barra, { eixo: 'z', angulo: angulo + Math.PI / 2 }), {
+        x: Math.cos(angulo) * raio,
+        y: altura,
+        z: Math.sin(angulo) * raio,
+      }),
+    )
+  }
+
+  return montar(partes)
+}
+
+/**
+ * Funil de dados: boca larga em cima, corpo em degraus que estreita, e a pilha do
+ * que já saiu contado encostada na base.
+ *
+ * É a única construção do arquipélago que **estreita para baixo**: as outras
+ * crescem da base para cima (farol, torre, estante, nave) ou se espalham na
+ * horizontal (oficina, mercado, mira). Contra o céu, o que se vê é uma boca
+ * aberta sobre quatro pernas — nenhuma outra ilha tem isso.
+ */
+function funil(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  // Quatro pernas curtas, que deixam o corpo do funil no ar — é o vão embaixo que
+  // dá a leitura de "algo despeja aqui".
+  const alturaDasPernas = 0.9 * escala
+  for (const [ladoX, ladoZ] of [
+    [-1, -1],
+    [-1, 1],
+    [1, -1],
+    [1, 1],
+  ] as const) {
+    pecas.push(
+      caixa(0.14 * escala, alturaDasPernas, 0.14 * escala, {
+        x: ladoX * 0.42 * escala,
+        y: alturaDasPernas / 2,
+        z: ladoZ * 0.42 * escala,
+      }),
+    )
+  }
+
+  // O corpo: oito anéis empilhados, cada um mais largo que o de baixo. Um cilindro
+  // só daria um copo; em degraus, o que aparece de longe é a boca que abre.
+  const degraus = 8
+  const alturaDoCorpo = 1.12 * escala
+  const alturaDoDegrau = alturaDoCorpo / degraus
+  for (let degrau = 0; degrau < degraus; degrau += 1) {
+    const t = degrau / (degraus - 1)
+    const raio = (0.3 + t * 0.88) * escala
+    pecas.push(
+      cilindro(raio, alturaDoDegrau, 12, {
+        x: 0,
+        y: alturaDasPernas + degrau * alturaDoDegrau,
+        z: 0,
+      }),
+    )
+  }
+
+  // A pilha do dado contado: três blocos, um sobre o outro, fora do vão das
+  // pernas. É a assimetria que faz a silhueta não ser simétrica como um funil
+  // solto no ar.
+  let alturaDaPilha = 0
+  for (const lado of [0.36, 0.31, 0.26] as const) {
+    const alturaDoBloco = lado * 0.66 * escala
+    pecas.push(
+      caixa(lado * escala, alturaDoBloco, lado * escala, {
+        x: 0.92 * escala,
+        y: alturaDaPilha + alturaDoBloco / 2,
+        z: 0.92 * escala,
+      }),
+    )
+    alturaDaPilha += alturaDoBloco
+  }
+
+  return {
+    tipo: 'funil',
+    nome: NOMES_DOS_MARCOS.funil,
+    fixo: montar(pecas),
+    girantes: [],
+    // Medido com escala 1: 2,0200 de altura (a borda da boca, em 0,9 de pernas
+    // mais 1,12 de corpo) e 1,5556 de raio. O raio **não** é a boca: é a quina do
+    // último bloco da pilha, em (1,10; 1,10) — o canto de uma caixa passa mais
+    // longe do centro do que a borda de um cilindro do mesmo tamanho, e o teste
+    // mede a malha, e não a intenção.
+    alturaTotal: 2.03 * escala,
+    raioOcupado: 1.56 * escala,
+  }
+}
+
+/**
+ * Prancheta de colunas: um tabuleiro largo e fino, de pé, com a grade de células
+ * em relevo e a mola no alto.
+ *
+ * É a construção mais **larga e mais fina** do arquipélago: de frente é a grade
+ * de uma tabela, de lado é quase uma linha. As massas cheias (arquivo, torre,
+ * balança) e as rodas (engrenagens, mira) não têm esse perfil.
+ */
+function prancheta(escala: number): MarcoGerado {
+  const largura = 2.5 * escala
+  const altura = 1.85 * escala
+
+  // O tabuleiro e a grade são montados **em volta da origem** e girados juntos:
+  // assim a inclinação não desalinha célula e moldura. O giro é pequeno — é de
+  // prancheta apoiada, não de quadro caído.
+  const tabuleiro: Malha[] = [
+    caixa(largura, altura, 0.16 * escala, { x: 0, y: 0, z: 0 }),
+  ]
+
+  const colunas = 4
+  const linhas = 3
+  const margem = 0.18 * escala
+  const vao = 0.08 * escala
+  const larguraDaCelula = (largura - margem * 2 - vao * (colunas - 1)) / colunas
+  const alturaDaCelula = (altura - margem * 2 - vao * (linhas - 1)) / linhas
+  for (let coluna = 0; coluna < colunas; coluna += 1) {
+    for (let linha = 0; linha < linhas; linha += 1) {
+      const x = -largura / 2 + margem + larguraDaCelula / 2 + coluna * (larguraDaCelula + vao)
+      const y = -altura / 2 + margem + alturaDaCelula / 2 + linha * (alturaDaCelula + vao)
+      tabuleiro.push(
+        caixa(larguraDaCelula, alturaDaCelula, 0.06 * escala, {
+          x,
+          y,
+          z: 0.11 * escala,
+        }),
+      )
+    }
+  }
+
+  // A mola, no alto e no meio: sem ela a peça seria um quadro, e não uma
+  // prancheta. Fica com a grade, porque faz parte da face de leitura.
+  tabuleiro.push(
+    caixa(0.62 * escala, 0.26 * escala, 0.24 * escala, {
+      x: 0,
+      y: altura / 2 - 0.02 * escala,
+      z: 0.1 * escala,
+    }),
+  )
+
+  const inclinado = rotacionarMalha(montar(tabuleiro), { eixo: 'x', angulo: 0.14 })
+  const alturaDosApoios = 1.02 * escala
+
+  const pecas: Malha[] = [
+    // A sela, que deixa a prancheta de pé sem pernas à mostra.
+    caixa(1.5 * escala, 0.18 * escala, 0.9 * escala, { x: 0, y: 0.09 * escala, z: 0 }),
+    caixa(0.9 * escala, 0.92 * escala, 0.7 * escala, { x: 0, y: 0.6 * escala, z: 0.06 * escala }),
+    deslocarMalha(inclinado, { x: 0, y: alturaDosApoios + altura / 2 - 0.12 * escala, z: 0 }),
+  ]
+
+  return {
+    tipo: 'prancheta',
+    nome: NOMES_DOS_MARCOS.prancheta,
+    fixo: montar(pecas),
+    girantes: [],
+    // Medido com escala 1: 2,8527 de altura — o tabuleiro inclinado, e não os
+    // 2,87 da altura parada na sela — e 1,2672 de raio, que é a metade da largura
+    // mais o que o giro de 0,14 rad leva a quina de cima para trás.
+    alturaTotal: 2.86 * escala,
+    raioOcupado: 1.28 * escala,
+  }
+}
+
+/**
+ * Antena de escuta: mastro alto e fino com uma bacia de anéis no topo, girando
+ * devagar à procura de sinal.
+ *
+ * É a única construção do arquipélago com o peso **no alto de um mastro fino** —
+ * o farol e a torre são massas que sobem, o moinho tem pás, e nada mais tem peça
+ * redonda pendurada no topo de um poste. De perto, a bacia é vazada: são anéis de
+ * barras, e não um disco.
+ */
+function antena(escala: number): MarcoGerado {
+  const alturaDoMastro = 2.5 * escala
+
+  const pecas: Malha[] = [
+    caixa(1.3 * escala, 0.2 * escala, 1.3 * escala, { x: 0, y: 0.1 * escala, z: 0 }),
+    cilindro(0.13 * escala, alturaDoMastro, 10, { x: 0, y: 0.2 * escala, z: 0 }),
+  ]
+
+  // Três travessas presas ao mastro. Elas ficam paradas enquanto a bacia gira, e
+  // são o que diz que a antena é alta e fina, e não um poste só.
+  for (let travessa = 0; travessa < 3; travessa += 1) {
+    const angulo = (travessa / 3) * Math.PI * 2
+    const alturaDaTravessa = (0.95 + travessa * 0.34) * escala
+    const barra = caixa(0.7 * escala, 0.08 * escala, 0.08 * escala, { x: 0, y: 0, z: 0 })
+    pecas.push(
+      deslocarMalha(rotacionarMalha(barra, { eixo: 'y', angulo }), {
+        x: Math.cos(angulo) * 0.33 * escala,
+        y: alturaDaTravessa,
+        z: Math.sin(angulo) * 0.33 * escala,
+      }),
+    )
+  }
+
+  // A bacia, montada em volta da origem: três anéis de raio decrescente que sobem
+  // formando a concavidade, o cubo do meio e a haste do receptor, que sai
+  // inclinada — é a haste que faz a peça parecer antena, e não tigela.
+  const bacia: Malha[] = [
+    anelDeBarras({ raio: 1 * escala, quantidade: 16, espessura: 0.14 * escala, profundidade: 0.14 * escala, altura: 0 }),
+    anelDeBarras({ raio: 0.66 * escala, quantidade: 12, espessura: 0.12 * escala, profundidade: 0.13 * escala, altura: 0.2 * escala }),
+    anelDeBarras({ raio: 0.34 * escala, quantidade: 10, espessura: 0.11 * escala, profundidade: 0.12 * escala, altura: 0.38 * escala }),
+    cilindro(0.12 * escala, 0.2 * escala, 8, { x: 0, y: 0.42 * escala, z: 0 }),
+  ]
+
+  const haste = rotacionarMalha(
+    caixa(0.08 * escala, 0.86 * escala, 0.08 * escala, { x: 0, y: 0, z: 0 }),
+    { eixo: 'z', angulo: -0.5 },
+  )
+  bacia.push(deslocarMalha(haste, { x: 0.32 * escala, y: 0.72 * escala, z: 0 }))
+  bacia.push(
+    deslocarMalha(cilindro(0.11 * escala, 0.22 * escala, 8, { x: 0, y: 0, z: 0 }), {
+      x: 0.72 * escala,
+      y: 0.99 * escala,
+      z: 0,
+    }),
+  )
+
+  // A bacia é montada olhando para cima e depois tombada: girada em torno de x,
+  // ela passa a apontar para o horizonte, como antena de verdade. O giro em y
+  // (abaixo) varre o céu sem mexer na inclinação.
+  const baciaTombada = rotacionarMalha(montar(bacia), { eixo: 'x', angulo: -1.15 })
+
+  return {
+    tipo: 'antena',
+    nome: NOMES_DOS_MARCOS.antena,
+    fixo: montar(pecas),
+    girantes: [
+      {
+        malha: baciaTombada,
+        posicao: [0, 0.2 * escala + alturaDoMastro, 0],
+        eixo: 'y',
+        voltasPorSegundo: 0.06,
+      },
+    ],
+    // Medido com escala 1: 3,7053 de altura e 1,3883 de raio. Os dois passam do
+    // que a montagem sugere (mastro de 2,7 com bacia de raio 1) porque a bacia
+    // **tombada** sobe e se abre: a haste inclinada em 0,5 rad leva o receptor
+    // para cima, e o anel maior, que já era uma caixa girada passando do círculo,
+    // ganha a profundidade com o tombo. As medidas são da malha montada, e não da
+    // peça antes do tombo.
+    alturaTotal: 3.71 * escala,
+    raioOcupado: 1.4 * escala,
+  }
+}
+
+/**
  * Gera o marco de uma ilha.
  *
  * A escala sai do raio da ilha: uma ilha grande recebe um marco grande, e o
  * marco nunca fica maior que o capim onde ele fica em pé — o que o teste
- * `marcos.test.ts` confere para as dez ilhas do percurso.
+ * `marcos.test.ts` confere para as dezoito ilhas do percurso.
  */
 export function gerarMarco(tipo: TipoDeMarco, opcoes: OpcoesDoMarco): MarcoGerado {
   // `6` é o raio nominal do projeto (ver `RAIO_DA_ILHA` em `mapaDoMundo.ts`):
@@ -1014,6 +1281,9 @@ export function gerarMarco(tipo: TipoDeMarco, opcoes: OpcoesDoMarco): MarcoGerad
     nave,
     enxame,
     mira,
+    funil,
+    prancheta,
+    antena,
   }
 
   const gerado = marcos[tipo](escala)

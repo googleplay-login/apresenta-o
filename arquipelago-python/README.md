@@ -9,16 +9,28 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
 ## Estado atual: o protótipo já ensina e já avalia
 
-> **O que existe hoje:** mundo 3D navegável com **doze** ilhas suspensas — cada uma com a própria
-> forma, o próprio marco e o próprio tom (D-053) — e pontes, um **avatar que
+> **O que existe hoje:** mundo 3D navegável com **dezoito** ilhas suspensas — cada uma com a própria
+> forma, o próprio marco, a própria vegetação e o próprio tom (D-053), e desde o lote 6.1 também com a
+> **madeira, a pedra e a folhagem no tom dela** e a **bandeira da trilha** fincada no capim (D-063) — e
+> pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
-> ciclo de estudo completo das doze unidades escritas — a Parte I inteira do livro, capítulos 1 a 11 (missão, estudo,
+> ciclo de estudo completo das dezoito unidades escritas — a Parte I inteira do livro (capítulos 1 a 11)
+> e os dois primeiros projetos da Parte II (capítulos 12 a 17) — (missão, estudo,
 > prática, avaliação e resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador, um
 > **console de Python de verdade** em cada ilha — interpretador servido pela própria aplicação,
 > carregado só quando a pessoa pede — e a **conferência automática do exercício**, com o limite dela
 > escrito na tela.
 >
-> **O que ainda não existe:** a Parte II do livro (os três projetos: Pygame, dados e Django),
+> **As três trilhas, e o que cada console roda ali:** a Parte I é a trilha dos conceitos; o projeto 1
+> (capítulos 12 a 14) é a trilha do jogo, e ali o Pygame **não** roda — medido, `import pygame` falha
+> nesta distribuição, e o que se aprende é a lógica que roda; o projeto 2 (capítulos 15 a 17) é a trilha
+> de dados, e ali rodam `csv`, `json`, `random`, `statistics` e `collections`, mas não o desenho do
+> gráfico (`matplotlib`, `numpy`, `pandas` não existem) nem a busca pela rede (`requests` não existe — a
+> resposta de API entra na unidade já chegada, como texto).
+>
+> **O que ainda não existe:** o **projeto 3** da Parte II (as aplicações web do Django: medido, o Django
+> não roda aqui, e o lote 7 escreverá a parte que roda — a função que recebe os dados de um pedido e
+> devolve a resposta, sem servidor nenhum),
 > animação de caminhada do avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
 > nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
 > linha reproduzida e sem número de página, porque o PDF não está em mãos.
@@ -50,7 +62,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 779 testes em 43 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
+    npm test         # 785 testes em 43 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção

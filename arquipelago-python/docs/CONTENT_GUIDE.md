@@ -153,7 +153,16 @@ A regra para escrever essas unidades:
 4. **O que a biblioteca faria é dito como descrição, não como código.** "A biblioteca abre a janela com
    `pygame.display.set_mode(...)`", em texto, é honesto; um bloco de Pygame que ninguém pode rodar é
    promessa vazia.
-5. **A promessa da trilha é cobrada por teste:** todo exercício da trilha do jogo tem correção
+5. **A trilha de dados segue a mesma regra, com duas ausências declaradas** (D-062): a parte de dados
+   roda (medido: `csv`, `json`, `random`, `statistics`, `collections`, `urllib.parse`), o **desenho do
+   gráfico** não (`matplotlib`, `numpy` e `pandas` não existem nesta distribuição) e a **busca pela rede**
+   também não (`requests` não existe, e o projeto não baixa nada em tempo de execução — D-040). A resposta
+   de API entra na unidade **já chegada**, como texto, e todo o trabalho com ela é exercitado de verdade.
+   A regra é cobrada pelo validador, com **caso de teste próprio**: um bloco de código que importa uma
+   biblioteca dessa lista sem dizer por que não roda reprova; com o aviso, passa. Hoje nenhum conteúdo
+   real mostra essas bibliotecas em bloco de código — as unidades 12 a 18 falam delas **em texto**, que é
+   o que a tela do estudante lê.
+6. **A promessa da trilha é cobrada por teste:** todo exercício da trilha do jogo tem correção
    automática e roda aqui. Se um exercício precisar de biblioteca gráfica, o teste falha — e a saída é
    escrever a versão que roda.
 

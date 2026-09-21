@@ -221,6 +221,75 @@ export function alturaDoTopo(
   return t * t * raio * inclinacao
 }
 
+/**
+ * Os fatores da borda do capim, coluna a coluna.
+ *
+ * É esta lista que faz a borda do topo não ser um círculo perfeito — e é ela que
+ * posiciona o último anel do capim. Está separada de `gerarTopo` porque quem
+ * precisa **encostar** na ilha tem de ler a mesma lista: a ponte ancorada no
+ * raio nominal ficava no ar onde a borda recuava, e entrava no capim onde a
+ * borda avançava (ver D-063). A semente e a ordem dos sorteios são as de
+ * `gerarTopo`, e não podem mudar: mudar aqui move a borda de todas as ilhas.
+ */
+export function fatoresDaBorda(opcoes: OpcoesDoTopo): number[] {
+  const { segmentosRadiais, semente, amplitude, bordaMinima } = opcoes
+  const sortear = criarSorteador(semente + 7919)
+
+  const borda: number[] = []
+  for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
+    borda.push(
+      coluna === segmentosRadiais ? (borda[0] ?? 1) : entre(sortear, 1 - amplitude, 1 + amplitude),
+    )
+  }
+
+  // O capim é o teto da ilha: ele nunca é mais estreito que a pedra embaixo dele.
+  if (bordaMinima !== undefined) {
+    for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
+      borda[coluna] = Math.max(borda[coluna] ?? 1, bordaMinima[coluna] ?? 1)
+    }
+  }
+
+  return borda
+}
+
+/**
+ * Onde a borda do capim está, em uma direção qualquer.
+ *
+ * A borda do topo é um **polígono**, e não um círculo: os vértices ficam nas
+ * colunas, com o fator sorteado, e entre duas colunas a borda é a reta que liga
+ * um vértice ao outro. Daí as duas medidas:
+ *
+ *  - `externo` é o maior dos dois fatores vizinhos: nenhum ponto da ilha passa
+ *    disso, e é o limite que a ponte **não** pode ultrapassar;
+ *  - `interno` é o menor deles encolhido pelo cosseno do meio-ângulo: essa é a
+ *    altura da corda no meio do vão, e um ponto até aqui está **dentro** da
+ *    borda em qualquer coluna.
+ *
+ * Quem precisa garantir contato (a ponte) ancora no `interno`. Quem quer medir
+ * a ilha inteira usa o `externo`.
+ */
+export function bordaDoTopoEmDirecao(opcoes: {
+  readonly raio: number
+  readonly segmentosRadiais: number
+  readonly fatores: readonly number[]
+  readonly angulo: number
+}): { readonly externo: number; readonly interno: number } {
+  const { raio, segmentosRadiais, fatores, angulo } = opcoes
+  const voltas = angulo / (Math.PI * 2)
+  const dentroDaVolta = ((voltas % 1) + 1) % 1
+  const primeira = Math.floor(dentroDaVolta * segmentosRadiais)
+  const fatorA = fatores[primeira % segmentosRadiais] ?? 1
+  const fatorB = fatores[(primeira + 1) % segmentosRadiais] ?? 1
+
+  return {
+    externo: raio * Math.max(fatorA, fatorB),
+    // A corda entre dois vértices de raios diferentes: o ponto mais fundo dela
+    // está a `min × cos(meio-ângulo)` do centro, e é por isso que o cosseno
+    // aparece aqui — sem ele, a conta prometeria contato que a malha não tem.
+    interno: raio * Math.min(fatorA, fatorB) * Math.cos(Math.PI / segmentosRadiais),
+  }
+}
+
 export const TOPO_PADRAO: OpcoesDoTopo = {
   segmentosRadiais: 14,
   aneis: 4,
@@ -236,7 +305,7 @@ export const TOPO_PADRAO: OpcoesDoTopo = {
  * pastagem levemente abaulada, e não uma tampa plana.
  */
 export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
-  const { segmentosRadiais, aneis, semente, raio, amplitude } = opcoes
+  const { segmentosRadiais, aneis, raio } = opcoes
   const inclinacao = opcoes.inclinacao ?? INCLINACAO_DO_TOPO
 
   if (segmentosRadiais < 3) {
@@ -246,23 +315,10 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
     throw new Error(`São necessários ao menos 1 anel, e veio ${aneis}`)
   }
 
-  const sortear = criarSorteador(semente + 7919)
   const posicoes: number[] = []
   const indices: number[] = []
 
-  const borda: number[] = []
-  for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
-    borda.push(
-      coluna === segmentosRadiais ? (borda[0] ?? 1) : entre(sortear, 1 - amplitude, 1 + amplitude),
-    )
-  }
-
-  // O capim é o teto da ilha: ele nunca é mais estreito que a pedra embaixo dele.
-  if (opcoes.bordaMinima !== undefined) {
-    for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
-      borda[coluna] = Math.max(borda[coluna] ?? 1, opcoes.bordaMinima[coluna] ?? 1)
-    }
-  }
+  const borda = fatoresDaBorda(opcoes)
 
   // Centro
   posicoes.push(0, 0, 0)

@@ -157,8 +157,12 @@ export type OpcoesDaPonte = {
   readonly tabuas: number
   /**
    * Ponte liberada: tábuas de ponta a ponta e corrimão.
-   * Bloqueada: as tábuas param no meio, e o vão aberto é o aviso visual de que
-   * a unidade seguinte ainda não abriu.
+   *
+   * Bloqueada: as tábuas saem das **duas** pontas e o que falta é o meio — a
+   * ponte interrompida, e não a ponte pela metade. A versão anterior construía
+   * metade do vão a partir da ilha de origem, e a captura mostrou o resultado:
+   * uma tábua pendurada no ar, sem encostar em lugar nenhum, e um arquipélago
+   * que parecia quebrado em vez de bloqueado (D-063).
    */
   readonly liberada: boolean
 }
@@ -168,6 +172,19 @@ export type PonteGerada = {
   readonly estrutura: Malha
   /** Corrimão, presente apenas quando a ponte está liberada. */
   readonly corrimao: Malha | null
+  /**
+   * Quais tábuas existem, por índice.
+   *
+   * É dado, e não sobra do desenho: a ponte bloqueada tem buraco no meio, e
+   * quem quiser dizer em palavras onde ela para — o painel, um teste, a
+   * contagem de tábuas da tela — não precisa deduzir isso varrendo a malha.
+   */
+  readonly tabuasConstruidas: readonly number[]
+  /**
+   * O trecho que falta, em unidades ao longo da ponte, a partir do início.
+   * `null` quando a ponte está inteira.
+   */
+  readonly vaoAberto: { readonly de: number; readonly ate: number } | null
 }
 
 /**
@@ -188,11 +205,25 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
 
   const espacamento = comprimento / tabuas
   const espessura = ESPESSURA_DO_TABULEIRO
-  const vao = liberada ? tabuas : Math.ceil(tabuas / 2)
 
+  // O buraco do meio: quantas tábuas faltam quando a ponte está bloqueada. Com
+  // menos de duas, o vão não se lê de longe; com muito mais, a ponte deixa de
+  // parecer uma ponte. Um quarto do total (no mínimo duas) é o que a distância
+  // de câmera do mundo mostra como "aqui ainda não dá para passar".
+  const faltando = liberada ? 0 : Math.max(2, Math.round(tabuas * 0.25))
+  const primeiraQueFalta = Math.floor((tabuas - faltando) / 2)
+  const ultimaQueFalta = primeiraQueFalta + faltando - 1
+  const construida = (indice: number): boolean =>
+    indice >= 0 && indice < tabuas && (liberada || indice < primeiraQueFalta || indice > ultimaQueFalta)
+
+  const tabuasConstruidas: number[] = []
   const pecas: Malha[] = []
 
-  for (let indice = 0; indice < vao; indice += 1) {
+  for (let indice = 0; indice < tabuas; indice += 1) {
+    if (!construida(indice)) {
+      continue
+    }
+    tabuasConstruidas.push(indice)
     const x = indice * espacamento
     pecas.push(
       gerarCaixa({
@@ -204,9 +235,19 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
     )
   }
 
-  // Postes a cada quatro tábuas, sempre no trecho construído.
+  // Postes a cada quatro tábuas, sempre no trecho construído, mais um par em cada
+  // beirada do buraco: é o par de postes que diz onde a ponte para.
   const intervaloDePoste = Math.max(3, Math.round(tabuas / 4))
-  for (let indice = 0; indice <= vao; indice += intervaloDePoste) {
+  const ondeTemPoste = new Set<number>([0, tabuas])
+  for (let indice = 0; indice <= tabuas; indice += intervaloDePoste) {
+    ondeTemPoste.add(indice)
+  }
+  if (!liberada) {
+    ondeTemPoste.add(primeiraQueFalta)
+    ondeTemPoste.add(ultimaQueFalta + 1)
+  }
+
+  for (const indice of [...ondeTemPoste].sort((um, outro) => um - outro)) {
     const x = Math.min(indice * espacamento, comprimento)
     for (const lado of [-1, 1]) {
       pecas.push(
@@ -220,10 +261,32 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
     }
   }
 
+  if (!liberada) {
+    // A travessa de parada: uma barra atravessada na beirada de cada toco, na
+    // altura do joelho. Sem ela, o toco termina em tábua solta e parece
+    // inacabado; com ela, o que se vê é uma ponte **interrompida**.
+    const alturaDaTravessa = 0.62
+    for (const indice of [primeiraQueFalta, ultimaQueFalta + 1]) {
+      const x = Math.min(Math.max(indice * espacamento, 0.11), comprimento - 0.11)
+      pecas.push(
+        gerarCaixa({
+          largura: 0.16,
+          altura: 0.14,
+          profundidade: largura,
+          centro: { x, y: alturaDaTravessa, z: 0 },
+        }),
+      )
+    }
+  }
+
   const estrutura = montar(pecas)
 
+  const vaoAberto = liberada
+    ? null
+    : { de: primeiraQueFalta * espacamento, ate: (ultimaQueFalta + 1) * espacamento }
+
   if (!liberada) {
-    return { estrutura, corrimao: null }
+    return { estrutura, corrimao: null, tabuasConstruidas, vaoAberto }
   }
 
   const barras: Malha[] = []
@@ -242,7 +305,7 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
     }
   }
 
-  return { estrutura, corrimao: montar(barras) }
+  return { estrutura, corrimao: montar(barras), tabuasConstruidas, vaoAberto: null }
 }
 
 export type OpcoesDaBiblioteca = {
@@ -402,6 +465,82 @@ export function gerarArvore(opcoes: { readonly altura: number; readonly raio: nu
 /** Bola de pedra solta no capim. Detalhe barato que tira a cara de "caixa vazia". */
 export function gerarPedra(opcoes: { readonly raio: number }): Malha {
   return gerarCilindro({ raio: opcoes.raio, altura: opcoes.raio * 0.8, lados: 5 })
+}
+
+/**
+ * As quatro formas de bandeira, uma por trilha do livro.
+ *
+ * A bandeira existe para responder a uma pergunta que a captura deixou clara: de
+ * longe, o arquipélago dizia "ilhas" e não dizia **de que parte do livro** cada
+ * uma é. O marco responde por dentro (cada ilha tem o seu), e a bandeira responde
+ * de fora: mesma forma e mesma cor para as ilhas da mesma trilha, então quem
+ * olha o mundo vê os quatro grupos antes de ler qualquer nome.
+ *
+ * São quatro silhuetas distintas, e todas saem de caixas: flâmula (triangular),
+ * retangular, de duas caudas (o retângulo com o recorte no meio) e quadrada.
+ */
+export type FormaDeBandeira = 'flamula' | 'retangular' | 'duas-caudas' | 'quadrada'
+
+export type BandeiraGerada = {
+  /** O pano, na altura do topo do mastro. */
+  readonly pano: Malha
+  /** O mastro, do capim até acima do pano. */
+  readonly mastro: Malha
+  /** Altura total, para quem precisa enquadrar. */
+  readonly alturaTotal: number
+  /** Maior distância do mastro, no plano. */
+  readonly raioOcupado: number
+}
+
+/** Bandeira da trilha: mastro fino com o pano preso no alto, indo para +x. */
+export function gerarBandeira(opcoes: {
+  readonly forma: FormaDeBandeira
+  readonly altura: number
+  readonly largura: number
+}): BandeiraGerada {
+  const { forma, altura, largura } = opcoes
+  const espessura = 0.06
+
+  // As formas são feitas de **faixas horizontais**, e a lista de frações de
+  // largura de cada faixa é a forma. Assim as quatro saem do mesmo pedaço de
+  // código, e a diferença entre elas é dado, e não quatro blocos copiados.
+  const faixas: Record<FormaDeBandeira, readonly number[]> = {
+    // De cima para baixo, cada faixa mais curta: o que se lê é um triângulo.
+    flamula: [1, 0.66, 0.33],
+    // O pano inteiro: uma faixa só.
+    retangular: [1],
+    // Duas caudas: a faixa do meio recua, e a borda fica com um recorte.
+    'duas-caudas': [1, 0.45, 1],
+    // Quadrada: duas faixas, e o pano é menor que o das outras.
+    quadrada: [1, 1],
+  }
+  const larguras = faixas[forma]
+  const alturaDoPano = forma === 'quadrada' ? altura * 0.22 : altura * 0.34
+  const larguraDoPano = forma === 'quadrada' ? largura * 0.7 : largura
+  const alturaDaFaixa = alturaDoPano / larguras.length
+  const base = altura - alturaDoPano
+
+  const pano = montar(
+    larguras.map((fracao, indice) =>
+      gerarCaixa({
+        largura: Math.max(larguraDoPano * fracao, 0.08),
+        altura: alturaDaFaixa,
+        profundidade: espessura,
+        centro: {
+          x: (larguraDoPano * fracao) / 2,
+          y: base + alturaDoPano - (indice + 0.5) * alturaDaFaixa,
+          z: 0,
+        },
+      }),
+    ),
+  )
+
+  return {
+    pano,
+    mastro: gerarCilindro({ raio: 0.07, altura, lados: 6 }),
+    alturaTotal: altura,
+    raioOcupado: larguraDoPano,
+  }
 }
 
 export { deslocarMalha }

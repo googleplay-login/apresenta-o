@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useMemo, useReducer, useState } from 'react'
 import { LimiteDeErro } from '../../ui/components/LimiteDeErro'
+import { corDaTrilha, paraCss } from '../../ui/theme/paleta3d'
 import { PainelDaUnidade } from '../../ui/paineis/PainelDaUnidade'
 import { PLANO_DE_UNIDADES, trilhaDe, type IdDeTrilha } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
@@ -530,6 +531,14 @@ function TrilhaDeIlhas({
       {gruposDeTrilha(ilhas).map((grupo) => (
         <section key={grupo.trilha} className="trilha__grupo" aria-labelledby={`trilha-${grupo.trilha}`}>
           <h3 className="trilha__grupo-titulo" id={`trilha-${grupo.trilha}`}>
+            {/* A marca da trilha é a mesma cor da bandeira que a ilha finca no
+                capim (D-063): a lista e o mundo dizem a mesma coisa, e quem viu
+                a bandeira verde acha o grupo sem ler. */}
+            <span
+              className="trilha__grupo-marca"
+              style={{ background: paraCss(corDaTrilha(grupo.trilha)) }}
+              aria-hidden="true"
+            />
             {trilhaDe(grupo.trilha).nome}
           </h3>
           <p className="trilha__grupo-texto">{trilhaDe(grupo.trilha).resumo}</p>

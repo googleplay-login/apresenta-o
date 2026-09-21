@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CONTEUDO_DAS_UNIDADES, conteudoDaUnidade } from './unidades'
 import { gabaritoDaUnidade, problemasNoConteudo } from './validadorDeConteudo'
 import { PLANO_DE_UNIDADES } from './planoDeUnidades'
+import type { ConteudoDaUnidade } from './tiposDeConteudo'
 import { PERGUNTAS_POR_UNIDADE, foiAprovado } from '../learning/avaliacao'
 import { motivoDaRecusa } from '../python/protocolo'
 
@@ -127,31 +128,90 @@ describe('a trilha do jogo roda no console, e é isso que ela promete', () => {
     }
   })
 
-  it('nenhum trecho de código da trilha do jogo é mostrado como se rodasse aqui', () => {
-    // Medido: `import pygame` falha neste console (D-061). Se algum trecho de
-    // código da trilha importar a biblioteca, ele precisa dizer por que não roda.
+  it('nenhum trecho de código de biblioteca que não roda aqui é mostrado como se rodasse', () => {
+    // Medido neste console: `import pygame` falha (D-061), e `matplotlib`,
+    // `numpy`, `pandas`, `requests`, `django` e `tkinter` também (D-062). Se um
+    // trecho de código em qualquer unidade importar uma dessas, ele precisa
+    // dizer, na tela, por que não roda — e a lista é a medida, não a lembrança.
+    const NAO_RODAM_AQUI = [
+      'import pygame',
+      'import matplotlib',
+      'import numpy',
+      'import pandas',
+      'import requests',
+      'import django',
+      'import tkinter',
+      'from matplotlib',
+      'from django',
+      'from requests',
+    ]
+
+    let comBiblioteca = 0
+    let comAviso = 0
+
     for (const unidade of CONTEUDO_DAS_UNIDADES) {
-      const planejada = PLANO_DE_UNIDADES.find((candidata) => candidata.id === unidade.id)
-      if (planejada?.trilha !== 'invasao-alienigena') {
-        continue
-      }
       for (const bloco of unidade.explicacao) {
         if (bloco.tipo !== 'codigo') {
           continue
         }
-        if (!bloco.codigo.includes('import pygame')) {
+        const biblioteca = NAO_RODAM_AQUI.find((marca) => bloco.codigo.includes(marca))
+        if (biblioteca === undefined) {
           continue
         }
+        comBiblioteca += 1
         expect(
           bloco.naoRodaNoConsole,
-          `Um trecho com Pygame em ${unidade.id} não diz por que não roda`,
+          `Um trecho com «${biblioteca}» em ${unidade.id} não diz por que não roda`,
         ).toBeDefined()
+        comAviso += 1
       }
     }
+
+    // A igualdade é a regra, e ela vale para qualquer conteúdo futuro: todo trecho
+    // que usa uma biblioteca ausente aqui carrega o aviso, e o teste não depende de
+    // o número ser um valor fixo. Medido em 21/09/2026: **zero** blocos de código
+    // com essas bibliotecas em todo o conteúdo — as unidades 12 a 18 tocam no
+    // assunto em **texto**, que é o que a tela do estudante lê. Se um dia entrar um
+    // trecho desses, ele entra com aviso, e este mesmo teste continua valendo.
+    expect(comAviso).toBe(comBiblioteca)
   })
 })
 
 describe('validador de conteúdo', () => {
+  it('acusa código que usa biblioteca que não roda aqui sem dizer por quê', () => {
+    // A regra existe porque as unidades 12 a 18 tocam em Pygame, matplotlib,
+    // requests e Django — todas medidas como ausentes no console (D-061, D-062).
+    // O caso abaixo é sintético de propósito: na data desta conferência nenhum
+    // conteúdo real mostra essas bibliotecas em bloco de código, e uma regra sem
+    // caso de teste é uma regra que pode ter morrido sem ninguém notar.
+    const base = CONTEUDO_DAS_UNIDADES[0]!
+    const semAviso: ConteudoDaUnidade = {
+      ...base,
+      explicacao: [
+        ...base.explicacao,
+        {
+          tipo: 'codigo',
+          linguagem: 'python',
+          legenda: 'Gráfico com a biblioteca de desenho',
+          codigo: 'import matplotlib.pyplot as plt\nplt.plot([1, 2, 3])\nplt.show()',
+        },
+      ],
+    }
+
+    expect(problemasNoConteudo(semAviso).some((problema) => problema.includes('matplotlib'))).toBe(true)
+
+    const comAviso: ConteudoDaUnidade = {
+      ...semAviso,
+      explicacao: semAviso.explicacao.map((bloco) =>
+        bloco.tipo === 'codigo' && bloco.codigo.includes('matplotlib')
+          ? { ...bloco, naoRodaNoConsole: 'O matplotlib não existe nesta distribuição do Python (medido, D-062).' }
+          : bloco,
+      ),
+    }
+
+    expect(problemasNoConteudo(comAviso).some((problema) => problema.includes('matplotlib'))).toBe(false)
+  })
+
   const base = CONTEUDO_DAS_UNIDADES[0]
 
   it('aprova um conteúdo correto', () => {

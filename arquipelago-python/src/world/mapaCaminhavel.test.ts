@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado, type Progresso } from '../learning/percurso'
 import { alturaDoTopo } from './geometria/ilha'
+import { bordaDaIlhaEmDirecao, bordaExternaDaIlhaEmDirecao } from './mapaDoMundo'
 import {
   LARGURA_DO_TABULEIRO,
   RAIO_DO_AVATAR,
@@ -97,7 +98,12 @@ describe('a altura do chão', () => {
       throw new Error('Sem a primeira ilha não há mundo para testar')
     }
 
-    const passos = [0, 1, 2, 3, 4, 5]
+    // Onde o capim **desenhado** termina na direção +x (D-063): a borda é um
+    // polígono, e o chão caminhável passou a ler o mesmo polígono. O último passo
+    // do avatar é a borda menos a margem do corpo.
+    const borda = bordaDaIlhaEmDirecao(ilha, 1, 0)
+    const ultimoPasso = borda - RAIO_DO_AVATAR
+    const passos = [0, 1, 2, 3, 4].map((indice) => (indice / 4) * ultimoPasso)
     const alturas = passos.map((distancia) =>
       chaoEm(chao, { x: ilha.centro[0] + distancia, z: ilha.centro[2] }),
     )
@@ -111,19 +117,39 @@ describe('a altura do chão', () => {
       expect(altura ?? 0).toBeGreaterThanOrEqual(anterior)
     }
 
-    // O número da borda sai da mesma função que gerou a malha do capim, com a
+    // O número da altura sai da mesma função que gerou a malha do capim, com a
     // inclinação **desta** ilha — cada uma sobe de um jeito.
     const inclinacao = ilha.identidade.formato.inclinacaoDoCapim
-    const esperadoNaBorda = ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio, inclinacao)
-    expect(chaoEm(chao, { x: ilha.centro[0] + ilha.raio - RAIO_DO_AVATAR, z: ilha.centro[2] })).toBeCloseTo(
-      ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio - RAIO_DO_AVATAR, inclinacao),
+    const esperadoNaBorda = ilha.centro[1] + alturaDoTopo(ilha.raio, borda, inclinacao)
+    expect(chaoEm(chao, { x: ilha.centro[0] + ultimoPasso, z: ilha.centro[2] })).toBeCloseTo(
+      ilha.centro[1] + alturaDoTopo(ilha.raio, ultimoPasso, inclinacao),
       6,
     )
-    // E acima disso não há mais capim: a margem do corpo já foi toda usada.
-    expect(
-      chaoEm(chao, { x: ilha.centro[0] + ilha.raio - RAIO_DO_AVATAR + 0.2, z: ilha.centro[2] }),
-    ).toBeNull()
     expect(esperadoNaBorda).toBeGreaterThan(ilha.centro[1])
+    // E acima disso não há mais capim: a margem do corpo já foi toda usada.
+    expect(chaoEm(chao, { x: ilha.centro[0] + ultimoPasso + 0.2, z: ilha.centro[2] })).toBeNull()
+
+    // A prova de que a conta mudou de verdade: em alguma direção, o capim
+    // desenhado termina a mais de um passo do raio nominal. Era essa diferença
+    // que deixava o avatar andando no ar (e a ponte no ar, do outro lado).
+    const direcoes: readonly (readonly [number, number])[] = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]
+    const maiorDesvio = Math.max(
+      ...direcoes.map(([ux, uz]) => Math.abs(bordaDaIlhaEmDirecao(ilha, ux, uz) - ilha.raio)),
+    )
+    expect(maiorDesvio).toBeGreaterThan(0.2)
+
+    // E o alcance do pé continua **dentro** do polígono desenhado, nunca além.
+    for (const [ux, uz] of direcoes) {
+      const alcance = bordaDaIlhaEmDirecao(ilha, ux, uz)
+      const externo = bordaExternaDaIlhaEmDirecao(ilha, ux, uz)
+      expect(alcance).toBeLessThanOrEqual(externo)
+      expect(alcance).toBeGreaterThan(externo * 0.85)
+    }
   })
 
   it('no topo do tabuleiro é a altura do capim nas duas pontas', () => {

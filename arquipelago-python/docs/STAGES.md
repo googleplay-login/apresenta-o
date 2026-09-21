@@ -436,6 +436,27 @@ baixar da internet (D-040). A trilha do jogo declara isso na tela, e o que ela e
 jogo — que roda — com o desenho apresentado como o que a biblioteca faria. O lote acrescentou as ilhas
 13 a 15, os marcos `nave`, `enxame` e `mira`, e os tons 13 a 15.
 
+O **lote 6** (capítulos 15 a 17) foi o projeto de dados, e ali o console roda **quase tudo**: medido, `csv`,
+`json`, `random`, `datetime`, `statistics`, `collections` e `urllib.parse` funcionam. Ficam de fora o
+desenho do gráfico (`matplotlib`, `numpy` e `pandas` não existem) e a busca pela rede (`requests` não
+existe, e o projeto não baixa nada em tempo de execução) — as duas ausências estão escritas na tela, e a
+resposta de API entra na unidade **já chegada**, como texto, para que o trabalho com ela seja feito de
+verdade. Com os três tons novos a paleta chegou a **dezoito** tones sem empilhar nenhum: o par mais
+próximo dos dezoito desenhados continua em **32,1**, o mesmo dos doze originais (D-062).
+
+Depois do lote 6, e a partir de **quatro capturas de tela** do mundo, veio o conserto do lote 6.1 (D-063).
+Três queixas, três causas medidas: **a ponte não encostava** porque estava ancorada no raio nominal,
+enquanto a borda do capim é um polígono que recua e avança (6 das 34 pontas ficavam no ar, a pior a 0,582
+além da borda desenhada, com desvio de até 0,941); **o chão caminhável repetia o mesmo erro**, e o avatar
+andava no ar onde a borda recuava; **a ponte bloqueada parecia quebrada**, porque construía metade do vão a
+partir da origem. As três foram consertadas com as funções de borda (`fatoresDaBorda`,
+`bordaDoTopoEmDirecao`), e a ponte bloqueada passou a ser uma ponte **interrompida** — dois tocos, vão no
+meio, travessa de parada. As outras duas queixas eram de vida e de identidade: as dezoito ilhas desenhavam
+**as mesmas cinco cores** (parede, poste, tronco, conífera, rocha clara), e agora cada uma tempera madeira,
+pedra e folhagem com o tom dela, com as frações medidas; o capim ganhou arbustos e flores; e cada ilha
+fincou a **bandeira da trilha**, com forma e cor próprias, a mesma cor que a lista de ilhas usa no título do
+grupo.
+
 **Limite explícito:** nenhum lote foi visto em navegador — nenhum navegador com WebGL existe neste
 ambiente. O que eles provam está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real), e a verificação
 de pixel depende de captura de tela de quem tem WebGL.
@@ -446,12 +467,14 @@ de pixel depende de captura de tela de quem tem WebGL.
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades. Os lotes 1 a 5 estão acima: a
-  Parte I inteira (capítulos 1 a 11, ilhas 1 a 12) e o **primeiro projeto da Parte II** (capítulos 12 a
-  14, ilhas 13 a 15). Com o lote 5, os três projetos do livro passaram a ser **trilhas declaradas**
-  (D-061): cada unidade sabe a que parte do livro pertence, e cada trilha diz o que o console roda ali.
-  O lote seguinte é o projeto 2 — visualização de dados (capítulos 15 a 17), cuja parte de dados roda e
-  cujo desenho de gráfico não (medido).
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades. Os lotes 1 a 6 estão acima: a
+  Parte I inteira (capítulos 1 a 11, ilhas 1 a 12) e os **dois primeiros projetos da Parte II**
+  (capítulos 12 a 17, ilhas 13 a 18). Com o lote 5, os três projetos do livro passaram a ser **trilhas
+  declaradas** (D-061): cada unidade sabe a que parte do livro pertence, e cada trilha diz o que o console
+  roda ali. O lote 6 escreveu o projeto 2 (D-062), e o conserto do lote 6.1 (D-063) tratou o que as
+  capturas mostraram. O lote seguinte é o projeto 3 — aplicações web (capítulos 18 a 20): o Django não
+  roda (medido), e o que se escreve é a função que recebe os dados de um pedido e devolve a resposta, sem
+  servidor nenhum.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

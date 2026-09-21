@@ -6,7 +6,8 @@ import { alturaDoTopo } from './geometria/ilha'
 import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 import {
   DISTANCIA_ENTRE_CENTROS,
-  RAIO_DA_ILHA,
+  bordaDaIlhaEmDirecao,
+  bordaExternaDaIlhaEmDirecao,
   SOBE_POR_ILHA,
   VAO_DA_PONTE,
   enquadramentoDaIlha,
@@ -101,10 +102,80 @@ describe('ponte entre duas ilhas', () => {
   })
 
   it('tem o comprimento do vão, e não da distância entre centros', () => {
-    for (const ponte of pontesDoPercurso(ILHAS)) {
+    // O vão agora é medido de **borda desenhada a borda desenhada** (D-063), e
+    // não entre os raios nominais: as duas medidas diferentes que aparecem aqui
+    // são as duas bordas externas, que é o maior vão possível, e a distância
+    // entre os centros, que é o menor comprimento impossível.
+    for (let indice = 0; indice < ILHAS.length - 1; indice += 1) {
+      const uma = ILHAS[indice]!
+      const outra = ILHAS[indice + 1]!
+      const ponte = ponteEntre(uma, outra)
+      const [ux, uz] = ponte.direcao
+      const maiorVao =
+        Math.hypot(outra.centro[0] - uma.centro[0], outra.centro[2] - uma.centro[2]) -
+        bordaExternaDaIlhaEmDirecao(uma, ux, uz) -
+        bordaExternaDaIlhaEmDirecao(outra, -ux, -uz)
+
+      expect(ponte.comprimento).toBeGreaterThan(maiorVao - 0.001)
       expect(ponte.comprimento).toBeLessThan(DISTANCIA_ENTRE_CENTROS)
-      expect(ponte.comprimento).toBeGreaterThan(DISTANCIA_ENTRE_CENTROS - 2 * RAIO_DA_ILHA - 0.001)
     }
+  })
+
+  it('ancora no capim desenhado, e não no raio nominal', () => {
+    // A prova de que o defeito da captura era real: ancorada no raio nominal, a
+    // ponte ficava fora do capim (no ar) em pelo menos uma das pontas — e o
+    // quanto disso está medido abaixo. Nenhuma ponta pode passar da borda
+    // externa, e todas têm de chegar perto dela.
+    let maiorDesvio = 0
+    let pontasNoArAntes = 0
+
+    for (let indice = 0; indice < ILHAS.length - 1; indice += 1) {
+      const uma = ILHAS[indice]!
+      const outra = ILHAS[indice + 1]!
+      const ponte = ponteEntre(uma, outra)
+      const [ux, uz] = ponte.direcao
+
+      // O fim sai da **mesma** transformação que o desenho usa: o Three.js
+      // aplica as duas rotações, e a projeção horizontal do tabuleiro é menor
+      // que o comprimento quando a ponte sobe.
+      const fim = new Vector3(ponte.comprimento, 0, 0).applyEuler(
+        new Euler(0, ponte.rotacaoY, ponte.rotacaoZ, 'XYZ'),
+      )
+      fim.add(new Vector3(...ponte.posicao))
+
+      const pontas = [
+        {
+          ilha: uma,
+          distancia: Math.hypot(ponte.posicao[0] - uma.centro[0], ponte.posicao[2] - uma.centro[2]),
+          direcao: [ux, uz] as const,
+        },
+        {
+          ilha: outra,
+          distancia: Math.hypot(fim.x - outra.centro[0], fim.z - outra.centro[2]),
+          direcao: [-ux, -uz] as const,
+        },
+      ]
+
+      for (const ponta of pontas) {
+        const interno = bordaDaIlhaEmDirecao(ponta.ilha, ponta.direcao[0], ponta.direcao[1])
+        const externo = bordaExternaDaIlhaEmDirecao(ponta.ilha, ponta.direcao[0], ponta.direcao[1])
+
+        // Ancorada: dentro do polígono desenhado...
+        expect(ponta.distancia).toBeLessThanOrEqual(externo + 1e-9)
+        // ...e encostada nele, e não enterrada no capim.
+        expect(ponta.distancia).toBeGreaterThan(interno - 1e-6)
+
+        maiorDesvio = Math.max(maiorDesvio, Math.abs(ponta.ilha.raio - ponta.distancia))
+        if (ponta.ilha.raio > externo) {
+          pontasNoArAntes += 1
+        }
+      }
+    }
+
+    // Medido: com o raio nominal, alguma ponta ficaria no ar; e a maior diferença
+    // entre a âncora certa e a nominal passa de um terço de unidade.
+    expect(pontasNoArAntes).toBeGreaterThan(0)
+    expect(maiorDesvio).toBeGreaterThan(0.33)
   })
 
   it('termina na borda da outra ilha, com o topo encostado no capim', () => {
@@ -126,7 +197,9 @@ describe('ponte entre duas ilhas', () => {
       fim.add(new Vector3(...ponte.posicao))
 
       const bordaEsperada = new Vector3(...outra.centro).add(
-        new Vector3(-ponte.direcao[0], 0, -ponte.direcao[1]).multiplyScalar(outra.raio),
+        new Vector3(-ponte.direcao[0], 0, -ponte.direcao[1]).multiplyScalar(
+          bordaDaIlhaEmDirecao(outra, -ponte.direcao[0], -ponte.direcao[1]),
+        ),
       )
 
       expect(fim.x).toBeCloseTo(bordaEsperada.x, 5)
@@ -145,8 +218,9 @@ describe('ponte entre duas ilhas', () => {
       const outra = ILHAS[indice + 1]!
       const ponte = ponteEntre(uma, outra)
 
-      const esperadoX = uma.centro[0] + ponte.direcao[0] * uma.raio
-      const esperadoZ = uma.centro[2] + ponte.direcao[1] * uma.raio
+      const borda = bordaDaIlhaEmDirecao(uma, ponte.direcao[0], ponte.direcao[1])
+      const esperadoX = uma.centro[0] + ponte.direcao[0] * borda
+      const esperadoZ = uma.centro[2] + ponte.direcao[1] * borda
       expect(ponte.posicao[0]).toBeCloseTo(esperadoX, 5)
       expect(ponte.posicao[2]).toBeCloseTo(esperadoZ, 5)
     }
