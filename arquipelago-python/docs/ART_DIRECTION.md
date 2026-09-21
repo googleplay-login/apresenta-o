@@ -124,18 +124,23 @@ Cada ilha tem uma construção que só ela tem, e um tom próprio. Os dois saem 
 a forma da pedra e a vegetação saem da semente da unidade. Os números abaixo foram **medidos** a
 partir do conteúdo real, e não escritos à mão.
 
-| # | Ilha | Marco | Raio do capim | Altura da pedra | Lados | Tom |
-|---|---|---|---|---|---|---|
-| 1 | A Praia do Primeiro Programa | Portal de pedra | 6,67 | 8,01 | 14 | `#106553` |
-| 2 | A Oficina das Variáveis | Bancada de oficina | 6,83 | 8,43 | 16 | `#ad8551` |
-| 3 | A Ilha das Palavras | Estante alta | 5,23 | 9,72 | 10 | `#6fbdc0` |
-| 4 | As Listas do Mercado | Barracas do mercado | 5,33 | 8,96 | 18 | `#91412e` |
-| 5 | O Moinho das Repetições | Moinho de pás | 5,77 | 9,29 | 12 | `#3a673a` |
-| 6 | A Encruzilhada das Decisões | Placas da encruzilhada | 5,28 | 7,73 | 10 | `#e2e5e8` |
-| 7 | O Farol dos Registros | Farol alto | 5,24 | 8,53 | 10 | `#a7c9d0` |
-| 8 | A Estação das Perguntas | Estação de perguntas | 6,88 | 8,88 | 12 | `#799796` |
-| 9 | A Oficina das Funções | Par de engrenagens | 6,02 | 9,98 | 12 | `#5c4430` |
-| 10 | A Torre das Classes | Torre de anéis | 5,62 | 10,93 | 12 | `#cf9693` |
+| # | Ilha | Marco | Raio do capim | Altura da pedra | Lados | Ponta | Largura da ponta | Tom |
+|---|---|---|---|---|---|---|---|---|
+| 1 | A Praia do Primeiro Programa | Portal de pedra | 6,67 | 8,01 | 14 | espinho | 0,43 | `#106553` |
+| 2 | A Oficina das Variáveis | Bancada de oficina | 6,83 | 8,43 | 16 | ponta rombuda | 1,48 | `#ad8551` |
+| 3 | A Ilha das Palavras | Estante alta | 5,23 | 9,72 | 10 | toco | 1,90 | `#6fbdc0` |
+| 4 | As Listas do Mercado | Barracas do mercado | 5,33 | 8,96 | 18 | espinho | 0,32 | `#91412e` |
+| 5 | O Moinho das Repetições | Moinho de pás | 5,77 | 9,29 | 12 | ponta rombuda | 1,10 | `#3a673a` |
+| 6 | A Encruzilhada das Decisões | Placas da encruzilhada | 5,28 | 7,73 | 10 | toco | 1,87 | `#e2e5e8` |
+| 7 | O Farol dos Registros | Farol alto | 5,24 | 8,53 | 10 | espinho | 0,15 | `#a7c9d0` |
+| 8 | A Estação das Perguntas | Estação de perguntas | 6,88 | 8,88 | 12 | ponta rombuda | 1,17 | `#799796` |
+| 9 | A Oficina das Funções | Par de engrenagens | 6,02 | 9,98 | 12 | toco | 2,04 | `#5c4430` |
+| 10 | A Torre das Classes | Torre de anéis | 5,62 | 10,93 | 12 | espinho | 0,11 | `#cf9693` |
+
+**A ponta da pedra (D-057).** É a única parte da ilha que aparece sozinha contra o céu, e por isso é o
+que mais muda a silhueta vista de longe. A **família** vem da posição no percurso (as três aparecem
+sempre: espinho, ponta rombuda, toco) e o valor exato vem da semente. Em unidades, a largura da ponta
+vai de 0,11 (ilha 10, um alfinete) a 2,04 (ilha 9, um toco de pedra).
 
 ### A cadeia de cor do mundo (D-054)
 

@@ -115,6 +115,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       aneis: formato.aneis,
       amplitude: formato.amplitude,
       expoenteDoPerfil: formato.expoenteDoPerfil,
+      pontaDoPerfil: formato.pontaDoPerfil,
     })
 
     const rocha = pintarPorAltura(

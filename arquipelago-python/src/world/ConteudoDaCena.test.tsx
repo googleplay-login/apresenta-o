@@ -643,6 +643,58 @@ describe('a ilha é o capim em cima da pedra, e não o contrário (D-055)', () =
   })
 })
 
+describe('as ilhas não terminam todas no mesmo bico (D-057)', () => {
+  it('as pontas das dez ilhas são de tamanhos diferentes, do espinho ao toco', async () => {
+    // Medido antes do conserto: as dez pontas tinham 0,02 do raio do topo — o
+    // mesmo espinho. Vista de longe, a ponta é a única parte da ilha que aparece
+    // sozinha contra o céu, e dez bicos iguais fazem a fileira parecer a mesma
+    // ilha repetida.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const pontas: number[] = []
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const pedra = malhasComCorDeVertice(ilha).find((malha) => faixaVerticalDaMalha(malha) > 1)
+      if (pedra === undefined) {
+        throw new Error(`A ilha «${unidade.titulo}» deveria ter pedra`)
+      }
+
+      const posicoes = posicoesDaMalha(pedra)
+
+      // A última faixa da pedra é a ponta: acha-se pela linha de y mais baixa.
+      let maisBaixo = Number.POSITIVE_INFINITY
+      for (let indice = 1; indice < posicoes.length; indice += 3) {
+        maisBaixo = Math.min(maisBaixo, posicoes[indice] ?? 0)
+      }
+      let raioDaPonta = 0
+      for (let indice = 0; indice < posicoes.length; indice += 3) {
+        if (Math.abs((posicoes[indice + 1] ?? 0) - maisBaixo) > 1e-6) {
+          continue
+        }
+        raioDaPonta = Math.max(
+          raioDaPonta,
+          Math.hypot(posicoes[indice] ?? 0, posicoes[indice + 2] ?? 0),
+        )
+      }
+      pontas.push(raioDaPonta)
+    }
+
+    expect(pontas).toHaveLength(UNIDADES.length)
+    const menor = Math.min(...pontas)
+    const maior = Math.max(...pontas)
+    expect(
+      maior - menor,
+      `Pontas medidas: ${pontas.map((p) => p.toFixed(2)).join(', ')}`,
+    ).toBeGreaterThan(1)
+    expect(menor).toBeLessThan(0.6)
+    expect(maior).toBeGreaterThan(1.4)
+
+    await cena.unmount()
+  })
+})
+
 describe('a luz do mundo não tinge a pedra de mar (D-056)', () => {
   it('a meia-luz do chão é neutra — a cor do mar deixava a rocha azul', async () => {
     // A rocha da paleta é um cinza quente. Enquanto o chão da meia-luz foi a cor

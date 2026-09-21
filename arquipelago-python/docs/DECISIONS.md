@@ -1188,3 +1188,51 @@ roteiro manual desde a Etapa 4).
 **O que continua sem prova:** os **pixels**. As duas correções foram medidas com os tokens e as duas
 luzes do mundo (modelo de meia-esfera mais sol direcional, por canal — é conta, não pixel) e travadas
 por teste. A confirmação é de quem olha: itens **58** e **59** do roteiro manual.
+
+## D-057 — A ponta da pedra: dez ilhas com dez jeitos de terminar
+**21/09/2026** — correção de um defeito **visto na captura de tela** de quem usa, na Etapa 11.
+
+**O que a captura mostrou:** a fileira das dez ilhas, de longe, parecia a mesma ilha repetida — todas
+com o mesmo bico afiado embaixo, como uma fila de piões. D-053 tinha dado a cada ilha silhueta, marco,
+vegetação e tom próprios, e a promessa escrita era "*de ilha atarracada a ilha em agulha*". A agulha
+veio; a atarracada, não.
+
+**A medida, antes:** as dez ilhas terminavam com raio de **0,02 do raio do topo** — o mesmo espinho,
+em todas. O número existia por uma razão técnica legítima (um anel de raio zero são vários vértices no
+mesmo ponto: triângulos sem área, que não desenham nada e confundem a conta de normal), mas estava
+**escrito dentro da função**, igual para todo mundo.
+
+**A decisão:** a ponta passa a ser **da ilha**, como o raio e a altura.
+
+- `gerarRocha` aceita `pontaDoPerfil` (fração do raio do topo). O padrão continua 0,02 para quem
+  chamar a geometria sem dizer nada — nenhum teste antigo muda de sentido;
+- `identidadeDaIlha` decide a ponta com **duas fontes**: a **família** vem da posição no percurso
+  (assim as três aparecem sempre, sem depender de sorte) e o **valor exato** vem da semente (assim
+  duas ilhas nunca terminam iguais);
+- as três famílias: **espinho** (0,02 a 0,08 do raio), **ponta rombuda** (0,14 a 0,22) e **toco**
+  (0,28 a 0,38).
+
+| Ilha | Família | Largura da ponta (unidades) |
+|---|---|---|
+| 1 | espinho | 0,43 |
+| 2 | ponta rombuda | 1,48 |
+| 3 | toco | 1,90 |
+| 4 | espinho | 0,32 |
+| 5 | ponta rombuda | 1,10 |
+| 6 | toco | 1,87 |
+| 7 | espinho | 0,15 |
+| 8 | ponta rombuda | 1,17 |
+| 9 | toco | 2,04 |
+| 10 | espinho | 0,11 |
+
+A diferença entre a ponta mais fina e a mais larga é de **quase duas unidades**, em ilhas de 5 a 7 de
+raio: é o suficiente para que a silhueta de baixo diga de qual ilha se trata.
+
+**O que o teste passou a cobrar:** toda identidade tem `pontaDoPerfil` dentro da faixa; as três
+famílias aparecem entre as dez ilhas; a diferença entre a menor e a maior passa de 0,25; o raio da
+última faixa da malha é o que a ilha pediu; e, na árvore 3D, as dez pontas medidas **não são todas o
+mesmo bico** (a maior menos a menor passa de 1 unidade, com a menor abaixo de 0,6 e a maior acima de
+1,4).
+
+**O que continua sem prova:** os **pixels**. A medida aqui é geometria, não tela — e a conferência é de
+quem olha (item 60 do roteiro manual).

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { sementeDeTexto } from './aleatorio'
 import {
+  FAMILIAS_DE_PONTA,
   FAIXAS,
   LUGARES_NA_ILHA,
   MARCOS,
@@ -96,6 +97,55 @@ describe('uma ilha não é a outra', () => {
       assinaturas.add(assinaturaDaSilhueta(identidadeDaIlha(semente % 7, semente)))
     }
     expect(assinaturas.size).toBeGreaterThan(900)
+  })
+})
+
+describe('a ponta da pedra (D-057)', () => {
+  it('cada ilha tem a própria ponta, e todas cabem na faixa', () => {
+    for (let indice = 0; indice < 10; indice += 1) {
+      const { formato } = identidadeDaIlha(indice, 1000 + indice)
+      expect(formato.pontaDoPerfil).toBeGreaterThanOrEqual(FAIXAS.pontaDoPerfil.minimo)
+      expect(formato.pontaDoPerfil).toBeLessThanOrEqual(FAIXAS.pontaDoPerfil.maximo)
+    }
+  })
+
+  it('as três famílias aparecem, e a diferença entre elas se vê de longe', () => {
+    // A ponta é a única parte da ilha que aparece sozinha contra o céu. Enquanto
+    // todas terminavam no mesmo espinho de 2% do raio, a fileira de ilhas parecia
+    // a mesma ilha repetida — por mais que altura, marco e tom mudassem.
+    const pontas = Array.from(
+      { length: 10 },
+      (_, indice) => identidadeDaIlha(indice, 42).formato.pontaDoPerfil,
+    )
+    const menor = Math.min(...pontas)
+    const maior = Math.max(...pontas)
+
+    expect(FAMILIAS_DE_PONTA).toHaveLength(3)
+    for (const familia of FAMILIAS_DE_PONTA) {
+      const destaFamilia = pontas.filter(
+        (ponta) => ponta >= familia.minimo && ponta <= familia.maximo,
+      )
+      expect(destaFamilia.length, `a família «${familia.nome}» não apareceu`).toBeGreaterThan(0)
+    }
+
+    // O espinho tem 0,15 a 0,43 de largura em unidades; o toco, quase 2. A
+    // diferença passa de uma unidade inteira em qualquer ilha do mundo.
+    expect(maior - menor).toBeGreaterThan(0.25)
+  })
+
+  it('a família da ponta segue a posição no percurso, e o valor segue a semente', () => {
+    // Família por índice: as três aparecem sempre, sem depender de sorte. Valor
+    // por semente: duas ilhas nunca terminam exatamente iguais.
+    const daPrimeira = identidadeDaIlha(0, 7).formato.pontaDoPerfil
+    const daQuarta = identidadeDaIlha(3, 7).formato.pontaDoPerfil
+    const daSegunda = identidadeDaIlha(1, 7).formato.pontaDoPerfil
+
+    expect(daQuarta).toBeLessThan(0.1)
+    expect(daSegunda).toBeGreaterThan(0.1)
+
+    // Mesmo índice, semente diferente: o valor muda.
+    const comOutraSemente = identidadeDaIlha(0, 8).formato.pontaDoPerfil
+    expect(comOutraSemente).not.toBe(daPrimeira)
   })
 })
 

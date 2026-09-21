@@ -28,7 +28,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 746 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
+    npm test             # 750 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -255,6 +255,20 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Conserto depois do lote 3: a ponta da pedra (D-057)
+
+- **a fileira das dez ilhas parecia a mesma ilha repetida**: todas terminavam no mesmo espinho de 0,02
+  do raio do topo. D-053 prometeu "de ilha atarracada a ilha em agulha" e só a agulha veio — porque o
+  raio da ponta estava **escrito dentro de `gerarRocha`**, igual para todas;
+- a ponta passou a ser **da ilha**: `gerarRocha` aceita `pontaDoPerfil` (o padrão 0,02 continua, para
+  quem chamar a geometria sem dizer nada), e `identidadeDaIlha` decide com duas fontes — a **família**
+  vem da posição no percurso (espinho, ponta rombuda, toco: as três aparecem sempre) e o **valor**
+  vem da semente (duas ilhas nunca terminam iguais);
+- medido: a largura da ponta vai de **0,11** (ilha 10, um alfinete) a **2,04** (ilha 9, um toco) — em
+  ilhas de 5 a 7 de raio, quase duas unidades de diferença;
+- o teste novo cobra as três famílias, a diferença entre a menor e a maior ponta, o raio da última
+  faixa da malha, e — na árvore 3D — que as dez pontas medidas não sejam todas o mesmo bico.
+
 ### Conserto depois do lote 3: a ilha azul-petróleo e o farol solto (D-056)
 
 - **a ilha parecia uma barbatana azul.** A causa não era a paleta: era a luz. O chão da meia-esfera era
@@ -444,7 +458,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054), a pedra fora do capim (D-055) e a ilha azul-petróleo (D-056) | Registrado em `TEST_REPORT.md`, com roteiro manual de 59 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056) e a ponta repetida (D-057) | Registrado em `TEST_REPORT.md`, com roteiro manual de 60 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |

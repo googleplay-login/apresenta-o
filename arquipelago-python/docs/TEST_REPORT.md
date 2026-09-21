@@ -6,6 +6,65 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — a ponta da pedra (captura de tela da fileira de ilhas)
+
+### 1. O defeito, medido
+
+A captura de longe mostrou a fileira das dez ilhas como uma fila de piões: todas com o **mesmo bico
+afiado** embaixo. Medido na geometria, antes do conserto: as dez ilhas terminavam com raio de **0,02 do
+raio do topo** — o mesmo espinho em todas, porque o número estava escrito dentro de `gerarRocha`.
+
+| Ilha | Família (depois) | Largura da ponta |
+|---|---|---|
+| 1 | espinho | 0,43 |
+| 2 | ponta rombuda | 1,48 |
+| 3 | toco | 1,90 |
+| 4 | espinho | 0,32 |
+| 5 | ponta rombuda | 1,10 |
+| 6 | toco | 1,87 |
+| 7 | espinho | 0,15 |
+| 8 | ponta rombuda | 1,17 |
+| 9 | toco | 2,04 |
+| 10 | espinho | 0,11 |
+
+A correção está em **D-057**.
+
+### 2. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro.
+
+### 3. Testes automáticos — EXECUTADO
+
+    npm test
+
+**42 arquivos, 750 testes, todos passando** (eram 42 e 746).
+
+| Arquivo | Testes | O que o conserto acrescentou |
+|---|---|---|
+| `src/world/geometria/identidade.test.ts` | 14 | Três casos novos: cada ilha tem ponta dentro da faixa, as **três famílias** aparecem entre as dez, e a diferença entre a menor e a maior passa de 0,25 (era 11) |
+| `src/world/geometria/ilha.test.ts` | 28 | Dois casos novos: o raio da última faixa é o que a ilha pediu (0,02 / 0,2 / 0,35) e o padrão continua 0,02 para quem não diz nada (era 26) |
+| `src/world/ConteudoDaCena.test.tsx` | 31 | Um caso novo na árvore 3D: as dez pontas medidas **não são todas o mesmo bico** — a maior menos a menor passa de 1 unidade (era 30) |
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/assets/index-*.js` | 420,61 kB | 128,64 kB |
+| `dist/assets/Cena-*.js` | 919,60 kB | 244,90 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Os pixels.** A medida é geometria, não tela: neste ambiente não há GPU. Se, na tela, as pontas
+  ainda parecerem parecidas, quem diz é quem olha — item **60** do roteiro manual.
+- A ponta mais larga (2,04 na ilha 9) é quase **40% do raio do capim**: se na tela ela parecer um
+  degrau em vez de pedra quebrada, o conserto é a faixa da família "toco", em `FAMILIAS_DE_PONTA`.
+
 ## Execução de 21/09/2026 — a ilha azul-petróleo e o farol solto no céu (capturas de tela)
 
 ### 1. Os dois defeitos, medidos
@@ -466,7 +525,12 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
     poste fino, saindo do capim — e não um losango solto no céu. Conferir também que o losango gira
     devagar e que a cor diz o estado: âmbar na ilha disponível, cinza nas bloqueadas.
 
-Resultado esperado, somando as etapas 5 a 11: **59 de 59 itens conferidos**. Qualquer item que falhe
+60. **As ilhas não terminam todas no mesmo bico.** Olhar o arquipélago de longe, de lado: embaixo de
+    cada ilha a pedra termina de um jeito — algumas em espinho fino, outras em ponta rombuda e outras
+    em toco de pedra largo. Duas ilhas não podem terminar exatamente iguais. Se todas parecerem um
+    bico afiado, registrar aqui.
+
+Resultado esperado, somando as etapas 5 a 11: **60 de 60 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.
 
 ## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)

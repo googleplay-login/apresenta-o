@@ -37,6 +37,14 @@ export type OpcoesDaRocha = {
    * É o número que faz duas ilhas da mesma altura parecerem diferentes.
    */
   readonly expoenteDoPerfil?: number
+  /**
+   * Raio da ponta da pedra, **como fração do raio do topo** (0,02 padrão).
+   *
+   * 0,02 é um espinho; 0,35 é um toco rombudo. É o que mais muda a silhueta vista
+   * de longe, porque a ponta é a única parte da ilha que aparece sozinha contra o
+   * céu. Ver `FAMILIAS_DE_PONTA`, em `identidade.ts`.
+   */
+  readonly pontaDoPerfil?: number
 }
 
 export const ROCHA_PADRAO: OpcoesDaRocha = {
@@ -62,6 +70,16 @@ export function perfilDeRaio(t: number, expoente: number = EXPOENTE_DO_PERFIL): 
 
 /** Expoente do perfil da primeira ilha. Cada ilha pode trazer o seu. */
 export const EXPOENTE_DO_PERFIL = 1.7
+
+/**
+ * A ponta padrão da pedra: quanto do raio do topo sobra na última faixa.
+ *
+ * 2% é um espinho — a forma que **todas** as dez ilhas tinham, e que fazia a
+ * fileira de ilhas parecer a mesma ilha repetida: de longe, dez bicos afiados
+ * iguais. Cada ilha agora traz a própria ponta na identidade; este número ficou
+ * como o padrão de quem chamar a geometria sem dizer nada.
+ */
+export const PONTA_PADRAO = 0.02
 
 /**
  * Gera a malha da rocha: anéis empilhados, fechados em uma ponta embaixo.
@@ -109,11 +127,13 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
     )
   }
 
-  // O raio nunca chega exatamente a zero. Um anel de raio zero seriam vários
-  // vértices no mesmo ponto: triângulos sem área, que não desenham nada e ainda
-  // confundem qualquer conta de normal. Fica uma tampinha de 2% do raio, que
-  // ninguém vê na ponta.
-  const raioMinimo = raioDoTopo * 0.02
+  // O raio da última faixa — a ponta da pedra — é a **borda de baixo** da ilha, e
+  // ela é de cada ilha: umas terminam em espinho, outras em toco rombudo. Duas
+  // restrições em qualquer caso: o raio nunca chega a zero (um anel de raio zero
+  // são vários vértices no mesmo ponto, triângulos sem área que não desenham nada
+  // e ainda confundem a conta de normal), e quem escolhe o valor é a identidade da
+  // ilha (ver `pontaDoPerfil` em `identidade.ts` e a decisão D-057).
+  const raioMinimo = raioDoTopo * (opcoes.pontaDoPerfil ?? PONTA_PADRAO)
 
   for (let anel = 0; anel <= aneis; anel += 1) {
     const t = anel / aneis

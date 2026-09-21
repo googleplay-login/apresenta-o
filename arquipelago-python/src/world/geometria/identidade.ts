@@ -74,6 +74,13 @@ export type FormatoDaIlha = {
   readonly aneis: number
   readonly amplitude: number
   readonly expoenteDoPerfil: number
+  /**
+   * Raio da ponta da pedra, como fração do raio do topo.
+   *
+   * É a única parte da ilha que aparece sozinha contra o céu, e é o que mais muda
+   * a silhueta vista de longe. Ver `FAMILIAS_DE_PONTA` e a decisão D-057.
+   */
+  readonly pontaDoPerfil: number
   readonly inclinacaoDoCapim: number
   readonly amplitudeDaBorda: number
 }
@@ -111,6 +118,7 @@ export const FAIXAS = {
   aneis: { minimo: 6, maximo: 8 },
   amplitude: { minimo: 0.16, maximo: 0.3 },
   expoenteDoPerfil: { minimo: 1.35, maximo: 2.15 },
+  pontaDoPerfil: { minimo: 0.02, maximo: 0.38 },
   inclinacaoDoCapim: { minimo: 0.045, maximo: 0.085 },
   amplitudeDaBorda: { minimo: 0.08, maximo: 0.16 },
   arvores: { minimo: 2, maximo: 5 },
@@ -120,6 +128,22 @@ export const FAIXAS = {
 
 /** Quantos tons a paleta oferece para as ilhas. Ver `paleta3d.ts`. */
 export const TONS_DAS_ILHAS = 10
+
+/**
+ * As três famílias de ponta de pedra: como a ilha termina embaixo.
+ *
+ * A ponta é a única parte da ilha que aparece sozinha contra o céu, e era a
+ * **mesma** nas dez: um espinho de 2% do raio. Numa fileira vista de longe, dez
+ * bicos afiados iguais fazem o arquipélago parecer a mesma ilha repetida, por mais
+ * que a altura, o marco e o tom mudem. Aqui a família sai da **posição** no
+ * percurso — para as três aparecerem sempre, e não depender de sorte — e o valor
+ * exato sai da **semente**, para duas ilhas nunca ficarem iguais.
+ */
+export const FAMILIAS_DE_PONTA = [
+  { nome: 'espinho', minimo: 0.02, maximo: 0.08 },
+  { nome: 'ponta rombuda', minimo: 0.14, maximo: 0.22 },
+  { nome: 'toco', minimo: 0.28, maximo: 0.38 },
+] as const
 
 /**
  * A identidade de uma ilha.
@@ -149,6 +173,14 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
     FAIXAS.inclinacaoDoCapim.maximo,
   )
   const amplitudeDaBorda = entre(sortear, FAIXAS.amplitudeDaBorda.minimo, FAIXAS.amplitudeDaBorda.maximo)
+  // A família da ponta vem do índice; o valor exato, da semente. A ordem dos
+  // sorteios importa: este entra depois do expoente do perfil e antes da
+  // vegetação, e mudar de lugar muda a cara da vegetação de todas as ilhas.
+  const familiaDaPonta =
+    FAMILIAS_DE_PONTA[
+      ((indice % FAMILIAS_DE_PONTA.length) + FAMILIAS_DE_PONTA.length) % FAMILIAS_DE_PONTA.length
+    ] ?? FAMILIAS_DE_PONTA[0]
+  const pontaDoPerfil = entre(sortear, familiaDaPonta.minimo, familiaDaPonta.maximo)
   const arvores = FAIXAS.arvores.minimo + Math.floor(sortear() * (FAIXAS.arvores.maximo - FAIXAS.arvores.minimo + 1))
   const pedras = FAIXAS.pedras.minimo + Math.floor(sortear() * (FAIXAS.pedras.maximo - FAIXAS.pedras.minimo + 1))
   const distanciaMinima = entre(sortear, FAIXAS.distancia.minimo, FAIXAS.distancia.maximo)
@@ -168,6 +200,7 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
       aneis,
       amplitude,
       expoenteDoPerfil,
+      pontaDoPerfil,
       inclinacaoDoCapim,
       amplitudeDaBorda,
     },
