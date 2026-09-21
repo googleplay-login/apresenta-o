@@ -145,8 +145,15 @@ describe('a ponta da pedra (D-057)', () => {
     const daQuarta = identidadeDaIlha(3, 7).formato.pontaDoPerfil
     const daSegunda = identidadeDaIlha(1, 7).formato.pontaDoPerfil
 
-    expect(daQuarta).toBeLessThan(0.1)
-    expect(daSegunda).toBeGreaterThan(0.1)
+    // Os limites vêm das próprias famílias, e não de um número escrito aqui: um
+    // literal já envelheceu uma vez, quando a ponta mais fina deixou de ser um
+    // espinho de 2% (D-064).
+    const primeira = FAMILIAS_DE_PONTA[0]
+    const segunda = FAMILIAS_DE_PONTA[1]
+    expect(daQuarta).toBeGreaterThanOrEqual(primeira.minimo)
+    expect(daQuarta).toBeLessThanOrEqual(primeira.maximo)
+    expect(daSegunda).toBeGreaterThanOrEqual(segunda.minimo)
+    expect(daSegunda).toBeLessThanOrEqual(segunda.maximo)
 
     // Mesmo índice, semente diferente: o valor muda.
     const comOutraSemente = identidadeDaIlha(0, 8).formato.pontaDoPerfil

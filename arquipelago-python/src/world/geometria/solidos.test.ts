@@ -137,13 +137,49 @@ describe('ponte', () => {
     expect(bloqueada.estrutura.posicoes.length).toBeLessThan(liberada.estrutura.posicoes.length)
   })
 
-  it('vai de ponta a ponta quando liberada', () => {
-    const { estrutura } = gerarPonte({ ...base, liberada: true })
+  it('vai de ponta a ponta quando liberada, e entra na ilha pelos dois lados', () => {
+    const { estrutura, entrada, comprimentoTotal } = gerarPonte({ ...base, liberada: true })
     const caixa = limites(estrutura)
-    // As tábuas são centradas na vaga de cada uma, com uma folga pequena entre
-    // elas: a ponte cobre o vão inteiro, sem encostar na divisa exata.
+
+    // A queixa do estudante (21/09/2026) foi "as pontes não encostam nas ilhas".
+    // Medido antes de mudar, o tabuleiro encostava com margem 0,000 — e encostar
+    // por zero não se vê: a tábua da ponta fica escondida pela borda do capim.
+    // Agora a estrutura **entra** na ilha, pelas duas pontas, e é isto que o
+    // teste cobra: pelo menos um metro de rampa deitada no capim de cada lado.
+    expect(entrada).toBeGreaterThanOrEqual(1)
+    expect(comprimentoTotal).toBeCloseTo(base.comprimento + entrada * 2, 5)
+    expect(caixa.x[0]).toBeLessThanOrEqual(-1)
+    expect(caixa.x[1]).toBeGreaterThanOrEqual(base.comprimento + 1)
+
+    // E o vão continua coberto de ponta a ponta.
     expect(caixa.x[0]).toBeLessThan(0.5)
     expect(caixa.x[1]).toBeGreaterThan(9.5)
+  })
+
+  it('apoia o tabuleiro em pernas, e não em estacas soltas', () => {
+    // A outra metade da mesma queixa: os postes subiam 2,1 metros para o ar e
+    // não havia nada embaixo do tabuleiro. Agora há pares de pernas descendo do
+    // tabuleiro (mais fundo nas pontas, onde entram na encosta da ilha) e um
+    // travessão amarrando cada par.
+    const { estrutura } = gerarPonte({ ...base, liberada: true })
+    const caixa = limites(estrutura)
+    expect(caixa.y[0]).toBeLessThanOrEqual(-2)
+    expect(caixa.y[1]).toBeGreaterThan(1)
+  })
+
+  it('não desenha duas tábuas iguais, e desenha igual para a mesma semente', () => {
+    // "Pranchas repetidas roboticamente" foi o que a captura chamou. A folga, o
+    // deslocamento lateral e a profundidade de cada tábua saem da semente.
+    const uma = gerarPonte({ ...base, liberada: true, semente: 7 })
+    const outra = gerarPonte({ ...base, liberada: true, semente: 7 })
+    const diferente = gerarPonte({ ...base, liberada: true, semente: 8 })
+
+    expect(outra.estrutura.posicoes).toEqual(uma.estrutura.posicoes)
+    expect(diferente.estrutura.posicoes).not.toEqual(uma.estrutura.posicoes)
+  })
+
+  it('recusa entrada de ponte sem comprimento', () => {
+    expect(() => gerarPonte({ ...base, liberada: true, entrada: 0 })).toThrow(/Entrada da ponte/)
   })
 
   it('a ponte bloqueada sai das duas pontas, com o vão no meio', () => {

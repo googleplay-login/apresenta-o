@@ -1664,3 +1664,109 @@ ocupa é o lado que morde, e é o teste que mede a malha montada, e não a inten
 verificação visual deste projeto depende das capturas do usuário. O que os testes provam está em
 `docs/TEST_REPORT.md`; o que depende de olhar está dito lá também, com o roteiro do que conferir na próxima
 captura.
+
+---
+
+## D-064 — A profundidade visual: céu desenhado, sombra, textura por código, e a ponte que entra na ilha
+
+A captura de tela de 21/09/2026 foi a crítica mais dura que o mundo recebeu, e ela veio em quatro frentes:
+*"a geometria é primitiva demais"*; *"não há mapas de textura reais — a madeira parece plástico marrom
+fosco e a grama parece tapetes sintéticos sem fios ou profundidade"*; *"não há sombreamento de contato nem
+oclusão de ambiente — tudo parece uniformemente iluminado"*; e *"o céu é um gradiente sem graça de branco e
+azul claro, sem nuvens volumétricas, atmosfera ou horizonte"*. Junto com essas, os **clippings**: *"as
+tábuas do deck são apenas retângulos repetidos roboticamente, com aparência de estarem postas ao acaso"*.
+E, na mesma tela, a queixa mais concreta de todas: **"as pontes não encostam nas ilhas"**.
+
+Este incremento (lote 6.3) é a resposta às cinco, e cada uma terminou com um número medido. O que não
+mudou: nenhuma biblioteca nova, nenhum arquivo de imagem, nenhum material do Three.js além do que a cena
+já usava.
+
+**1. A ponte entra na ilha — e "encostar" virou medida, não impressão.** A primeira coisa foi medir o
+estado atual, e a medida desmentiu a queixa literal: a âncora já era a borda **real** do capim desde o
+conserto de D-063, e as duas pontas de cada uma das 17 pontes caíam exatamente sobre ela — margem
+**0,000** de um lado, degrau vertical **0,000** do outro. O que estava errado era a **leitura**: encostar
+por zero não se vê. A tábua da ponta fica rente à borda do capim, escondida por ela, e o que se lê numa
+captura é uma ponte que termina no ar. Agora a ponte **entra** na ilha: `gerarPonte` ganhou `entrada`
+(1,1 m), uma rampa deitada no capim de cada lado, com o declive daquele capim
+(`declivesDaEntrada = 2 × inclinacaoDoCapim`, a derivada da parábola do topo em t = 1). Medido no mundo
+inteiro: **1,085 m de capim coberto** em cada ponta, e o topo da rampa pousando a **0,058 m** da
+superfície. O teste cobra a partir de 1 m e 0,1 m.
+
+**2. Nada mais fica pendurado: pernas, travessão e corrimão de verdade.** A ponte anterior tinha tábua e
+um poste de 2,1 m subindo para o ar — e, quando bloqueada, nenhum corrimão, só estacas. Agora: pares de
+**pernas** descendo do tabuleiro (1,7 m no meio do vão, **2,6 m** nas pontas, onde entram na encosta da
+ilha — medido: o ponto mais baixo da estrutura fica 2,60 m abaixo do capim da ponta), um **travessão**
+amarrando cada par por baixo, **corrimão de duas barras** (1,0 m e 0,52 m) com poste a cada duas tábuas, e,
+na ponte bloqueada, o par de postes em cada beirada do buraco com a travessa de parada apoiada neles. As
+tábuas deixaram de ser cópias: folga (6 a 14% do passo), deslocamento lateral (±3%) e profundidade de cada
+uma saem de uma **semente**, então a mesma ponte desenha sempre igual e duas pontes diferentes não saem
+idênticas — o teste cobra as duas metades disso.
+
+**3. O céu deixou de ser uma cor.** Era `color attach="background"`, ou seja, uma cor chapada — o
+"gradiente sem graça" da captura era generoso. Agora é um `shaderMaterial` com gradiente de altura (zênite,
+horizonte e névoa entrando por baixo), mais um halo de sol com núcleo e coroa, e as duas linhas obrigatórias
+de fim de fragmento (`tonemapping_fragment` e `colorspace_fragment`) — sem elas o céu ficaria **fora** do
+tone mapping que todos os outros materiais fazem, e a emenda com a névoa apareceria como linha de cor.
+**22 nuvens** em três faixas de altitude (y de −74 a 46), cada uma com 4 a 6 bolsões elipsoidais (esfera de
+9 meridianos por 5 anéis, `gerarEsfera`, que o mundo não tinha) — e não mais uma caixa achatada por nuvem,
+que era o que a captura via como cubos.
+
+**4. O sol passou a projetar sombra.** Até aqui este projeto dizia, com razão de custo, que sombra exigiria
+uma passagem de desenho por luz; a captura deixou claro que a falta dela era o que achatava tudo, e o custo
+passou a ser aceitável. A cena liga `shadows="soft"` no `<Canvas>` — sem essa linha, as flags
+`castShadow`/`receiveShadow` que o `Malha3D` já liga em cada peça **não têm efeito nenhum** —, e há **uma**
+luz direcional com mapa de 2048 cujo enquadramento **acompanha a câmera** (lado entre 45 e 220): luz parada
+com enquadramento do mundo inteiro daria sombra de poucos pixels por unidade, pior que não ter. O
+`normalBias` de 0,035 e o `bias` de −0,0004 tiram o serrilhado e o "acne" sem descolar a sombra do pé.
+
+**5. A textura é gerada por código, e não baixada.** A regra do projeto é asset externo só com licença
+documentada, e este ambiente não alcança a rede onde as bibliotecas de textura vivem; a saída foi a mesma do
+resto do mundo — escrever. `geometria/texturas.ts` faz quatro texturas (`grama`, `pedra`, `madeira`,
+`palha`) de **96 × 96**, em `DataTexture` (sem `canvas`, para existir também no ambiente de teste),
+determinísticas, em tons de cinza com luminância entre **0,72 e 1,0** — a textura **multiplica** a cor da
+peça, e a paleta continua sendo a fonte da cor (D-060). Médias medidas: **0,881** (grama), **0,912**
+(palha), **0,914** (madeira), **0,915** (pedra). E as coordenadas de textura são **em unidades do mundo**
+(uma repetição a cada **2 m**), não de 0 a 1 por face: uma face de 4 m cobre duas repetições, um cilindro de
+raio 1,5 cobre 4,712 de `u` na volta, e a tábua de dois metros mostra o mesmo veio da de quatro.
+
+**6. A malha ficou densa, e a pedra ganhou barriga.** As ilhas nasciam com 14 colunas e 7 anéis; agora são
+**24 a 36 colunas** e **12 a 16 anéis**, e as massas orgânicas (pedra, capim, copa, nuvem) passaram a ser
+desenhadas **lisas** (`suave`, normais por média) enquanto as peças serradas (tábua, caixa, marco)
+continuam facetadas — o corte reto ali é o que se quer ver. E `perfilDeRaio` ganhou o terceiro termo,
+`barriga` (0,1 a 0,36 por ilha): a pedra abre cerca de **30%** a um quarto da descida e volta a fechar na
+ponta, que é o que tira a leitura de "cone de sorvete". O peso vai a zero na ponta de propósito, para a
+barriga não desfazer a família de ponta da ilha (D-057).
+
+**Sete defeitos e armadilhas que este incremento achou — e que ficam registrados, porque o próximo lote
+mexe nos mesmos arquivos:**
+
+1. **O vértice do centro do capim entrava sem coordenada de textura.** 61 vértices e 120 números de `uv`
+   (o certo seriam 122): o vetor ficava deslocado em todos os vértices seguintes, e a grama chegaria à tela
+   com a textura torta. Achado pelo teste de textura, no primeiro dia — é exatamente o tipo de defeito que
+   nenhuma leitura de código encontra.
+2. **Com 12 a 16 anéis, o tremor da pedra passava do plano do capim.** Medido: **0,032 acima**. O anel
+   logo abaixo do topo estava a menos de meia unidade dele, e o tremor cheio ali fazia a pedra aparecer como
+   mancha cinza no meio do verde. A correção é um **degrau de entrada**: tremor zero no topo e cheio só a
+   partir do terceiro anel.
+3. **Medir a barriga pelo raio máximo da malha não mede barriga.** A primeira versão do teste comparava o
+   raio máximo das duas pedras e reprovava — porque o máximo está na borda do topo, onde a barriga é zero de
+   propósito. A medida certa é na faixa onde ela age (o primeiro quarto da descida).
+4. **A cor deixou de servir de marcador da nuvem.** O teste antigo achava as nuvens por
+   `corDoMaterial === CORES_DERIVADAS.nuvem`; com a pintura por altura, a cor passou a ser por vértice e o
+   marcador virou nada. O grupo ganhou nome estável (`nuvem:<índice>`) e o teste passou a cobrar o que
+   importa: material sem luz e nenhum vértice escuro.
+5. **`nuvemDoAlto` nascia branco puro** (a mistura com 12% do azul do céu batia no teto) e o teste das
+   derivadas pegou: 14% deixam o tom de cima fora do branco puro, como o de baixo.
+6. **O sol não é superfície.** Ele é o halo que o céu **soma** por cima do próprio gradiente; medi-lo contra
+   o teto das superfícies não quer dizer nada (o núcleo de um sol clarear até o branco é o esperado). Ele
+   entrou na lista de cores com papel `luz` — que passou de duas para três —, e as superfícies passaram a
+   ser "o total menos dez".
+7. **`pernas` e `entrada` mudaram a ponte sem quebrar o contrato existente.** Os testes antigos da ponte
+   continuaram valendo porque cobravam o que continua verdadeiro ("cobre o vão de ponta a ponta", "a
+   bloqueada sai das duas pontas"), e os novos cobram o que passou a ser verdade.
+
+**O que fica declarado como não visto.** Nada disto foi visto em navegador: não há WebGL neste ambiente, e a
+verificação de imagem deste projeto é feita pelas **capturas do usuário**. O que os testes provam está em
+`docs/TEST_REPORT.md`, com os números acima; o que depende de olhar está lá também, como roteiro para a
+próxima captura — em especial a sombra (que pode sair serrilhada em placa fraca) e o custo do mapa de
+sombra com dezoito ilhas.

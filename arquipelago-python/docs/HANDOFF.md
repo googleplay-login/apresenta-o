@@ -1,6 +1,11 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, depois do **lote 6 da Etapa 11** (versão 0.20.0) — o lote do **projeto 2,
+Atualizado em **21/09/2026**, depois do **incremento gráfico 6.3 da Etapa 11** (versão 0.21.0) — a
+profundidade visual que a quinta captura de tela pediu: céu desenhado (gradiente de altura, sol com halo e
+22 nuvens com volume), **sombra projetada** pelo sol, **texturas geradas por código** (grama, pedra, madeira
+e palha, com coordenadas em metros), malha mais densa com **barriga** na pedra, e a **ponte que entra no
+capim** — rampa de 1,1 m deitada no chão de cada ilha, pernas de apoio, travessão e corrimão de duas barras
+(D-064). Antes, no mesmo dia, o **lote 6 da Etapa 11** (versão 0.20.0) — o lote do **projeto 2,
 visualização de dados** (capítulos 15 a 17, ilhas 16 a 18), e do **conserto visual que a captura de tela
 pediu** (D-063): a ponte passou a encostar no capim desenhado, o chão caminhável passou a acabar onde o
 capim acaba, a ponte bloqueada virou uma ponte **interrompida** (dois tocos, vão no meio) em vez de uma
@@ -12,19 +17,19 @@ e cada ilha fincou a bandeira da sua trilha. Antes, no mesmo dia: lote 5 (projet
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lotes 1 a 6 entregues (capítulos 4 a 17, ilhas 5 a 18): a Parte I inteira e os projetos 1 e 2 da Parte II; o lote seguinte é o projeto 3 (aplicações web, capítulos 18 a 20), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1 a 6 entregues (capítulos 4 a 17, ilhas 5 a 18): a Parte I inteira e os projetos 1 e 2 da Parte II, mais o **incremento gráfico 6.3** (D-064); o lote seguinte é o projeto 3 (aplicações web, capítulos 18 a 20), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: dezoito ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), e desde o lote 6.1 cada uma também com **madeira, pedra e folhagem no tom dela**, a **bandeira da trilha** fincada no capim e os **objetos do tema** da sua trilha (D-063); pontes ancoradas no capim desenhado, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
+| Mundo 3D | **existe**: dezoito ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), e desde o lote 6.1 cada uma também com **madeira, pedra e folhagem no tom dela**, a **bandeira da trilha** fincada no capim e os **objetos do tema** da sua trilha (D-063); pontes ancoradas no capim desenhado, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento. Desde o 6.3 (D-064): **céu desenhado** (gradiente, sol e nuvens com volume), **sombra projetada**, **textura gerada por código** em cada superfície, malha mais densa e **ponte que entra na ilha** com pernas, travessão e corrimão |
 | Conteúdo pedagógico | **existe** para as 18 unidades escritas (capítulos 1 a 17: a Parte I inteira e os dois primeiros projetos): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada — e **todo** exercício com correção automática conferida no Python de verdade |
 | Trilhas | **declaradas**: cada unidade pertence a uma trilha, e cada trilha diz o que o console roda ali — a do jogo diz que roda a lógica, e não a biblioteca gráfica (D-061); a de dados diz que roda a parte de dados, e não o gráfico nem a busca pela rede (D-062). No mundo, cada trilha tem bandeira e cor próprias (D-063) |
-| Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060) |
+| Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060). Desde o 6.3 são **três cores de luz** (meia-luz, sol e o halo do sol, que entrou como `luz` e não como superfície) e as **texturas escurecem a cor da paleta** de leve — medido: grama 0,881 · palha 0,912 · madeira 0,914 · pedra 0,915 (D-064) |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir` — agora com **`try` por medida**, para uma medida impossível virar frase e não derrubar as outras (D-052) —, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
 | Execução de código (Pyodide) | **existe como prova de conceito**: console por ilha, interpretador servido pela própria aplicação, carregado sob demanda (Etapa 9). A ligação do Worker com o navegador é roteiro manual |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
-| Testes de navegador | **não executados** — não há navegador neste ambiente. A verificação de imagem é feita por **captura de tela de quem usa**, e foi assim que apareceram as ilhas iguais (D-053), o mundo escuro (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056), a ponta repetida (D-057) e os quatro defeitos de cor de D-060 |
+| Testes de navegador | **não executados** — não há navegador neste ambiente. A verificação de imagem é feita por **captura de tela de quem usa**, e foi assim que apareceram as ilhas iguais (D-053), o mundo escuro (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056), a ponta repetida (D-057), os quatro defeitos de cor (D-060) e a **quinta captura** — as pontes que não pareciam encostar, o céu vazio e o material chapado, que a D-064 tratou (roteiro de conferência no `TEST_REPORT.md`) |
 | Avaliação | **existe e é honesta**: enunciado que diz que a correção roda no cliente, envio exige todas as respostas, revisão explica todas as perguntas (Etapa 7) |
 
 Badge honesto: **o protótipo já ensina e já avalia, com o mundo desenhado — mas ninguém viu o
@@ -35,7 +40,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 750 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
+    npm test             # 806 testes, em 45 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -574,6 +579,41 @@ acento da trilha), com a menor folga até as estruturas em **2,101** (limite 1,6
 verificação visual depende das capturas do usuário. O roteiro do que conferir na próxima captura está no
 `TEST_REPORT.md`.
 
+### Conserto depois do lote 6: a profundidade visual, e a ponte que entra na ilha (D-064)
+
+A quinta captura de tela foi a crítica mais dura que o mundo recebeu — *"os gráficos ainda estão ruins e sem
+profundidade"*, com quatro frentes (geometria primitiva, sem textura, sem luz nem sombra, e clipping) e uma
+queixa concreta: *"as pontes não encostam nas ilhas"*.
+
+**1. A ponte entra na ilha.** A medida disse primeiro que a queixa literal era falsa e a leitura era
+verdadeira: as 34 pontas encostavam no capim com margem **0,000** (D-063), e encostar por zero não se vê.
+Agora `gerarPonte` gera uma **rampa de entrada** de 1,1 m deitada no capim, com o declive daquele capim —
+medido: **1,085 m** de capim coberto por ponta, com o topo da rampa a **0,058 m** da superfície.
+
+**2. Nada mais pendurado.** Pernas descendo do tabuleiro (1,7 m no meio do vão, 2,6 m nas pontas, dentro da
+encosta), travessão amarrando cada par, corrimão de **duas** barras com poste a cada duas tábuas, e as tábuas
+com folga e deslocamento vindos de semente — a "prancha repetida roboticamente" da captura deixou de existir.
+
+**3. O céu deixou de ser uma cor.** Era `color attach="background"`. Agora é um `shaderMaterial` com
+gradiente de altura, névoa entrando por baixo do horizonte e sol com halo, e **22 nuvens** em três faixas de
+altitude, cada uma com 4 a 6 bolsões elipsoidais pintados em dois brancos (o teste cobra que nuvem nenhuma
+tenha vértice escuro).
+
+**4. O sol projeta sombra.** `shadows="soft"` no `<Canvas>` — sem essa linha as flags do `Malha3D` não têm
+efeito — com uma direcional de mapa 2048 cujo enquadramento **acompanha a câmera** (lado de 45 a 220).
+
+**5. A textura é gerada, e não baixada.** Quatro texturas de 96 × 96 em `DataTexture`, cinza puro com
+luminância de 0,72 a 1,0, determinísticas, em `uv` **em metros** (uma repetição a cada 2 m). O teste achou um
+defeito real no caminho: o vértice do centro do capim entrava **sem** coordenada de textura (61 vértices e
+120 números), o que deslocaria a textura da grama inteira.
+
+**6. Malha densa e pedra com barriga.** Ilhas com 24 a 36 colunas e 12 a 16 anéis (eram 14 e 7), superfícies
+orgânicas lisas e peças serradas facetadas, e `barriga` de 0,1 a 0,36 abrindo a pedra cerca de 30% a um
+quarto da descida — o que tira a leitura de cone.
+
+**O que não foi visto.** Nada disto foi visto em navegador: não há WebGL aqui, e a verificação é a próxima
+captura do usuário. O roteiro de seis itens está no `TEST_REPORT.md`.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -608,7 +648,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056) e a ponta repetida (D-057) | Registrado em `TEST_REPORT.md`, com roteiro manual de 60 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056), a ponta repetida (D-057), os quatro defeitos de cor (D-060) e a captura de material e profundidade (D-064) | Registrado em `TEST_REPORT.md`, com roteiro manual de 60 itens, mais os seis itens do 6.3 |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |
@@ -624,7 +664,9 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 **Etapa 11, lote 7 — o projeto 3: aplicações web (capítulos 18 a 20, ilhas 19 a 21).** O lote 6
 escreveu o projeto 2 inteiro e virou a trilha dele para `'escrita'` (D-062); o conserto do lote 6.1
-(D-063) tratou o que a captura de tela mostrou. O que vem agora já está declarado em `TRILHAS`: a trilha
+(D-063) tratou o que a captura de tela mostrou, e o incremento gráfico 6.3 (D-064) tratou a profundidade
+visual — e vale a mesma regra para ele: **a verificação é a próxima captura**, e o roteiro está no
+`TEST_REPORT.md`. O que vem agora já está declarado em `TRILHAS`: a trilha
 `aplicacoes-web` está como `'planejada'`, com o que o console roda ali (o Django **não** roda — medido —, e
 o projeto não levanta servidor nenhum: a parte que se escreve é a função que recebe os dados de um pedido
 e devolve a resposta). O lote 7 é escrever as três unidades dela, marcos, tons, e virar a situação para

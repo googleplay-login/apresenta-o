@@ -64,7 +64,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 792 testes em 44 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
+    npm test         # 806 testes em 45 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, cor sob a luz do mundo, texturas geradas por código, conteúdo, trilhas, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção

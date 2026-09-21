@@ -207,6 +207,9 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       amplitude: formato.amplitude,
       expoenteDoPerfil: formato.expoenteDoPerfil,
       pontaDoPerfil: formato.pontaDoPerfil,
+      // A barriga do perfil: é o que tira a cara de cone da parte de baixo da
+      // ilha (D-064). Vem da identidade, como a ponta, para as ilhas diferirem.
+      barriga: formato.barriga,
     })
 
     const rocha = pintarPorAltura(
@@ -440,8 +443,10 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       {/* Pedra e capim são pintados por vértice: a cor já vem na malha, e o
           estado da unidade está dentro da pintura. Passar tinta aqui seria
           multiplicar cor por cor — o defeito que deixou o mundo quase preto. */}
-      <Malha3D malha={pecas.rocha} />
-      <Malha3D malha={pecas.capim} duasFaces />
+      {/* A pedra e o capim são as duas massas orgânicas da ilha: superfície lisa
+          e o ruído da textura por cima. */}
+      <Malha3D malha={pecas.rocha} textura="pedra" suave />
+      <Malha3D malha={pecas.capim} duasFaces textura="grama" suave />
 
       <group
         // Nome com prefixo para o teste: o Grupo 2 é o corpo interativo da ilha, e
@@ -492,15 +497,15 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         <group name="biblioteca" position={[pecas.posicoes.biblioteca.x, 0, pecas.posicoes.biblioteca.z]}>
           {/* A parede é a cor mais clara do mundo e chega a 1,001 de radiação: passa
               pelo orçamento de luz como o marco e o avatar (D-060). */}
-          <Malha3D malha={pecas.biblioteca} cor={corDaPedra} />
+          <Malha3D malha={pecas.biblioteca} cor={corDaPedra} textura="palha" />
         </group>
 
         <group name="mesa" position={[pecas.posicoes.mesa.x, 0, pecas.posicoes.mesa.z]}>
-          <Malha3D malha={pecas.mesa} cor={corDaMadeira} />
+          <Malha3D malha={pecas.mesa} cor={corDaMadeira} textura="madeira" />
         </group>
 
         <group name="placa" position={[pecas.posicoes.placa.x, 0, pecas.posicoes.placa.z]}>
-          <Malha3D malha={pecas.placa} cor={corDaEstrutura} />
+          <Malha3D malha={pecas.placa} cor={corDaEstrutura} textura="madeira" />
         </group>
 
         {pecas.arvores.map((arvore, indice) => {
@@ -510,8 +515,8 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
               {/* Duas cores, e não uma (D-060): o tronco é madeira e a copa é o
                   verde da conífera. Com uma cor só, a copa saía marrom e a árvore
                   virava um torrão de terra em pé. */}
-              <Malha3D malha={arvore.tronco} cor={corDoTronco} />
-              <Malha3D malha={arvore.copa} cor={corDaCopa} />
+              <Malha3D malha={arvore.tronco} cor={corDoTronco} textura="madeira" />
+              <Malha3D malha={arvore.copa} cor={corDaCopa} suave />
             </group>
           )
         })}
@@ -523,13 +528,13 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
           name={`bandeira:${ilha.trilha}`}
           position={[pecas.posicoes.bandeira.x, 0, pecas.posicoes.bandeira.z]}
         >
-          <Malha3D malha={pecas.bandeira.mastro} cor={corDaMadeira} />
+          <Malha3D malha={pecas.bandeira.mastro} cor={corDaMadeira} textura="madeira" />
           <Malha3D malha={pecas.bandeira.pano} cor={corNoOrcamentoDeLuz(corDaTrilha(ilha.trilha))} />
         </group>
 
         {pecas.pedras.map((pedra, indice) => (
           <group key={`pedra-${indice}`} name={`pedra:${indice}`} position={[pedra.x, 0, pedra.z]}>
-            <Malha3D malha={pedra.malha} cor={corDaPedra} />
+            <Malha3D malha={pedra.malha} cor={corDaPedra} textura="pedra" suave />
           </group>
         ))}
 
@@ -538,7 +543,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
             — barata de gerar e de desenhar —, com outra cor e outro tamanho. */}
         {pecas.arbustos.map((arbusto, indice) => (
           <group key={`arbusto-${indice}`} name={`arbusto:${indice}`} position={[arbusto.x, 0, arbusto.z]}>
-            <Malha3D malha={arbusto.malha} cor={corDoArbusto} />
+            <Malha3D malha={arbusto.malha} cor={corDoArbusto} suave />
           </group>
         ))}
 
@@ -563,7 +568,12 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
               position={[lugar?.x ?? 0, 0, lugar?.z ?? 0]}
               rotation={[0, lugar?.rotacaoY ?? 0, 0]}
             >
-              <Malha3D malha={objeto.malha} duasFaces />
+              <Malha3D
+                malha={objeto.malha}
+                duasFaces
+                suave={objeto.suave}
+                textura={objeto.textura}
+              />
             </group>
           )
         })}
@@ -577,7 +587,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
             então ela é deslocada para baixo o comprimento inteiro: assim a base
             fica enterrada no capim e o topo encosta no farol. */}
         <group position={[0, -(ALTURA_DO_FAROL + FUNDO_DO_MASTRO), 0]}>
-          <Malha3D malha={pecas.mastro} cor={corDaMadeira} />
+          <Malha3D malha={pecas.mastro} cor={corDaMadeira} textura="madeira" />
         </group>
         <mesh>
           <octahedronGeometry args={[ilha.acessivel ? 0.62 : 0.42, 0]} />

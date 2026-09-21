@@ -103,6 +103,8 @@ export type GradienteDeAltura = {
 }
 
 export type MalhaPintada = Malha & {
+  /** As coordenadas de textura, quando a malha tiver textura (D-064). */
+  readonly uvs?: readonly number[]
   /**
    * Cores por vértice, em sequência r, g, b de 0 a 1, **em escala linear** —
    * que é a escala que o Three.js espera no atributo `color`. Ver `canalLinear`.
@@ -139,7 +141,7 @@ export function pintarPorAltura(malha: Malha, gradiente: GradienteDeAltura): Mal
     cores.push(r ?? 0, g ?? 0, b ?? 0)
   }
 
-  return { posicoes: malha.posicoes, indices: malha.indices, cores }
+  return { posicoes: malha.posicoes, indices: malha.indices, uvs: malha.uvs, cores }
 }
 
 /**

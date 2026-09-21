@@ -109,6 +109,23 @@ export const CORES_DERIVADAS = {
   /** Nuvem: branco puxado para o azul do céu. */
   nuvem: misturar(BRANCO, deHex(cores.ceu.alto), 0.25),
   /**
+   * O alto da nuvem: o branco da nuvem iluminado pelo sol.
+   *
+   * A nuvem é pintada por altura com estas duas cores (`pintarPorAltura`, com
+   * três degraus). A pintura não é enfeite: a nuvem **não recebe luz** (o motivo
+   * está em D-055 — com a luz do mundo, a face de baixo era acesa pela cor do mar
+   * e a nuvem virava um caco escuro). Sem luz, o que dá volume a ela é a cor, e
+   * esta é a metade de cima: um passo e meio acima da brancura da base.
+   */
+  nuvemDoAlto: misturar(BRANCO, deHex(cores.ceu.alto), 0.14),
+  /**
+   * O sol: o branco quente que fecha o halo do céu.
+   *
+   * O tom sai do âmbar da marca, e não de um branco puro: um disco branco no meio
+   * de um gradiente azul parece um furo na tela, e o âmbar claro lê como sol.
+   */
+  sol: misturar(BRANCO, deHex(cores.acento.ambar), 0.35),
+  /**
    * O mar distante, sob o arquipélago: a laje grande que a névoa come.
    *
    * O nome antigo era `vazio`, e o nome mentia: a laje é **o mar visto de longe**.

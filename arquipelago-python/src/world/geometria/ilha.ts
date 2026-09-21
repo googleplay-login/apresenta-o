@@ -1,4 +1,5 @@
 import { criarSorteador, entre } from './aleatorio'
+import { UNIDADES_POR_TEXTURA } from './texturas'
 
 /**
  * Geometria das ilhas, gerada por nós.
@@ -17,6 +18,15 @@ export type Malha = {
   readonly posicoes: readonly number[]
   /** Índices dos triângulos, em sequência de três por triângulo. */
   readonly indices: readonly number[]
+  /**
+   * Coordenadas de textura em sequência u, v — uma por vértice.
+   *
+   * Opcional, e medidas em **unidades do mundo** (uma repetição da textura a cada
+   * `UNIDADES_POR_TEXTURA`), e não de 0 a 1 por face: assim a pedra tem a mesma
+   * textura na ilha grande e na pequena, e a emenda entre duas peças não aparece.
+   * Ver `texturas.ts` (D-064).
+   */
+  readonly uvs?: readonly number[]
 }
 
 export type OpcoesDaRocha = {
@@ -45,6 +55,13 @@ export type OpcoesDaRocha = {
    * céu. Ver `FAMILIAS_DE_PONTA`, em `identidade.ts`.
    */
   readonly pontaDoPerfil?: number
+  /**
+   * Quanto a pedra **engrossa** no meio do caminho, antes de afinar na ponta.
+   *
+   * 0 é a curva seca de antes; 0,3 abre a massa em cerca de um terço. É o número
+   * que tira a cara de cone (ver `perfilDeRaio` e D-064).
+   */
+  readonly barriga?: number
 }
 
 export const ROCHA_PADRAO: OpcoesDaRocha = {
@@ -63,9 +80,20 @@ export const ROCHA_PADRAO: OpcoesDaRocha = {
  * do topo e afina rápido no fim, que é o formato reconhecível de ilha suspensa —
  * uma parede de rocha com ponta, e não um cone de sorvete.
  */
-export function perfilDeRaio(t: number, expoente: number = EXPOENTE_DO_PERFIL): number {
+export function perfilDeRaio(
+  t: number,
+  expoente: number = EXPOENTE_DO_PERFIL,
+  barriga: number = 0,
+): number {
   const profundidade = Math.min(Math.max(t, 0), 1)
-  return (1 - profundidade) ** expoente
+  const corpo = (1 - profundidade) ** expoente
+  // A barriga: a pedra se abre um pouco abaixo do capim e volta a fechar na
+  // direção da ponta. Sem ela o perfil é uma curva monótona, e a captura de tela
+  // de 21/09/2026 mostrou como isso lê de longe — "cones inferiores". Com a
+  // barriga, o que se vê é uma massa presa por baixo, que é o que uma ilha
+  // suspensa deveria parecer. O peso vai a zero na ponta, para a barriga não
+  // desfazer a família de ponta da ilha (D-057).
+  return corpo * (1 + barriga * Math.sin(Math.PI * Math.min(profundidade * 2, 1)))
 }
 
 /** Expoente do perfil da primeira ilha. Cada ilha pode trazer o seu. */
@@ -102,6 +130,7 @@ export type MalhaDaRocha = Malha & {
 
 export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
   const { segmentosRadiais, aneis, semente, raioDoTopo, altura, amplitude } = opcoes
+  const barriga = opcoes.barriga ?? 0
   const expoenteDoPerfil = opcoes.expoenteDoPerfil ?? EXPOENTE_DO_PERFIL
 
   if (segmentosRadiais < 3) {
@@ -114,6 +143,7 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
   const sortear = criarSorteador(semente)
   const posicoes: number[] = []
   const indices: number[] = []
+  const uvs: number[] = []
 
   // Uma irregularidade por "coluna" de pedra, para a parede ter relevo contínuo
   // em vez de tremer a cada anel. O último valor repete o primeiro, fechando a
@@ -137,7 +167,10 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
 
   for (let anel = 0; anel <= aneis; anel += 1) {
     const t = anel / aneis
-    const raioDoAnel = Math.max(raioDoTopo * perfilDeRaio(t, expoenteDoPerfil), raioMinimo)
+    const raioDoAnel = Math.max(
+      raioDoTopo * perfilDeRaio(t, expoenteDoPerfil, barriga),
+      raioMinimo,
+    )
     const y = -altura * t
 
     for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
@@ -155,10 +188,22 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
       // orientação reprovou: uma coluna descendo 0,6 ao lado de outra no zero
       // torcia a primeira faixa da parede, e uma face virava para dentro do eixo.
       // Tremor zero não tem esse risco.
-      const tremor = anel === 0 ? 0 : Math.sin(angulo * 3 + semente) * amplitude * 0.55 * raioDoAnel
+      // O tremor entra com um **degrau de entrada**: zero no topo e cheio só no
+      // terceiro anel. Com 12 a 16 anéis (D-064), o anel logo abaixo do topo está
+      // a menos de meia unidade dele, e o tremor cheio ali fazia a pedra passar
+      // do plano do capim (medido: 0,032 acima) — a pedra aparecia como mancha
+      // cinza no meio do verde. O degrau deixa a parede começar lisa e abrir o
+      // relevo um pouco abaixo, que é onde ele se vê.
+      const entrada = Math.min(1, (anel / aneis) * 3)
+      const tremor =
+        anel === 0 ? 0 : Math.sin(angulo * 3 + semente) * amplitude * 0.55 * raioDoAnel * entrada
       const raio = raioDoAnel * (relevo[coluna] ?? 1)
 
       posicoes.push(Math.cos(angulo) * raio, y + tremor, Math.sin(angulo) * raio)
+      // A textura da pedra anda pelo **arco**, e não pelo ângulo: assim ela não
+      // estica quando o raio muda, e a pedra grande não fica com a textura
+      // esticada em relação à pequena (D-064).
+      uvs.push((angulo * raioDoTopo) / UNIDADES_POR_TEXTURA, (y + tremor) / UNIDADES_POR_TEXTURA)
     }
   }
 
@@ -177,7 +222,7 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
     }
   }
 
-  return { posicoes, indices, bordaDoTopo: relevo }
+  return { posicoes, indices, uvs, bordaDoTopo: relevo }
 }
 
 export type OpcoesDoTopo = {
@@ -317,11 +362,17 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
 
   const posicoes: number[] = []
   const indices: number[] = []
+  const uvs: number[] = []
 
   const borda = fatoresDaBorda(opcoes)
 
-  // Centro
+  // Centro. Ele também precisa de coordenada de textura: sem ela, o vetor de
+  // `uvs` ficava com **um a menos** que o de vértices, e a textura da grama
+  // chegava deslocada em todos os vértices seguintes — o tipo de defeito que não
+  // aparece no código e aparece na tela como listras tortas (achado pelo teste de
+  // textura, D-064).
   posicoes.push(0, 0, 0)
+  uvs.push(0, 0)
 
   for (let anel = 1; anel <= aneis; anel += 1) {
     const t = anel / aneis
@@ -335,6 +386,12 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
       const r = raioDoAnel * fator
 
       posicoes.push(Math.cos(angulo) * r, y, Math.sin(angulo) * r)
+      // O capim recebe a textura **de cima** (x por z): é uma superfície quase
+      // plana, e a grama vista de cima é o que se espera ver.
+      uvs.push(
+        (Math.cos(angulo) * r) / UNIDADES_POR_TEXTURA,
+        (Math.sin(angulo) * r) / UNIDADES_POR_TEXTURA,
+      )
     }
   }
 
@@ -357,7 +414,7 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
     }
   }
 
-  return { posicoes, indices }
+  return { posicoes, indices, uvs }
 }
 
 /**
@@ -390,7 +447,7 @@ export function rotacionarMalha(
     }
   }
 
-  return { posicoes, indices: malha.indices }
+  return { posicoes, indices: malha.indices, uvs: malha.uvs }
 }
 
 /** Coloca a malha na posição informada, devolvendo uma malha nova. */
@@ -406,7 +463,7 @@ export function deslocarMalha(
       (malha.posicoes[indice + 2] ?? 0) + deslocamento.z,
     )
   }
-  return { posicoes, indices: malha.indices }
+  return { posicoes, indices: malha.indices, uvs: malha.uvs }
 }
 
 /** Junta duas malhas, ajustando os índices da segunda. */
@@ -418,5 +475,23 @@ export function juntarMalhas(primeira: Malha, segunda: Malha): Malha {
       ...primeira.indices,
       ...segunda.indices.map((indice) => indice + deslocamentoDeIndice),
     ],
+    uvs: juntarUvs(primeira, segunda),
   }
+}
+
+/**
+ * As coordenadas de textura de duas malhas, com zeros onde faltar.
+ *
+ * O que não pode acontecer é o atributo existir com o número de vértices errado —
+ * o Three.js desenha isso como textura esticada, e o defeito só aparece na tela.
+ */
+function juntarUvs(primeira: Malha, segunda: Malha): readonly number[] | undefined {
+  if (primeira.uvs === undefined && segunda.uvs === undefined) {
+    return undefined
+  }
+  const verticesDaPrimeira = primeira.posicoes.length / 3
+  const verticesDaSegunda = segunda.posicoes.length / 3
+  const doPrimeiro = primeira.uvs ?? new Array<number>(verticesDaPrimeira * 2).fill(0)
+  const doSegundo = segunda.uvs ?? new Array<number>(verticesDaSegunda * 2).fill(0)
+  return [...doPrimeiro, ...doSegundo]
 }

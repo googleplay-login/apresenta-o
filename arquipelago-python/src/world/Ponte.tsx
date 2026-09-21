@@ -61,8 +61,13 @@ export function Ponte({ ponte, tabuas = 12, aoEscolher, aoApontar }: Props) {
         largura: 3.2,
         tabuas,
         liberada: ponte.liberada,
+        // A entrada deita no capim com o declive de cada ilha (D-064), e a
+        // semente do desenho vem do comprimento: a mesma ponte desenha sempre
+        // igual, e duas pontes diferentes não saem com as tábuas iguais.
+        declivesDaEntrada: ponte.declivesDaEntrada,
+        semente: Math.round(ponte.comprimento * 1000) + tabuas,
       }),
-    [ponte.comprimento, ponte.liberada, tabuas],
+    [ponte.comprimento, ponte.liberada, ponte.declivesDaEntrada, tabuas],
   )
 
   // Só cresce quando o estado MUDA na frente do estudante. Uma ponte que já
@@ -125,9 +130,11 @@ export function Ponte({ ponte, tabuas = 12, aoEscolher, aoApontar }: Props) {
         aoApontar?.(null)
       }}
     >
-      <Malha3D malha={pecas.estrutura} cor={corDaEstrutura} />
+      {/* Tábua, travessa e poste: madeira. É aqui que o olho confere a espessura
+          da ponte, e o veio da madeira é o que dá a escala. */}
+      <Malha3D malha={pecas.estrutura} cor={corDaEstrutura} textura="madeira" />
       {pecas.corrimao === null ? null : (
-        <Malha3D malha={pecas.corrimao} cor={CORES_DERIVADAS.corrimao} />
+        <Malha3D malha={pecas.corrimao} cor={CORES_DERIVADAS.corrimao} textura="madeira" />
       )}
     </group>
   )

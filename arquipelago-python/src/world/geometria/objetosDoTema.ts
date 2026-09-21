@@ -1,6 +1,7 @@
 import { deslocarMalha, rotacionarMalha, type Malha } from './ilha'
 import { gerarCaixa, gerarCilindro, montar } from './solidos'
 import { canais, paraLinear, type Cor3D, type MalhaPintada } from './pintura'
+import type { TipoDeTextura } from './texturas'
 import type { IdDeTrilha } from '../../content/planoDeUnidades'
 
 /**
@@ -52,6 +53,28 @@ export type TipoDeObjetoDoTema =
  */
 export type PapelDaCor = 'pedra' | 'madeira' | 'acento'
 
+/**
+ * O acabamento de cada objeto: a textura que ele veste e se a superfície é lisa.
+ *
+ * Mora aqui, e não no `Ilha.tsx`, porque é propriedade do objeto — quem desenha
+ * não deveria saber que a torre de barras é de madeira e o disco voador é liso.
+ * A textura é gerada por código em `geometria/texturas.ts` (D-064).
+ */
+const ACABAMENTO: Readonly<
+  Record<TipoDeObjetoDoTema, { readonly textura?: TipoDeTextura; readonly suave: boolean }>
+> = {
+  // Livros: o papel da capa e das folhas pede o grão da palha.
+  'pilha-de-livros': { textura: 'palha', suave: false },
+  // Disco: casco curvo, e o único objeto do tema com superfície contínua — é o
+  // que mais sofre com o facetado, e o que a captura viu como "bloco de Lego".
+  'disco-voador': { suave: true },
+  // Barras do gráfico: madeira pintada, como o resto da ilha.
+  'torre-de-barras': { textura: 'madeira', suave: false },
+  // Armário: chapas de metal. Sem textura: nenhuma das quatro serve, e forçar
+  // uma delas deixaria a chapa com cara de madeira.
+  'armario-de-servidor': { suave: false },
+}
+
 export type ParteDoObjeto = {
   readonly malha: Malha
   readonly papel: PapelDaCor
@@ -60,6 +83,10 @@ export type ParteDoObjeto = {
 export type ObjetoDoTema = {
   readonly tipo: TipoDeObjetoDoTema
   readonly nome: string
+  /** A textura do acabamento, quando existe uma que sirva. */
+  readonly textura?: TipoDeTextura
+  /** Superfície lisa (normais suavizadas) ou facetada (arestas vivas). */
+  readonly suave: boolean
   /** A malha que vai para a cena: **uma**, com as cores por vértice. */
   readonly malha: MalhaPintada
   /** As peças antes da pintura, para o teste medir. Não vai para a cena. */
@@ -387,9 +414,13 @@ export function gerarObjetoDoTema(opcoes: {
   const partes = GERADORES[tipo](escala)
   const medida = MEDIDAS[tipo]
 
+  const acabamento = ACABAMENTO[tipo]
+
   return {
     tipo,
     nome: NOMES_DOS_OBJETOS[tipo],
+    textura: acabamento.textura,
+    suave: acabamento.suave,
     malha: pintarPartes(partes, cores),
     partes,
     alturaTotal: medida.altura * escala,

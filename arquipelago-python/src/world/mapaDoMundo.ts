@@ -198,6 +198,16 @@ export type TrechoDePonte = {
   readonly rotacaoY: number
   /** Inclinação em torno do eixo Z, para a ponte subir junto com a trilha. */
   readonly rotacaoZ: number
+  /**
+   * O declive do capim em cada ponta (origem e destino), em tangente.
+   *
+   * A ponte usa isto para **deitar a rampa de entrada no capim** em vez de
+   * deixá-la paralela ao horizonte: a queixa de 21/09/2026 foi "as pontes não
+   * encostam nas ilhas", e parte do que se via era a entrada no ar. Vale
+   * `2 × inclinacaoDoCapim`, porque o capim é `t²·raio·inclinacao` e a derivada
+   * dele na borda (t = 1) é o dobro da inclinação.
+   */
+  readonly declivesDaEntrada: readonly [number, number]
   readonly comprimento: number
   /** Unidade horizontal que vai de `uma` para `outra`. */
   readonly direcao: readonly [number, number]
@@ -282,6 +292,10 @@ export function ponteEntre(uma: IlhaDoMundo, outra: IlhaDoMundo): TrechoDePonte 
     rotacaoZ: Math.atan2(vertical, horizontal),
     comprimento,
     direcao: [ux, uz],
+    declivesDaEntrada: [
+      2 * uma.identidade.formato.inclinacaoDoCapim,
+      2 * outra.identidade.formato.inclinacaoDoCapim,
+    ],
   }
 }
 

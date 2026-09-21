@@ -135,13 +135,24 @@ describe('nenhuma superfície do mundo chega queimada à tela', () => {
     expect(porPapel['CORES_DO_MUNDO.rocha']).toBe('fonte')
     expect(porPapel['CORES_DO_MUNDO.rochaClara']).toBe('superficie')
     expect(porPapel['CORES_DERIVADAS.parede']).toBe('superficie')
+    // O sol entrou como 'luz' na D-065, e não como superfície: ele é o halo que o
+    // céu soma por cima do próprio gradiente, num `shaderMaterial`. O núcleo dele
+    // clarear até o branco é o comportamento esperado de um sol desenhado — e é
+    // justamente o que o teto das **superfícies** existe para impedir numa parede.
+    expect(porPapel['CORES_DERIVADAS.sol']).toBe('luz')
 
     const contar = (papel: string) =>
       CORES_DO_MUNDO_INTEIRO.filter((entrada) => entrada.papel === papel).length
     expect(contar('fundo'), 'Mudou a lista de cores de fundo').toBe(2)
-    expect(contar('luz'), 'Mudou a lista de cores de luz').toBe(2)
+    // Três desde a D-065: a meia-luz por cima, a luz de preenchimento por baixo
+    // e o sol — as três são emitidas, nenhuma é pintada.
+    expect(contar('luz'), 'Mudou a lista de cores de luz').toBe(3)
     expect(contar('fonte'), 'Mudou a lista de cores que só servem de mistura').toBe(5)
-    expect(SUPERFICIES_DO_MUNDO.length).toBe(CORES_DO_MUNDO_INTEIRO.length - 9)
+    // Nove cores fora do desenho como superfície: duas de fundo, três de luz e
+    // cinco que só servem de mistura. O número do lado direito sai do próprio
+    // código, e o nove é a soma das três contagens acima — quem mudar a lista
+    // muda as duas contas de uma vez.
+    expect(SUPERFICIES_DO_MUNDO.length).toBe(CORES_DO_MUNDO_INTEIRO.length - 10)
   })
 
   it('o mundo não desenha cor fora do orçamento: toda cor usada como material é superfície', () => {

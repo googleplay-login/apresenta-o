@@ -42,7 +42,7 @@ import type { ArrastoPendente } from './CameraLivre'
 import { SEM_TECLAS, type TeclasDeMovimento } from './camera/movimento'
 import { chaoDoMundo, type ChaoDoMundo, type Localizacao } from './mapaCaminhavel'
 import { caminhanteInicial, type Caminhante } from './avatar/passos'
-import { CORES_DERIVADAS, CORES_DO_MUNDO } from '../ui/theme/paleta3d'
+import { CORES_DO_MUNDO } from '../ui/theme/paleta3d'
 import { canalLinear, canais } from './geometria/pintura'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado } from '../learning/percurso'
@@ -946,20 +946,46 @@ describe('o céu tem nuvens, e nuvem não é cascalho (D-055)', () => {
       <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
     )
 
-    const nuvens = cena.scene.findAll(
+    // O grupo da nuvem tem nome estável (`nuvem:<índice>`), e é por ele que se
+    // chega à malha: a cor deixou de ser o marcador quando a nuvem passou a ser
+    // pintada por altura (dois tons de branco), na D-064. O que continua sendo
+    // cobrado é o que importa — ela não recebe luz, e nenhum vértice é escuro.
+    const grupos = cena.scene.findAll(
       (no) =>
-        (no.instance as unknown as { type?: string }).type === 'Mesh' &&
-        (no.instance as unknown as { geometry?: { attributes?: { color?: unknown } } }).geometry
-          ?.attributes?.color === undefined &&
-        corDoMaterial(no) === CORES_DERIVADAS.nuvem,
+        typeof (no.instance as unknown as { name?: unknown }).name === 'string' &&
+        (no.instance as unknown as { name: string }).name.startsWith('nuvem:'),
     )
+    expect(grupos.length).toBeGreaterThan(4)
 
-    expect(nuvens.length).toBeGreaterThan(4)
-    for (const nuvem of nuvens) {
-      expect(
-        (nuvem.instance as unknown as { material?: { type?: string } }).material?.type,
-        'A nuvem voltou a receber luz: ela vai escurecer pela cor do mar',
-      ).toBe('MeshBasicMaterial')
+    for (const grupo of grupos) {
+      const malhas = grupo.findAll(
+        (no) => (no.instance as unknown as { type?: string }).type === 'Mesh',
+      )
+      expect(malhas.length, 'Cada nuvem é uma malha só').toBe(1)
+
+      for (const nuvem of malhas) {
+        expect(
+          (nuvem.instance as unknown as { material?: { type?: string } }).material?.type,
+          'A nuvem voltou a receber luz: ela vai escurecer pela cor do mar',
+        ).toBe('MeshBasicMaterial')
+
+        const atributo = (
+          nuvem.instance as unknown as {
+            geometry: { attributes: { color?: { array: Float32Array } } }
+          }
+        ).geometry.attributes.color
+        expect(atributo, 'A nuvem perdeu a pintura por altura').toBeDefined()
+        const cores = atributo?.array ?? new Float32Array()
+        expect(cores.length).toBeGreaterThan(0)
+        let menor = 1
+        for (const canal of cores) {
+          menor = Math.min(menor, canal)
+        }
+        // Em luz linear. O tom de baixo da nuvem (#F1F4F9) chega aqui com 0,88 no
+        // canal mais escuro; o limite de 0,6 é o que separa "nuvem clara" de
+        // "cascalho escuro", que foi o defeito da D-055.
+        expect(menor, 'Há nuvem escura no céu').toBeGreaterThan(0.6)
+      }
     }
 
     await cena.unmount()

@@ -3,7 +3,7 @@ import { Euler, Vector3 } from 'three'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { sementeDeTexto } from './geometria/aleatorio'
 import { alturaDoTopo } from './geometria/ilha'
-import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
+import { ESPESSURA_DO_TABULEIRO, gerarPonte } from './geometria/solidos'
 import {
   DISTANCIA_ENTRE_CENTROS,
   bordaDaIlhaEmDirecao,
@@ -234,6 +234,52 @@ describe('ponte entre duas ilhas', () => {
   it('recusa ilhas no mesmo ponto', () => {
     const uma = ILHAS[0]!
     expect(() => ponteEntre(uma, uma)).toThrow(/mesmo ponto/)
+  })
+
+  it('deita a rampa de entrada no capim, e não no ar', () => {
+    // A queixa mais concreta do estudante (21/09/2026): "as pontes não encostam
+    // nas ilhas". Medido antes de mudar, as duas pontas do tabuleiro caíam no
+    // ponto mais interior da borda do capim, com margem **0,000** e degrau
+    // **0,000** — e ainda assim a ponte parecia terminar no ar, porque encostar
+    // por zero não se vê. Agora a estrutura entra cerca de um metro na ilha, e a
+    // rampa é gerada com o declive daquele capim: aqui se confere que o topo da
+    // rampa pousa na altura do capim, com folga de menos de um palmo.
+    for (let indice = 0; indice < ILHAS.length - 1; indice += 1) {
+      const uma = ILHAS[indice]!
+      const outra = ILHAS[indice + 1]!
+      const ponte = ponteEntre(uma, outra)
+      const desenho = gerarPonte({
+        comprimento: ponte.comprimento,
+        largura: 3.2,
+        tabuas: 12,
+        liberada: true,
+        declivesDaEntrada: ponte.declivesDaEntrada,
+        semente: 1,
+      })
+
+      const [decliveDaOrigem, decliveDoDestino] = ponte.declivesDaEntrada
+      // O declive declarado é o do capim, medido pela derivada da mesma função
+      // que desenha a ilha — e não um número escolhido aqui.
+      expect(decliveDaOrigem).toBeCloseTo(
+        2 * uma.identidade.formato.inclinacaoDoCapim,
+        10,
+      )
+      expect(decliveDoDestino).toBeCloseTo(
+        2 * outra.identidade.formato.inclinacaoDoCapim,
+        10,
+      )
+
+      const angulo = Math.atan(decliveDaOrigem)
+      const avanco = desenho.entrada * Math.cos(angulo)
+      const ondePousa = bordaDaIlhaEmDirecao(uma, ponte.direcao[0], ponte.direcao[1]) - avanco
+      const capim = uma.centro[1] + alturaDoTopo(uma.raio, ondePousa, uma.identidade.formato.inclinacaoDoCapim)
+      const topoDaRampa = ponte.posicao[1] - desenho.entrada * Math.sin(angulo) + ESPESSURA_DO_TABULEIRO / 2
+
+      // A rampa cobre pelo menos um metro de capim, e a ponta dela fica a menos
+      // de um palmo da superfície.
+      expect(avanco).toBeGreaterThanOrEqual(1)
+      expect(Math.abs(topoDaRampa - capim)).toBeLessThan(0.1)
+    }
   })
 })
 

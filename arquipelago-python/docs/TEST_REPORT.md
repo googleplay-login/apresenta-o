@@ -6,6 +6,91 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — lote 6.3: a profundidade visual (incremento gráfico)
+
+Versão **0.21.0**. O incremento responde à quinta captura de tela do mundo — *"os gráficos ainda estão ruins
+e sem profundidade"*, com as quatro frentes (geometria primitiva, sem texturas, sem luz nem sombra, e
+clipping) e a queixa concreta *"as pontes não encostam nas ilhas"*. As decisões estão em **D-064**.
+
+### 1. A ponte — o que a medida mostrou, antes e depois
+
+| | antes | depois |
+| --- | --- | --- |
+| margem do tabuleiro até a borda do capim (nas 34 pontas) | **0,000 m** (encostava exatamente) | **1,085 m** de capim coberto |
+| topo da rampa de entrada contra a superfície do capim | degrau **0,000 m** | **0,058 m** |
+| apoio abaixo do tabuleiro | nenhum (poste subindo para o ar) | pernas de **1,7 m** (meio) e **2,6 m** (pontas) |
+| corrimão | uma barra por lado, ausente na ponte bloqueada | **duas** barras (1,0 m e 0,52 m), poste a cada duas tábuas |
+| tábuas | folga fixa de 18% em todas | folga de **6 a 14%**, deslocamento lateral de ±3%, por semente |
+
+A medida de "antes" foi feita por sonda sobre as 17 pontes do mundo real, e é ela que explica a queixa:
+encostar com margem 0,000 é encostar **invisivelmente** — a tábua da ponta fica escondida pela borda do
+capim. A sonda apagou-se depois de rodar (`rm`), como as anteriores.
+
+### 2. As texturas — luminância e escala, medidas
+
+| textura | luminância média | faixa de cada pixel |
+| --- | --- | --- |
+| grama | **0,881** | 0,72 a 1,0 |
+| palha | **0,912** | 0,72 a 1,0 |
+| madeira | **0,914** | 0,72 a 1,0 |
+| pedra | **0,915** | 0,72 a 1,0 |
+
+96 × 96 pixels, três canais, todos iguais (cinza puro — a cor vem da paleta), bytes determinísticos entre
+execuções. Coordenadas: uma repetição a cada **2 m** do mundo — a face de 4 × 3 m de uma caixa cobre
+**2,0 × 1,5** repetições, e a volta de um cilindro de raio 1,5 cobre **4,712** de `u` (2π · 1,5 ÷ 2).
+
+### 3. A luz e a cor
+
+| | antes | depois |
+| --- | --- | --- |
+| meia-luz (hemisférica) | 1,35 | **1,05** |
+| sol (direcional) | 1,15, sem sombra | **1,5**, com mapa de sombra de 2048 |
+| enquadramento da sombra | — | acompanha a câmera (lado de **45 a 220**) |
+| cores de luz na paleta | 2 | **3** (entrou `CORES_DERIVADAS.sol`, papel `luz`) |
+| superfícies conferidas pelo orçamento | total − 9 | total − **10** |
+
+O sol entrou como **luz** e não como superfície: ele é o halo que o céu soma por cima do gradiente, e o
+núcleo dele clarear até o branco é o esperado. As nuvens entraram como **sem luz** (as duas cores), como o
+mar distante já estava.
+
+### 4. O que foi executado
+
+| comando | resultado |
+| --- | --- |
+| `npx tsc --noEmit` | **limpo** |
+| `npx vitest run` | **45 arquivos, 806 testes, todos aprovados** (eram 44 e 792) |
+| `npm run build` | **571 ms** na primeira execução e **639 ms** na conferência final, sem erro (permanece o aviso já conhecido de pedaço acima de 500 kB — a biblioteca 3D num só arquivo) |
+| servidor de desenvolvimento | `curl` em `/`, `/src/world/Ceu.tsx`, `/src/world/geometria/texturas.ts`, `/src/world/geometria/solidos.ts`, `/src/world/Ilha.tsx` e `/src/world/Cena.tsx`: **200** em todos (o Vite transforma os arquivos, e um erro de sintaxe ou de import daria 500) |
+
+Os testes novos deste incremento: 10 em `geometria/texturas.test.ts` (bytes, determinismo, faixa de luz,
+média, cache, uvs por vértice, unidades do mundo, barriga) e 4 na geometria da ponte (entrada de 1 m nas
+duas pontas, pernas abaixo do tabuleiro, mesma semente dá a mesma malha e semente diferente não dá, entrada
+zero é recusada), mais 1 em `mapaDoMundo.test.ts` (a rampa deita no capim, com o declive vindo da própria
+função que desenha a ilha) e 1 em `ConteudoDaCena.test.tsx` reescrito (a nuvem continua sem luz e sem vértice
+escuro, agora achada pelo nome do grupo).
+
+### 5. O que **não** foi executado
+
+- **Nenhuma verificação visual.** Não há navegador nem WebGL neste ambiente: os testes provam números,
+  não a imagem. Nada aqui está "aprovado visualmente".
+- **Nenhum teste de navegador** (Playwright) — segue pendente desde a Etapa 0, e o caminho escolhido para
+  isso é a captura de tela de quem usa.
+
+### 6. Roteiro para a próxima captura
+
+1. **A ponte encostando**: as duas pontas sobre o capim, com a rampa visível, e nenhuma tábua no ar.
+2. **A ponte bloqueada**: dois tocos, o vão no meio, as duas travessas de parada e os postes — e **não**
+   estacas soltas.
+3. **Sombra**: sob a biblioteca, a mesa, os marcos e a ponte; conferir se há serrilhado (placa fraca) e se a
+   sombra acompanha a câmera quando ela se afasta (o enquadramento abre até 220 de lado).
+4. **Material**: veio da madeira nas tábuas e na mesa, grão da pedra na encosta, fios no capim, e a mesma
+   textura no mesmo tamanho numa tábua grande e numa pequena.
+5. **Céu**: gradiente com névoa no horizonte, sol com halo, e nuvens com volume (e não cubos) em três
+   faixas de altura.
+6. **Nada atravessando o capim**: objetos do tema, árvores, arbustos, marcos e a bandeira — todos apoiados.
+
+---
+
 ## Execução de 21/09/2026 — lote 6: o projeto de dados (capítulos 15 a 17, ilhas 16 a 18) e o conserto do lote 6.1
 
 Versão **0.20.0**. O lote 6 escreveu a trilha de visualização de dados; o 6.1 consertou o que a captura de

@@ -105,6 +105,8 @@ export type FormatoDaIlha = {
   readonly pontaDoPerfil: number
   readonly inclinacaoDoCapim: number
   readonly amplitudeDaBorda: number
+  /** Quanto a pedra engrossa no meio, antes de afinar na ponta. */
+  readonly barriga: number
 }
 
 export type IdentidadeDaIlha = {
@@ -154,11 +156,24 @@ export type IdentidadeDaIlha = {
 export const FAIXAS = {
   raioDoTopo: { minimo: 5.2, maximo: 7 },
   altura: { minimo: 7.6, maximo: 11.4 },
-  segmentosRadiais: [10, 12, 14, 16, 18],
-  aneis: { minimo: 6, maximo: 8 },
+  // A contagem de polígonos subiu no lote 6.3, e o motivo está na captura de
+  // 21/09/2026: *"as ilhas flutuantes terminam em cones inferiores com uma
+  // contagem de polígonos vergonhosamente baixa, exibindo arestas duras e
+  // visíveis"*. Dez a dezoito colunas davam uma parede de dez a dezoito faces, e
+  // a silhueta ficava um polígono de verdade, com quina a cada 20°. Agora são 24
+  // a 36 colunas e 12 a 16 anéis — cerca de quatro vezes os vértices, o que numa
+  // ilha é ~500 vértices e não pesa no quadro.
+  segmentosRadiais: [24, 28, 32, 36],
+  aneis: { minimo: 12, maximo: 16 },
   amplitude: { minimo: 0.16, maximo: 0.3 },
   expoenteDoPerfil: { minimo: 1.35, maximo: 2.15 },
-  pontaDoPerfil: { minimo: 0.02, maximo: 0.38 },
+  // A ponta mais fina subiu de 0,02 para 0,1: o espinho de 2% era o formato que
+  // todas as ilhas tinham, e é o que a captura chamou de cone. Uma ponta de 10%
+  // do raio ainda é uma ponta, e o perfil com barriga (ver `perfilDeRaio`) faz o
+  // resto — a massa se abre abaixo do capim e fecha embaixo.
+  pontaDoPerfil: { minimo: 0.1, maximo: 0.46 },
+  /** Quanto a pedra engrossa no meio do caminho. Zero seria a curva seca. */
+  barriga: { minimo: 0.1, maximo: 0.36 },
   inclinacaoDoCapim: { minimo: 0.045, maximo: 0.085 },
   amplitudeDaBorda: { minimo: 0.08, maximo: 0.16 },
   arvores: { minimo: 2, maximo: 5 },
@@ -185,9 +200,9 @@ export const TONS_DAS_ILHAS = 18
  * exato sai da **semente**, para duas ilhas nunca ficarem iguais.
  */
 export const FAMILIAS_DE_PONTA = [
-  { nome: 'espinho', minimo: 0.02, maximo: 0.08 },
-  { nome: 'ponta rombuda', minimo: 0.14, maximo: 0.22 },
-  { nome: 'toco', minimo: 0.28, maximo: 0.38 },
+  { nome: 'ponta fina', minimo: 0.1, maximo: 0.16 },
+  { nome: 'ponta rombuda', minimo: 0.2, maximo: 0.28 },
+  { nome: 'toco', minimo: 0.34, maximo: 0.46 },
 ] as const
 
 /**
@@ -226,6 +241,10 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
       ((indice % FAMILIAS_DE_PONTA.length) + FAMILIAS_DE_PONTA.length) % FAMILIAS_DE_PONTA.length
     ] ?? FAMILIAS_DE_PONTA[0]
   const pontaDoPerfil = entre(sortear, familiaDaPonta.minimo, familiaDaPonta.maximo)
+  // Sorteio novo, e no fim dos que já existiam: a barriga muda a pedra de todas
+  // as ilhas de propósito (é o que tira a cara de cone), mas não pode mover a
+  // árvore nem a pedra solta de nenhuma delas.
+  const barriga = entre(sortear, FAIXAS.barriga.minimo, FAIXAS.barriga.maximo)
   const arvores = FAIXAS.arvores.minimo + Math.floor(sortear() * (FAIXAS.arvores.maximo - FAIXAS.arvores.minimo + 1))
   const pedras = FAIXAS.pedras.minimo + Math.floor(sortear() * (FAIXAS.pedras.maximo - FAIXAS.pedras.minimo + 1))
   const distanciaMinima = entre(sortear, FAIXAS.distancia.minimo, FAIXAS.distancia.maximo)
@@ -262,6 +281,7 @@ export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaI
       pontaDoPerfil,
       inclinacaoDoCapim,
       amplitudeDaBorda,
+      barriga,
     },
     vegetacao: { arvores, pedras, arbustos, flores, objetos, distanciaMinima, distanciaMaxima },
   }

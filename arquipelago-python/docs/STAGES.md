@@ -444,7 +444,11 @@ resposta de API entra na unidade **já chegada**, como texto, para que o trabalh
 verdade. Com os três tons novos a paleta chegou a **dezoito** tones sem empilhar nenhum: o par mais
 próximo dos dezoito desenhados continua em **32,1**, o mesmo dos doze originais (D-062).
 
-Depois do lote 6, e a partir de **quatro capturas de tela** do mundo, veio o conserto do lote 6.1 (D-063).
+Depois do lote 6 veio o **incremento gráfico 6.3** (D-064), a partir da quinta captura de tela: geometria
+mais densa com barriga na pedra, texturas geradas por código (uma repetição a cada 2 m), céu desenhado com
+gradiente, sol e nuvens com volume, **sombra projetada**, e a **ponte que entra na ilha** — rampa de 1,1 m
+deitada no capim (medido: 1,085 m cobertos, degrau de 0,058 m), pernas de apoio, travessão e corrimão de
+duas barras. Ele veio depois do conserto do lote 6.1 (D-063), que tratou as quatro capturas anteriores.
 Três queixas, três causas medidas: **a ponte não encostava** porque estava ancorada no raio nominal,
 enquanto a borda do capim é um polígono que recua e avança (6 das 34 pontas ficavam no ar, a pior a 0,582
 além da borda desenhada, com desvio de até 0,941); **o chão caminhável repetia o mesmo erro**, e o avatar
@@ -474,8 +478,9 @@ O detalhamento de cada uma será feito na autorização da própria etapa.
   Parte I inteira (capítulos 1 a 11, ilhas 1 a 12) e os **dois primeiros projetos da Parte II**
   (capítulos 12 a 17, ilhas 13 a 18). Com o lote 5, os três projetos do livro passaram a ser **trilhas
   declaradas** (D-061): cada unidade sabe a que parte do livro pertence, e cada trilha diz o que o console
-  roda ali. O lote 6 escreveu o projeto 2 (D-062), e o conserto do lote 6.1 (D-063) tratou o que as
-  capturas mostraram. O lote seguinte é o projeto 3 — aplicações web (capítulos 18 a 20): o Django não
+  roda ali. O lote 6 escreveu o projeto 2 (D-062), o conserto do lote 6.1 (D-063) tratou o que as
+  capturas mostraram, e o incremento gráfico 6.3 (D-064) tratou a profundidade visual (céu, sombra, textura
+  e a ponte que entra no capim). O lote seguinte é o projeto 3 — aplicações web (capítulos 18 a 20): o Django não
   roda (medido), e o que se escreve é a função que recebe os dados de um pedido e devolve a resposta, sem
   servidor nenhum.
 - **12** — recursos complementares.

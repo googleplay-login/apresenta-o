@@ -134,6 +134,10 @@ export function Cena({
         dpr={[1, 2]}
         camera={{ fov: 55, near: 0.5, far: 900, position: [0, 12, 30] }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
+        // A sombra. Sem esta linha, as flags `castShadow`/`receiveShadow` que o
+        // `Malha3D` já liga em cada peça não têm efeito nenhum, e o mundo volta a
+        // ser uniformemente iluminado — que foi a crítica de 21/09/2026.
+        shadows="soft"
         onPointerMissed={() => aoPassarPorCima(null)}
       >
         <ConteudoDaCena

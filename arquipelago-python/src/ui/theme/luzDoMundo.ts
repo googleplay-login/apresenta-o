@@ -228,10 +228,17 @@ export const CORES_DO_MUNDO_INTEIRO: readonly {
   ...Object.entries(CORES_DERIVADAS).map(([nome, cor]) => ({
     nome: `CORES_DERIVADAS.${nome}`,
     cor,
-    papel: 'superficie' as PapelDaCor,
-    // A nuvem e o mar distante são desenhados chapados (`meshBasicMaterial`), em
-    // `world/Ceu.tsx`: não recebem luz nenhuma.
-    semLuz: nome === 'nuvem' || nome === 'marDistante',
+    // O sol não é superfície: é a **luz** que o céu desenha como halo, num
+    // `shaderMaterial` que soma a cor por cima do gradiente (ver `Ceu.tsx`). O
+    // núcleo do sol clarear até o branco é o que se espera de um sol, e medir a
+    // cor dele contra o teto das superfícies não quer dizer nada — do mesmo jeito
+    // que a cor do céu (D-065).
+    papel: nome === 'sol' ? ('luz' as PapelDaCor) : ('superficie' as PapelDaCor),
+    // As nuvens (os dois tons) e o mar distante são desenhados chapados
+    // (`meshBasicMaterial`), em `world/Ceu.tsx`: não recebem luz nenhuma. A
+    // nuvem entrou nesta lista na D-055; o tom de cima, que dá volume a ela,
+    // entrou junto (D-065).
+    semLuz: nome === 'nuvem' || nome === 'nuvemDoAlto' || nome === 'marDistante',
   })),
 ]
 

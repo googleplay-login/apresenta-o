@@ -1,4 +1,12 @@
-import { deslocarMalha, juntarMalhas, type Malha } from './ilha'
+import {
+  deslocarMalha,
+  juntarMalhas,
+  rotacionarMalha,
+  INCLINACAO_DO_TOPO,
+  type Malha,
+} from './ilha'
+import { UNIDADES_POR_TEXTURA } from './texturas'
+import { criarSorteador, entre } from './aleatorio'
 
 /**
  * Sólidos simples, montados por nós.
@@ -77,7 +85,43 @@ export function gerarCaixa(opcoes: OpcoesDaCaixa): Malha {
     20, 21, 22, 20, 22, 23, // direita
   ]
 
-  return { posicoes, indices }
+  // As coordenadas de textura, em unidades do mundo (D-064): cada face usa os
+  // dois eixos que ela tem, então a textura é contínua de uma peça para a outra e
+  // não estica na peça grande. Sem isso, a caixa receberia a textura inteira em
+  // cada face — a diferença entre "tábua" e "adesivo".
+  const uvs = [
+    ...uvDeFace(x0, z0, x1, z1, false), // baixo (x por z)
+    ...uvDeFace(x0, z0, x1, z1, true), // cima
+    ...uvDeFace(x0, y0, x1, y1, true), // frente (x por y)
+    ...uvDeFace(x0, y0, x1, y1, false), // trás
+    ...uvDeFace(z1, y0, z0, y1, true), // esquerda (z por y)
+    ...uvDeFace(z0, y0, z1, y1, false), // direita
+  ]
+
+  return { posicoes, indices, uvs }
+}
+
+/**
+ * As quatro coordenadas de textura de uma face retangular, em unidades do mundo.
+ *
+ * `invertido` troca a ordem dos dois cantos no segundo eixo — é o que mantém a
+ * textura do lado de dentro para fora, em vez de espelhada, nas faces opostas.
+ */
+function uvDeFace(
+  a0: number,
+  b0: number,
+  a1: number,
+  b1: number,
+  invertido: boolean,
+): readonly number[] {
+  const escala = UNIDADES_POR_TEXTURA
+  const au0 = a0 / escala
+  const au1 = a1 / escala
+  const bv0 = b0 / escala
+  const bv1 = b1 / escala
+  return invertido
+    ? [au0, bv0, au0, bv1, au1, bv1, au1, bv0]
+    : [au0, bv1, au0, bv0, au1, bv0, au1, bv1]
 }
 
 export type OpcoesDoCilindro = {
@@ -141,7 +185,20 @@ export function gerarCilindro(opcoes: OpcoesDoCilindro): Malha {
     }
   }
 
-  return { posicoes, indices }
+  // A lateral recebe a textura pelo comprimento do arco (para não esticar em
+  // cilindro grosso) e pela altura; as tampas, pelo plano.
+  const uvs: number[] = []
+  for (let lado = 0; lado <= lados; lado += 1) {
+    const volta = ((lado / lados) * Math.PI * 2 * raio) / UNIDADES_POR_TEXTURA
+    uvs.push(volta, base.y / UNIDADES_POR_TEXTURA)
+    uvs.push(volta, (base.y + altura) / UNIDADES_POR_TEXTURA)
+  }
+  if (comTampas) {
+    uvs.push(base.x / UNIDADES_POR_TEXTURA, base.z / UNIDADES_POR_TEXTURA)
+    uvs.push(base.x / UNIDADES_POR_TEXTURA, base.z / UNIDADES_POR_TEXTURA)
+  }
+
+  return { posicoes, indices, uvs }
 }
 
 /** Junta várias malhas em uma. Atalho para montar estrutura peça por peça. */
@@ -150,7 +207,7 @@ export function montar(pecas: readonly Malha[]): Malha {
 }
 
 export type OpcoesDaPonte = {
-  /** Distância entre as duas ilhas. */
+  /** Distância entre as duas ilhas, medida nas bordas do capim. */
   readonly comprimento: number
   readonly largura: number
   /** Quantas tábuas cabem no vão. */
@@ -165,36 +222,92 @@ export type OpcoesDaPonte = {
    * que parecia quebrado em vez de bloqueado (D-063).
    */
   readonly liberada: boolean
+  /**
+   * Quanto a entrada da ponte avança **para dentro** da ilha, em metros.
+   *
+   * É a correção da queixa mais concreta do estudante (21/09/2026): *"as pontes
+   * não encostam nas ilhas"*. Medido antes de mudar, o tabuleiro **encostava**:
+   * as duas pontas caíam no ponto mais interior da borda do capim, com margem
+   * exata de 0,000 — e a altura das duas pontas batia com o capim, degrau 0,000.
+   * Só que encostar por zero não se vê: a tábua da ponta fica rente à borda do
+   * capim, escondida por ela, e o que se lê numa captura é uma ponte que termina
+   * no ar. Aqui a ponte **entra** na ilha: uma rampa de `entrada` metros deita
+   * sobre o capim, com a inclinação dele, e a estrutura ganha pernas de apoio —
+   * nada mais fica suspenso.
+   */
+  readonly entrada?: number
+  /**
+   * O declive do capim em cada ponta (origem e destino), em tangente.
+   *
+   * Vale `2 × inclinacaoDoCapim`: o capim sobe em direção à borda, e a derivada
+   * da parábola `t²·raio·inclinacao` na borda (t = 1) é exatamente o dobro da
+   * inclinação. É o que deita a rampa de entrada **no chão**, em vez de deixá-la
+   * paralela ao horizonte com a ponta no ar.
+   */
+  readonly declivesDaEntrada?: readonly [number, number]
+  /** Semente do desenho: as tábuas variam entre si, e a semente fixa como. */
+  readonly semente?: number
 }
 
 export type PonteGerada = {
-  /** Tábuas e postes. */
+  /** Tábuas, pernas, entradas e postes. */
   readonly estrutura: Malha
-  /** Corrimão, presente apenas quando a ponte está liberada. */
+  /** As barras do corrimão, quando a ponte está liberada. */
   readonly corrimao: Malha | null
-  /**
-   * Quais tábuas existem, por índice.
-   *
-   * É dado, e não sobra do desenho: a ponte bloqueada tem buraco no meio, e
-   * quem quiser dizer em palavras onde ela para — o painel, um teste, a
-   * contagem de tábuas da tela — não precisa deduzir isso varrendo a malha.
-   */
+  /** Índices das tábuas construídas, na ordem. */
   readonly tabuasConstruidas: readonly number[]
-  /**
-   * O trecho que falta, em unidades ao longo da ponte, a partir do início.
-   * `null` quando a ponte está inteira.
-   */
+  /** O trecho aberto no meio, quando a ponte está bloqueada. */
   readonly vaoAberto: { readonly de: number; readonly ate: number } | null
+  /** Quanto cada entrada avança para dentro da ilha. */
+  readonly entrada: number
+  /** O que a estrutura cobre no total: o vão mais as duas entradas. */
+  readonly comprimentoTotal: number
 }
 
+/** Quanto a ponte entra na ilha em cada ponta. */
+const ENTRADA_PADRAO = 1.1
+/** Altura do corrimão acima do tabuleiro, e da barra do meio. */
+const ALTURA_DO_CORRIMAO = 1
+const ALTURA_DO_CORRIMAO_DO_MEIO = 0.52
+/** Altura do poste que sustenta o corrimão. */
+const ALTURA_DO_POSTE = 1.05
+/** Quanto as pernas descem abaixo do tabuleiro, no meio e nas pontas. */
+const DESCIDA_DA_PERNA = 1.7
+const DESCIDA_DA_PERNA_DA_PONTA = 2.6
+/** De quantos em quantos metros entra um par de pernas. */
+const PASSO_DA_PERNA = 3.1
+
 /**
- * Gera a ponte entre duas ilhas.
+ * Uma ponte: tabuleiro de tábuas, pernas de apoio, entradas deitadas no capim e
+ * corrimão.
  *
- * A ponte é desenhada ao longo de +x, a partir da origem, e quem a posiciona no
- * mundo é o componente. Assim a conta de rotação fica em um lugar só.
+ * **O que mudou, e por quê.** A ponte anterior tinha tábua, poste de 2,1 metros e
+ * mais nada: os postes subiam do tabuleiro para o alto e, quando a ponte estava
+ * bloqueada, não havia corrimão nenhum — o que se via eram estacas espetadas ao
+ * acaso, sem apoio embaixo e sem nada em cima (a queixa das capturas). Agora:
+ *
+ *  - **entradas**: dois metros de rampa deitados no capim de cada ilha, na
+ *    inclinação dele, para o encontro da ponte com a ilha ser visível de longe;
+ *  - **pernas**: pares de esteios descendo do tabuleiro — mais fundos nas pontas,
+ *    onde entram na encosta da ilha — amarrados por um travessão. É o apoio que
+ *    faltava: nada da ponte fica pendurado no ar;
+ *  - **corrimão de verdade**: dois postes por par de tábuas e **duas** barras
+ *    (a do alto e a do meio), em vez de uma barra solta no ar a dois metros;
+ *  - **tábuas desiguais**: largura, folga e posição de cada tábua saem da
+ *    semente, então a prancha repetida de ponta a ponta — *"pranchas repetidas
+ *    roboticamente"*, na captura — deixou de existir. Tudo determinístico: a
+ *    mesma semente dá a mesma ponte.
  */
 export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
-  const { comprimento, largura, tabuas, liberada } = opcoes
+  const {
+    comprimento,
+    largura,
+    tabuas,
+    liberada,
+    entrada = ENTRADA_PADRAO,
+    declivesDaEntrada = [2 * INCLINACAO_DO_TOPO, 2 * INCLINACAO_DO_TOPO],
+    semente = 1,
+  } = opcoes
 
   if (comprimento <= 0 || largura <= 0) {
     throw new Error('Ponte precisa de comprimento e largura maiores que zero')
@@ -202,9 +315,13 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
   if (tabuas < 2) {
     throw new Error(`Ponte precisa de ao menos 2 tábuas, e veio ${tabuas}`)
   }
+  if (entrada <= 0) {
+    throw new Error(`Entrada da ponte precisa ser maior que zero, e veio ${entrada}`)
+  }
 
   const espacamento = comprimento / tabuas
   const espessura = ESPESSURA_DO_TABULEIRO
+  const sortear = criarSorteador(semente)
 
   // O buraco do meio: quantas tábuas faltam quando a ponte está bloqueada. Com
   // menos de duas, o vão não se lê de longe; com muito mais, a ponte deixa de
@@ -224,56 +341,139 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
       continue
     }
     tabuasConstruidas.push(indice)
-    const x = indice * espacamento
+    // A folga entre tábuas e o deslocamento lateral saem da semente: sem isso, a
+    // ponte é uma fileira de pranchas idênticas, que foi o que a captura chamou
+    // de "pranchas repetidas roboticamente".
+    const folga = entre(sortear, 0.06, 0.14)
+    const deslocamento = entre(sortear, -0.03, 0.03) * largura
     pecas.push(
       gerarCaixa({
-        largura: espacamento * 0.82,
+        largura: espacamento * (1 - folga),
         altura: espessura,
-        profundidade: largura,
-        centro: { x: x + espacamento / 2, y: 0, z: 0 },
+        profundidade: largura * entre(sortear, 0.95, 1),
+        centro: {
+          x: indice * espacamento + espacamento / 2,
+          y: entre(sortear, -0.012, 0.012),
+          z: deslocamento,
+        },
       }),
     )
   }
 
-  // Postes a cada quatro tábuas, sempre no trecho construído, mais um par em cada
-  // beirada do buraco: é o par de postes que diz onde a ponte para.
-  const intervaloDePoste = Math.max(3, Math.round(tabuas / 4))
-  const ondeTemPoste = new Set<number>([0, tabuas])
-  for (let indice = 0; indice <= tabuas; indice += intervaloDePoste) {
-    ondeTemPoste.add(indice)
+  // ── Pernas ────────────────────────────────────────────────────────────────
+  // Um par a cada três metros, sempre com um par em cada ponta: nas pontas as
+  // pernas descem mais, porque é a encosta da ilha que elas vão encontrar.
+  const ondeTemPerna: number[] = []
+  for (let x = 0; x < comprimento; x += PASSO_DA_PERNA) {
+    ondeTemPerna.push(x)
   }
-  if (!liberada) {
-    ondeTemPoste.add(primeiraQueFalta)
-    ondeTemPoste.add(ultimaQueFalta + 1)
-  }
+  ondeTemPerna.push(comprimento)
 
-  for (const indice of [...ondeTemPoste].sort((um, outro) => um - outro)) {
-    const x = Math.min(indice * espacamento, comprimento)
+  const zDaPerna = largura / 2 - 0.16
+  for (const x of ondeTemPerna) {
+    const naPonta = x <= 0.001 || x >= comprimento - 0.001
+    const descida = naPonta ? DESCIDA_DA_PERNA_DA_PONTA : DESCIDA_DA_PERNA
     for (const lado of [-1, 1]) {
       pecas.push(
         gerarCilindro({
-          raio: 0.16,
-          altura: 2.1,
+          raio: 0.13,
+          altura: descida,
           lados: 6,
-          base: { x, y: 0, z: (lado * largura) / 2 },
+          base: { x, y: -descida, z: lado * zDaPerna },
+        }),
+      )
+    }
+    // O travessão amarra o par de pernas por baixo do tabuleiro. Sem ele, o par
+    // fica parecendo duas estacas soltas — a queixa das capturas.
+    pecas.push(
+      gerarCaixa({
+        largura: 0.16,
+        altura: 0.14,
+        profundidade: largura - 0.3,
+        centro: { x, y: -0.75, z: 0 },
+      }),
+    )
+  }
+
+  // ── Entradas ──────────────────────────────────────────────────────────────
+  // Uma rampa por ponta, deitada no capim: o topo dela encosta no tabuleiro e a
+  // ponta desce o que o capim desce naquela distância.
+  for (const [indiceDaPonta, declive] of declivesDaEntrada.entries()) {
+    const naOrigem = indiceDaPonta === 0
+    const angulo = Math.atan(declive)
+    const inclinada = rotacionarMalha(
+      gerarCaixa({ largura: entrada, altura: espessura, profundidade: largura * 0.92 }),
+      { eixo: 'z', angulo: naOrigem ? angulo : -angulo },
+    )
+    pecas.push(
+      deslocarMalha(inclinada, {
+        // A rampa da origem cresce para −x (para dentro da ilha de origem); a do
+        // destino cresce para +x, a partir do fim do vão.
+        x: naOrigem
+          ? -entrada * Math.cos(angulo)
+          : comprimento,
+        y: naOrigem ? -entrada * Math.sin(angulo) : 0,
+        z: 0,
+      }),
+    )
+    // Duas pernas curtas ferram a rampa no capim: sem elas, a entrada se apoia
+    // só na quina do tabuleiro.
+    for (const lado of [-1, 1]) {
+      pecas.push(
+        gerarCilindro({
+          raio: 0.1,
+          altura: 0.5,
+          lados: 6,
+          base: {
+            x: naOrigem ? -entrada * 0.75 : comprimento + entrada * 0.75,
+            y: -entrada * 0.75 * declive - 0.5,
+            z: lado * (largura / 2 - 0.3),
+          },
+        }),
+      )
+    }
+  }
+
+  const zDoPoste = largura / 2 - 0.12
+
+  // ── Postes do corrimão ────────────────────────────────────────────────────
+  // Um par a cada duas tábuas quando a ponte está liberada; quando está
+  // bloqueada, um par em cada beirada do buraco, que é onde a travessa de parada
+  // se apoia.
+  const ondeTemPoste: number[] = []
+  if (liberada) {
+    for (let indice = 0; indice <= tabuas; indice += 2) {
+      ondeTemPoste.push(Math.min(indice * espacamento, comprimento))
+    }
+  } else {
+    for (const indice of [primeiraQueFalta, ultimaQueFalta + 1]) {
+      ondeTemPoste.push(Math.min(Math.max(indice * espacamento, 0.11), comprimento - 0.11))
+    }
+  }
+  for (const x of ondeTemPoste) {
+    for (const lado of [-1, 1]) {
+      pecas.push(
+        gerarCilindro({
+          raio: 0.09,
+          altura: ALTURA_DO_POSTE,
+          lados: 6,
+          base: { x, y: 0, z: lado * zDoPoste },
         }),
       )
     }
   }
 
   if (!liberada) {
-    // A travessa de parada: uma barra atravessada na beirada de cada toco, na
-    // altura do joelho. Sem ela, o toco termina em tábua solta e parece
+    // A travessa de parada: uma barra atravessada entre os dois postes de cada
+    // toco, na altura do joelho. Sem ela, o toco termina em tábua solta e parece
     // inacabado; com ela, o que se vê é uma ponte **interrompida**.
-    const alturaDaTravessa = 0.62
-    for (const indice of [primeiraQueFalta, ultimaQueFalta + 1]) {
-      const x = Math.min(Math.max(indice * espacamento, 0.11), comprimento - 0.11)
+    for (const x of ondeTemPoste) {
       pecas.push(
         gerarCaixa({
           largura: 0.16,
           altura: 0.14,
           profundidade: largura,
-          centro: { x, y: alturaDaTravessa, z: 0 },
+          centro: { x, y: 0.62, z: 0 },
         }),
       )
     }
@@ -286,26 +486,41 @@ export function gerarPonte(opcoes: OpcoesDaPonte): PonteGerada {
     : { de: primeiraQueFalta * espacamento, ate: (ultimaQueFalta + 1) * espacamento }
 
   if (!liberada) {
-    return { estrutura, corrimao: null, tabuasConstruidas, vaoAberto }
-  }
-
-  const barras: Malha[] = []
-  const alturaDoCorrimao = 2.0
-  for (const lado of [-1, 1]) {
-    for (let indice = 0; indice < tabuas - 1; indice += 1) {
-      const x = indice * espacamento
-      barras.push(
-        gerarCaixa({
-          largura: espacamento * 1.02,
-          altura: 0.14,
-          profundidade: 0.14,
-          centro: { x: x + espacamento / 2, y: alturaDoCorrimao, z: (lado * largura) / 2 },
-        }),
-      )
+    return {
+      estrutura,
+      corrimao: null,
+      tabuasConstruidas,
+      vaoAberto,
+      entrada,
+      comprimentoTotal: comprimento + entrada * 2,
     }
   }
 
-  return { estrutura, corrimao: montar(barras), tabuasConstruidas, vaoAberto: null }
+  const barras: Malha[] = []
+  for (const lado of [-1, 1]) {
+    for (const altura of [ALTURA_DO_CORRIMAO, ALTURA_DO_CORRIMAO_DO_MEIO]) {
+      for (let indice = 0; indice < tabuas; indice += 1) {
+        const x = indice * espacamento
+        barras.push(
+          gerarCaixa({
+            largura: espacamento * 1.04,
+            altura: altura === ALTURA_DO_CORRIMAO ? 0.16 : 0.1,
+            profundidade: 0.1,
+            centro: { x: x + espacamento / 2, y: altura, z: lado * zDoPoste },
+          }),
+        )
+      }
+    }
+  }
+
+  return {
+    estrutura,
+    corrimao: montar(barras),
+    tabuasConstruidas,
+    vaoAberto: null,
+    entrada,
+    comprimentoTotal: comprimento + entrada * 2,
+  }
 }
 
 export type OpcoesDaBiblioteca = {
@@ -465,6 +680,106 @@ export function gerarArvore(opcoes: { readonly altura: number; readonly raio: nu
 /** Bola de pedra solta no capim. Detalhe barato que tira a cara de "caixa vazia". */
 export function gerarPedra(opcoes: { readonly raio: number }): Malha {
   return gerarCilindro({ raio: opcoes.raio, altura: opcoes.raio * 0.8, lados: 5 })
+}
+
+/**
+ * Uma esfera de meridianos e anéis — o volume redondo que o mundo não tinha.
+ *
+ * Existe por causa da nuvem. O bolsão de nuvem era `gerarPedra`, que é um prisma
+ * de cinco lados: a nuvem ficava com quinas retas de cristal, e a crítica de
+ * 21/09/2026 pediu justamente o contrário dele. As faces de cima e de baixo são
+ * tapadas com leques, como no cilindro, e as coordenadas de textura correm no
+ * sentido do meridiano e da altura, para o ruído não esticar no equador.
+ */
+export function gerarEsfera(opcoes: {
+  readonly raio: number
+  readonly meridianos?: number
+  readonly aneis?: number
+}): Malha {
+  const { raio, meridianos = 10, aneis = 6 } = opcoes
+  const posicoes: number[] = []
+  const uvs: number[] = []
+  const indices: number[] = []
+
+  for (let anel = 0; anel <= aneis; anel += 1) {
+    const phi = (anel / aneis) * Math.PI
+    const y = Math.cos(phi) * raio
+    const raioDoAnel = Math.sin(phi) * raio
+
+    for (let meridiano = 0; meridiano <= meridianos; meridiano += 1) {
+      const angulo = (meridiano / meridianos) * Math.PI * 2
+      posicoes.push(
+        Math.cos(angulo) * raioDoAnel,
+        y,
+        Math.sin(angulo) * raioDoAnel,
+      )
+      uvs.push(
+        (angulo * raio) / UNIDADES_POR_TEXTURA,
+        ((y + raio) / UNIDADES_POR_TEXTURA),
+      )
+    }
+  }
+
+  const porAnel = meridianos + 1
+  for (let anel = 0; anel < aneis; anel += 1) {
+    for (let meridiano = 0; meridiano < meridianos; meridiano += 1) {
+      const a = anel * porAnel + meridiano
+      const b = a + 1
+      const c = a + porAnel
+      const d = c + 1
+      indices.push(a, c, b, b, c, d)
+    }
+  }
+
+  return { posicoes, indices, uvs }
+}
+
+/**
+ * Uma nuvem: três a cinco bolsões da mesma pedra redonda, montados e achatados.
+ *
+ * A captura de 21/09/2026 foi direta: *"o céu é um gradiente sem graça de branco
+ * e azul claro, sem nuvens volumétricas"*. Até então cada nuvem era **uma** caixa
+ * achatada — barata, e visivelmente uma caixa. Aqui ela é um conjunto de bolsões
+ * com deslocamentos e tamanhos sorteados da semente, então nenhuma nuvem é igual
+ * à outra e nenhuma tem quina reta. A malha é **uma só** por nuvem: cinco pedras
+ * separadas custariam cinco desenhos por quadro.
+ */
+export function gerarNuvem(opcoes: {
+  readonly largura: number
+  readonly altura: number
+  readonly profundidade: number
+  readonly semente: number
+}): Malha {
+  const { largura, altura, profundidade, semente } = opcoes
+  const sortear = criarSorteador(semente)
+  const quantos = 4 + Math.floor(sortear() * 3)
+  const pecas: Malha[] = []
+
+  for (let indice = 0; indice < quantos; indice += 1) {
+    const bolsao = gerarEsfera({ raio: 1, meridianos: 9, aneis: 5 })
+    // Cada bolsão é um elipsoide achatado: escala diferente em cada eixo, e a
+    // soma deles é que dá o contorno irregular de nuvem. Uma esfera perfeita
+    // escalada igual nos três eixos viraria uma bola.
+    const escalaX = (largura * entre(sortear, 0.45, 0.85)) / 2
+    const escalaY = (altura * entre(sortear, 0.6, 1)) / 2
+    const escalaZ = (profundidade * entre(sortear, 0.45, 0.85)) / 2
+    const escalado: Malha = {
+      posicoes: bolsao.posicoes.map((valor, posicao) =>
+        valor * (posicao % 3 === 0 ? escalaX : posicao % 3 === 1 ? escalaY : escalaZ),
+      ),
+      indices: bolsao.indices,
+      uvs: bolsao.uvs,
+    }
+    pecas.push(
+      deslocarMalha(escalado, {
+        x: entre(sortear, -0.34, 0.34) * largura,
+        y: entre(sortear, -0.2, 0.2) * altura,
+        z: entre(sortear, -0.34, 0.34) * profundidade,
+      }),
+    )
+  }
+
+  return montar(pecas)
 }
 
 /**
