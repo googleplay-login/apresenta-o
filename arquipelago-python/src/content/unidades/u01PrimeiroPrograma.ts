@@ -135,11 +135,11 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       enunciado: 'O que o interpretador do Python faz quando você pede para ele rodar um arquivo?',
       alternativas: [
         'Traduz o arquivo inteiro para outra linguagem e o guarda em disco',
-        'Lê o arquivo e executa as instruções uma por vez, de cima para baixo',
         'Envia o arquivo para um serviço na internet, que devolve o resultado',
+        'Lê o arquivo e executa as instruções uma por vez, de cima para baixo',
         'Compila o arquivo e gera um programa executável independente',
       ],
-      correta: 1,
+      correta: 2,
       explicacao:
         'O interpretador lê e executa na ordem escrita, uma instrução por vez. É isso que permite testar uma ideia rapidamente, sem esperar uma etapa de compilação.',
     },
@@ -162,10 +162,10 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       alternativas: [
         'O programa rodou até o fim, mas mostrou a resposta errada',
         'Faltou instalar uma biblioteca que o programa usa',
-        'O Python não conseguiu nem entender a escrita do programa, e parou antes de executar',
         'O arquivo não foi encontrado no disco',
+        'O Python não conseguiu nem entender a escrita do programa, e parou antes de executar',
       ],
-      correta: 2,
+      correta: 3,
       explicacao:
         'Erro de sintaxe é erro de escrita, e acontece antes da execução. É diferente de um erro de execução, que só aparece quando aquela linha chega a rodar.',
     },

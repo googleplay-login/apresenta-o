@@ -1,9 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { CameraLivre, type ArrastoPendente } from './CameraLivre'
-import { Ceu } from './Ceu'
-import { Ilha } from './Ilha'
-import { Ponte } from './Ponte'
+import type { ArrastoPendente } from './CameraLivre'
+import { ConteudoDaCena } from './ConteudoDaCena'
 import { useTeclasDeMovimento } from './useTeclasDeMovimento'
 import { enquadramentoDaIlha, espalhamentoDasIlhas } from './mapaDoMundo'
 import type { IlhaVisivel, PonteVisivel } from './mundoVisivel'
@@ -17,6 +15,10 @@ import type { ModoDeCamera } from '../state/sessao'
  * armazenamento. Isso é o que mantém a regra de aprovação em um lugar só, como
  * manda a decisão D-004 — e é o que permite desenhar a mesma trilha em texto,
  * sem 3D, com as mesmas informações.
+ *
+ * Esta casca cuida do que exige navegador — o `<Canvas>` e os eventos de ponteiro
+ * que arrastam a câmera. O conteúdo do mundo mora em `ConteudoDaCena.tsx`, que
+ * pode ser montado e conferido sem placa de vídeo (decisão D-025).
  */
 
 type Props = {
@@ -115,38 +117,22 @@ export function Cena({
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         onPointerMissed={() => aoPassarPorCima(null)}
       >
-        <Ceu />
-        <CameraLivre
+        <ConteudoDaCena
+          ilhas={ilhas}
+          pontes={pontes}
           modo={modo}
           tecladoAtivo={tecladoAtivo}
           teclas={teclas}
           arrasto={arrasto}
           enquadramento={enquadramento}
           espalhamento={espalhamento}
+          destacadaId={focarEm?.id ?? null}
           aoChegar={aoChegar}
+          aoEscolher={aoEscolher}
+          aoEscolherPonte={aoEscolherPonte}
+          aoApontarPonte={(apontada) => setPonteSob(apontada === null ? null : apontada.para)}
+          aoPassarPorCima={aoPassarPorCima}
         />
-        {pontes.map((ponte) => (
-          <Ponte
-            key={`${ponte.de}-${ponte.para}`}
-            ponte={ponte}
-            aoEscolher={aoEscolherPonte}
-            aoApontar={(apontada) => {
-              setPonteSob(apontada === null ? null : apontada.para)
-              // O nome que aparece no HUD é o da ilha de destino: é para lá que
-              // a ponte leva, e é o que o estudante quer saber antes de clicar.
-              aoPassarPorCima(apontada === null ? null : apontada.para)
-            }}
-          />
-        ))}
-        {ilhas.map((ilha) => (
-          <Ilha
-            key={ilha.id}
-            ilha={ilha}
-            destacada={focarEm?.id === ilha.id}
-            aoEscolher={aoEscolher}
-            aoPassarPorCima={aoPassarPorCima}
-          />
-        ))}
       </Canvas>
     </div>
   )

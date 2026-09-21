@@ -17,9 +17,9 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 > do livro na tela (Etapa 6) e som.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
-> desenvolvimento — a cena compila, monta e é testada com a cena trocada por marcador, mas os
-> pixels continuam **não verificados**. O roteiro manual de 15 itens está em
-> `docs/TEST_REPORT.md`.
+> desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 15 itens está
+> em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
 `docs/TEST_REPORT.md`. O site não mostra nenhum controle sem efeito (decisão D-009): o que não
@@ -32,7 +32,7 @@ funciona, não aparece como botão.
 
 Outros comandos:
 
-    npm test         # 398 testes: regras, geometria, conteúdo, interface e acentuação
+    npm test         # 416 testes: regras, geometria, mundo 3D, conteúdo, interface e acentuação
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 

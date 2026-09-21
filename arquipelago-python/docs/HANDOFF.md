@@ -1,6 +1,6 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 4**.
+Atualizado em **21/09/2026**, ao final da **revisão da Etapa 4**.
 
 ## Onde o projeto está
 
@@ -25,7 +25,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 406 testes, em 25 arquivos
+    npm test             # 416 testes, em 26 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -110,6 +110,20 @@ Verificação:
 - a última ilha não promete ponte: o texto, o botão de seguir e o HUD distinguem "fim do percurso
   escrito" de "próxima ilha".
 
+### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
+
+Três mudanças, todas nascidas de revisão e não de pedido novo:
+
+- `world/ConteudoDaCena.tsx` (conteúdo) separado de `world/Cena.tsx` (casca com o `<Canvas>`). É o
+  que permite montar a **árvore 3D de verdade** em teste, com `@react-three/test-renderer`, sem
+  placa de vídeo (D-025). Dez testes novos: uma ilha por unidade planejada, biblioteca, mesa e placa
+  em cada uma, uma ponte por par vizinho e nenhuma sobrando, clique na ilha, e a ponte bloqueada
+  desenhando menos tábuas que a liberada;
+- **defeito de conteúdo corrigido:** as cinco respostas de `u03Strings` estavam na posição 1, e o
+  teste antigo conferia a variedade somando todas as unidades. As quatro unidades foram
+  redistribuídas pelas quatro posições, e o teste agora exige isso **unidade por unidade** (D-027);
+- `pyodide` removido de `devDependencies`: estava instalado desde a Etapa 1 sem uso (D-026).
+
 ## Arquivos de referência rápida
 
 | Assunto | Arquivo |
@@ -131,7 +145,8 @@ Verificação:
 | PDF do livro ausente | Toda página continua `null` | Etapas 6 e 7 (conferir página) |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
 | Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 15 itens |
-| Pyodide ausente | Sem execução de código | Etapa 9 |
+| WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
+| Pyodide não instalado | Sem execução de código no navegador | Etapa 9, que traz o pacote junto com o Web Worker (D-026) |
 
 ## Decisões que ainda precisam do usuário
 

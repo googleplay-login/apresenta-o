@@ -40,6 +40,9 @@ type Props = {
   readonly aoPassarPorCima: (unidadeId: string | null) => void
 }
 
+/** Nome do grupo que recebe o clique. Usado pelo teste da árvore 3D. */
+const CORPO_DO_MUNDO = 'corpo'
+
 /** Posições das estruturas no capim. Fixas, para toda ilha parecer habitada do mesmo jeito. */
 const ESTRUTURAS = {
   biblioteca: { x: -2.7, z: -1.5, giro: Math.PI },
@@ -118,11 +121,15 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const interativo = ilha.acessivel
 
   return (
-    <group position={[ilha.centro[0], ilha.centro[1], ilha.centro[2]]}>
+    <group name={`ilha:${ilha.id}`} position={[ilha.centro[0], ilha.centro[1], ilha.centro[2]]}>
       <Malha3D malha={pecas.rocha} cor={corDaRocha(ilha.situacao)} />
       <Malha3D malha={pecas.capim} cor={corDoCapim(ilha.situacao)} duasFaces />
 
       <group
+        // Nome com prefixo para o teste: o Grupo 2 é o corpo interativo da ilha, e
+        // separa `ilha:*` (a posição onde ela está) de `corpo:*`, que é o que aceita
+        // clique.
+        name={CORPO_DO_MUNDO}
         onClick={(evento) => {
           evento.stopPropagation()
           aoEscolher(ilha.id)
@@ -147,15 +154,15 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
           />
         ) : null}
 
-        <group position={[ESTRUTURAS.biblioteca.x, 0, ESTRUTURAS.biblioteca.z]} rotation={[0, ESTRUTURAS.biblioteca.giro, 0]}>
+        <group name="biblioteca" position={[ESTRUTURAS.biblioteca.x, 0, ESTRUTURAS.biblioteca.z]} rotation={[0, ESTRUTURAS.biblioteca.giro, 0]}>
           <Malha3D malha={pecas.biblioteca} cor={CORES_DERIVADAS.parede} />
         </group>
 
-        <group position={[ESTRUTURAS.mesa.x, 0, ESTRUTURAS.mesa.z]} rotation={[0, ESTRUTURAS.mesa.giro, 0]}>
+        <group name="mesa" position={[ESTRUTURAS.mesa.x, 0, ESTRUTURAS.mesa.z]} rotation={[0, ESTRUTURAS.mesa.giro, 0]}>
           <Malha3D malha={pecas.mesa} cor={CORES_DERIVADAS.poste} />
         </group>
 
-        <group position={[ESTRUTURAS.placa.x, 0, ESTRUTURAS.placa.z]} rotation={[0, ESTRUTURAS.placa.giro, 0]}>
+        <group name="placa" position={[ESTRUTURAS.placa.x, 0, ESTRUTURAS.placa.z]} rotation={[0, ESTRUTURAS.placa.giro, 0]}>
           <Malha3D malha={pecas.placa} cor={corDaEstrutura} />
         </group>
 
@@ -177,7 +184,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
 
       {/* Farol de estado: gira devagar acima da ilha. Cor diz o estado; a forma
           não muda, porque quem lê a cor também lê o painel e a lista em texto. */}
-      <group ref={farol} position={[0, 7.4, 0]}>
+      <group name="farol" ref={farol} position={[0, 7.4, 0]}>
         <mesh>
           <octahedronGeometry args={[ilha.acessivel ? 0.62 : 0.42, 0]} />
           <meshLambertMaterial color={corDaEstrutura} flatShading />

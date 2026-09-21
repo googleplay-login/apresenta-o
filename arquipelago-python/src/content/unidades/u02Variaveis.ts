@@ -152,24 +152,24 @@ export const u02Variaveis: ConteudoDaUnidade = {
     {
       id: 'p2-1',
       enunciado: 'Depois de `pontos = 10` e `pontos = pontos + 5`, quanto vale `pontos`?',
-      alternativas: ['5', '10', '15', 'O Python recusa, porque o nome já existia'],
-      correta: 2,
+      alternativas: ['5', '10', 'O Python recusa, porque o nome já existia', '15'],
+      correta: 3,
       explicacao:
         'O valor antigo (10) é usado no cálculo do lado direito, e o resultado (15) passa a ser o novo valor guardado sob o mesmo nome. Guardar por cima do valor antigo é o uso normal de uma variável.',
     },
     {
       id: 'p2-2',
       enunciado: 'Qual destes é um nome de variável inválido em Python?',
-      alternativas: ['total_de_pontos', 'media2', '2a_nota', '_copia'],
-      correta: 2,
+      alternativas: ['2a_nota', 'total_de_pontos', 'media2', '_copia'],
+      correta: 0,
       explicacao:
         'Nome não pode começar com número. `2a_nota` parece razoável para uma pessoa, mas o Python lê o "2" inicial como número e não consegue entender o resto.',
     },
     {
       id: 'p2-3',
       enunciado: 'Qual é o resultado de `7 / 2` no Python 3?',
-      alternativas: ['3', '3.5', '4', 'Dá erro, porque 7 não é divisível por 2'],
-      correta: 1,
+      alternativas: ['3', '4', '3.5', 'Dá erro, porque 7 não é divisível por 2'],
+      correta: 2,
       explicacao:
         'A divisão comum sempre devolve decimal quando o resultado não é exato. Para descartar a parte decimal de propósito, existe `//`, que daria 3.',
     },
@@ -178,11 +178,11 @@ export const u02Variaveis: ConteudoDaUnidade = {
       enunciado: 'Por que `print("Idade: " + 34)` dá erro?',
       alternativas: [
         'Porque o texto tem dois pontos, que é caractere reservado',
-        'Porque `print` aceita apenas um argumento por vez',
         'Porque o sinal de mais junta textos, e o 34 é número: é preciso converter com `str(34)` antes de juntar',
+        'Porque `print` aceita apenas um argumento por vez',
         'Porque números grandes precisam de vírgula em vez de mais',
       ],
-      correta: 2,
+      correta: 1,
       explicacao:
         'O `+` faz coisas diferentes conforme o tipo: soma números e junta textos. Misturar os dois tipos na mesma operação é o que causa o `TypeError`, e a conversão explícita resolve.',
     },
@@ -191,11 +191,11 @@ export const u02Variaveis: ConteudoDaUnidade = {
       enunciado: 'Para que serve uma linha que começa com `#`?',
       alternativas: [
         'Para o Python executar aquela linha com prioridade',
-        'Para o Python ignorar completamente aquela linha, servindo de anotação para quem lê o código',
         'Para marcar o arquivo como pronto para publicação',
         'Para dividir o programa em arquivos separados',
+        'Para o Python ignorar completamente aquela linha, servindo de anotação para quem lê o código',
       ],
-      correta: 1,
+      correta: 3,
       explicacao:
         'O comentário é ignorado na execução. Ele existe para pessoas: explicar uma decisão, marcar algo a revisar ou desativar uma linha durante um teste.',
     },

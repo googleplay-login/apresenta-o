@@ -105,6 +105,9 @@ export function Ponte({ ponte, tabuas = 12, aoEscolher, aoApontar }: Props) {
 
   return (
     <group
+      // Nome estável para o teste da árvore 3D: identifica a ponte pelo par de
+      // ilhas que ela liga.
+      name={`ponte:${ponte.de}->${ponte.para}`}
       ref={grupo}
       position={[ponte.posicao[0], ponte.posicao[1], ponte.posicao[2]]}
       rotation={[0, ponte.rotacaoY, ponte.rotacaoZ]}

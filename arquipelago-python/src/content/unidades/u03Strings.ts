@@ -156,11 +156,11 @@ export const u03Strings: ConteudoDaUnidade = {
       enunciado: 'Depois de `texto = "  ilha  "` e `texto.strip()`, o que `print(texto)` mostra?',
       alternativas: [
         '"ilha", sem os espaços',
-        '"  ilha  ", com os espaços',
         'Um erro, porque o resultado foi perdido',
         '"ilha  ", sem os espaços da esquerda',
+        '"  ilha  ", com os espaços',
       ],
-      correta: 1,
+      correta: 3,
       explicacao:
         'Métodos de texto devolvem um texto novo e não alteram o original. Sem guardar o resultado (`texto = texto.strip()`), a mudança é calculada e descartada. Não dá erro — o que torna a confusão pior.',
     },
@@ -168,12 +168,12 @@ export const u03Strings: ConteudoDaUnidade = {
       id: 'p3-3',
       enunciado: 'O que a letra `f` faz em `f"Total: {pontos}"`?',
       alternativas: [
-        'Define o texto como formato fixo, imutável',
         'Avisa que as chaves ali dentro devem ser substituídas pelo valor das variáveis',
+        'Define o texto como formato fixo, imutável',
         'Formata o número com casas decimais automáticas',
         'Transforma a frase em um arquivo',
       ],
-      correta: 1,
+      correta: 0,
       explicacao:
         'O `f` habilita a interpolação: o que está entre chaves é avaliado como código e o resultado entra no lugar. É por isso que números não precisam de `str()` dentro de uma f-string.',
     },
@@ -182,11 +182,11 @@ export const u03Strings: ConteudoDaUnidade = {
       enunciado: 'Por que `"Ana" == "ana"` devolve `False`?',
       alternativas: [
         'Porque o Python compara o tamanho das palavras primeiro',
-        'Porque maiúsculas e minúsculas são caracteres diferentes, e a comparação é exata',
         'Porque falta converter os dois textos com `str()`',
+        'Porque maiúsculas e minúsculas são caracteres diferentes, e a comparação é exata',
         'Porque o operador `==` só funciona com números',
       ],
-      correta: 1,
+      correta: 2,
       explicacao:
         'A comparação é caractere por caractere, e "A" e "a" são caracteres distintos. Quando a intenção é comparar ignorando a caixa, é preciso normalizar os dois lados antes — por exemplo com `.lower()`.',
     },

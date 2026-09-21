@@ -6,6 +6,61 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — revisão da Etapa 4 (a árvore 3D sob teste)
+
+Esta execução é da revisão da Etapa 4: o mundo passou a ser montado em teste, e um defeito de
+conteúdo foi corrigido. Nada de etapa nova.
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+Sem erro, com a árvore 3D sob teste e os nomes novos nos grupos da cena.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 416 testes, 26 arquivos, todos aprovados** (eram 406/25 antes desta revisão).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| Uma ilha para cada unidade planejada, e nenhuma a mais | `src/world/ConteudoDaCena.test.tsx` (10 testes novos) |
+| Cada ilha tem biblioteca, mesa com computador e placa de missão | `src/world/ConteudoDaCena.test.tsx` |
+| Um farol de estado por ilha | `src/world/ConteudoDaCena.test.tsx` |
+| Uma ponte por par vizinho, e nenhuma depois da última ilha | `src/world/ConteudoDaCena.test.tsx` |
+| A ponte bloqueada desenha menos tábuas que a liberada (medido em vértices) | `src/world/ConteudoDaCena.test.tsx` |
+| Aprovar a primeira unidade não mexe nas pontes seguintes | `src/world/ConteudoDaCena.test.tsx` |
+| Clique na ilha escolhe a unidade; ilha bloqueada responde com o bloqueio | `src/world/ConteudoDaCena.test.tsx` |
+| Clique na ponte pela metade é recusado por `decidirTravessia`, com o motivo | `src/world/ConteudoDaCena.test.tsx` |
+| Distribuição das respostas corretas pelas quatro posições, **por unidade** | `src/content/conteudo.test.ts` (reforçado) |
+
+**Defeito real encontrado nesta revisão:** em `u03Strings`, as cinco respostas corretas estavam na
+posição 1. O teste que existia conferia a variedade somando todas as unidades em um conjunto único, e
+passava. As quatro unidades foram redistribuídas — u01 `[2,1,3,0,2]`, u02 `[3,0,2,1,3]`, u03
+`[1,3,0,2,1]`, u04 `[0,2,1,3,0]` — e o teste passou a exigir as quatro posições dentro de **cada**
+unidade (D-027).
+
+**O que o teste novo prova, e o que ele não prova:** ele monta a árvore 3D real — os mesmos
+componentes do navegador — com o renderizador de teste do React Three Fiber. Prova composição,
+quantidade e fiação. **Não prova aparência:** luz, cor, enquadramento, legibilidade e desempenho
+seguem sem verificação, porque dependem de pixel.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       18.25 kB │ gzip:   3.24 kB
+    dist/assets/index-*.js       277.22 kB │ gzip:  88.09 kB
+    dist/assets/Cena-*.js        911.08 kB │ gzip: 242.09 kB
+
+O aviso do empacotador sobre o bloco de 911 kB é conhecido e aceito por ora: é o `three`, que só
+chega quando o modo 3D é ligado (D-022). Reduzir esse número é assunto da Etapa 13.
+
+### 4. O que continua NÃO executado
+
+Tudo o que depende de navegador real: aparência do mundo, luz, enquadramento, o cursor de mãozinha
+sobre a ponte, a animação das tábuas, o voo da câmera e o desempenho. Ver o roteiro manual abaixo.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 4 (as pontes como travessia)
 
 ### 1. Checagem de tipos — EXECUTADO, passou

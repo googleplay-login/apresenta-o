@@ -72,6 +72,22 @@ localStorage ──lerProgresso──► useProgressoPersistido ──► estado
 Nenhuma seta aponta para trás: a cena não escreve em `learning/`, e o painel não calcula nota. O
 único lugar que grava progresso é o redutor, e ele só grava o que `registrarResultado` devolveu.
 
+## A cena em duas partes, e por quê
+
+O último passo do caminho acima é desenhar. Ele acontece em dois arquivos, e a divisão não é
+estética:
+
+| Arquivo | O que faz | Precisa de WebGL? |
+|---|---|---|
+| `world/ConteudoDaCena.tsx` | Céu, câmera, pontes e ilhas — o mundo em si | **Não** |
+| `world/Cena.tsx` | O `<Canvas>`, o contexto WebGL e os eventos de ponteiro que arrastam a câmera | Sim |
+
+O motivo está em `docs/TEST_REPORT.md`: não existe navegador com WebGL neste ambiente, então tudo
+que morasse dentro do `<Canvas>` ficaria sem verificação. Separado, o conteúdo do mundo é montado em
+teste pelo `@react-three/test-renderer` — a árvore 3D de verdade, sem placa de vídeo (D-025). O que
+a divisão **não** compra: aparência, luz, enquadramento e desempenho continuam sem verificação
+automática, porque dependem do desenho na tela.
+
 ## Piso técnico
 
 Vite + React + TypeScript. Three.js via React Three Fiber (sem Drei, D-021). CSS responsivo sem
@@ -94,8 +110,12 @@ não instalado.
 | three / @react-three/fiber | 0.186.0 / 9.7.0 | a cena entra por importação sob demanda (D-022) |
 | @types/three | 0.186.0 | apenas tipos |
 | jsdom / @testing-library/react | 30.1.0 / 16.3.3 | desenvolvimento; `@testing-library/dom` 10.4.2 e `user-event` 14.6.7 junto |
-| pyodide | 314.0.7 | instalado, ainda **não usado** (Etapa 9) |
+| @react-three/test-renderer | 9.1.1 | desenvolvimento; monta a árvore 3D sem placa de vídeo (D-025) |
 | @types/node | 26.6.2 | apenas tipos, para a verificação de qualidade em `qa/` |
+
+**Nenhuma dependência sem uso.** `pyodide` chegou a estar instalado na Etapa 1, "para já ficar", e
+foi removido na revisão da Etapa 4: nenhum arquivo o importava (D-026). Ele volta na Etapa 9, no
+mesmo commit que traz o Web Worker que o usa.
 
 Versões fixadas **exatas** (sem `^`) e `package-lock.json` versionado, para que outra pessoa, em
 outra máquina, obtenha exatamente a mesma instalação. Ver `DECISIONS.md` (D-008).
@@ -126,6 +146,8 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Aprovação só com 80% reais | `src/learning/avaliacao.test.ts` | Exibição que contradiz a decisão |
 | Nenhum atalho de desbloqueio | `src/learning/percurso.test.ts` | Pular portão por rota, clique ou ordem |
 | Acentuação do português | `qa/acentuacao.test.ts` | Texto sem acento no código e na documentação (D-015) |
+| O mundo desenhado é o mundo prometido | `src/world/ConteudoDaCena.test.tsx` | Ilha sem biblioteca, mesa ou placa; ponte a mais ou a menos (D-025) |
+| Nenhum gabarito viciado em uma posição | `src/content/conteudo.test.ts` | Alternativa correta sempre no mesmo lugar, **por unidade** (D-027) |
 
 ## Ambiente de execução (preview remoto)
 

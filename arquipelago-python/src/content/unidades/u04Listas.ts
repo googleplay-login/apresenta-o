@@ -151,8 +151,8 @@ export const u04Listas: ConteudoDaUnidade = {
     {
       id: 'p4-1',
       enunciado: 'Em `frutas = ["banana", "manga", "uva"]`, o que `frutas[1]` devolve?',
-      alternativas: ['"banana"', '"manga"', '"uva"', 'Um erro, porque a lista tem três itens'],
-      correta: 1,
+      alternativas: ['"manga"', '"banana"', '"uva"', 'Um erro, porque a lista tem três itens'],
+      correta: 0,
       explicacao:
         'A contagem começa em zero: o índice 0 é "banana", o 1 é "manga" e o 2 é "uva". É o erro de contagem mais comum de todos, e vale conferir antes de culpar o Python.',
     },
@@ -161,11 +161,11 @@ export const u04Listas: ConteudoDaUnidade = {
       enunciado: 'Qual é a diferença entre `sorted(numeros)` e `numeros.sort()`?',
       alternativas: [
         'Não há diferença: os dois ordenam a lista',
-        '`sorted()` devolve uma versão ordenada e não altera a original; `.sort()` altera a lista e não devolve nada útil',
         '`sorted()` só funciona com números, e `.sort()` só com textos',
+        '`sorted()` devolve uma versão ordenada e não altera a original; `.sort()` altera a lista e não devolve nada útil',
         '`sorted()` ordena ao contrário, e `.sort()` ordena normalmente',
       ],
-      correta: 1,
+      correta: 2,
       explicacao:
         'Como `.sort()` não devolve nada, `print(numeros.sort())` mostra `None` — o "nada" do Python. Já `print(sorted(numeros))` mostra a lista ordenada, sem tocar na original.',
     },
@@ -173,12 +173,12 @@ export const u04Listas: ConteudoDaUnidade = {
       id: 'p4-3',
       enunciado: 'O que `.pop()` faz?',
       alternativas: [
-        'Remove o último item e devolve o item removido',
         'Remove o item pelo valor que você informa',
+        'Remove o último item e devolve o item removido',
         'Esvazia a lista inteira de uma vez',
         'Cria uma cópia da lista sem o primeiro item',
       ],
-      correta: 0,
+      correta: 1,
       explicacao:
         'Por padrão ele tira o último item e o devolve, permitindo guardá-lo em outro lugar. Aceita também um índice, como em `pop(0)`. Quando o interesse é só remover pelo valor, `.remove()` é mais direto.',
     },
@@ -189,10 +189,10 @@ export const u04Listas: ConteudoDaUnidade = {
       alternativas: [
         'Devolve o terceiro item, porque 3 é a posição na contagem comum',
         'Devolve `None`, indicando que não há nada ali',
-        'Dá `IndexError`, porque os índices válidos vão de 0 a 2',
         'Acrescenta um item vazio na posição 3',
+        'Dá `IndexError`, porque os índices válidos vão de 0 a 2',
       ],
-      correta: 2,
+      correta: 3,
       explicacao:
         'Pedir posição inexistente é erro, e o Python avisa com `IndexError: list index out of range`. Repare que ele não devolve `None`: confundir "não existe" com "existe e está vazio" esconderia o problema em vez de mostrá-lo.',
     },
@@ -201,12 +201,12 @@ export const u04Listas: ConteudoDaUnidade = {
       enunciado:
         'Qual destas linhas acrescenta "kiwi" na **primeira** posição de uma lista existente, empurrando os outros itens?',
       alternativas: [
-        'frutas.append("kiwi")',
         'frutas.insert(0, "kiwi")',
+        'frutas.append("kiwi")',
         'frutas[0] = "kiwi"',
         'frutas.add("kiwi", 0)',
       ],
-      correta: 1,
+      correta: 0,
       explicacao:
         '`insert(0, ...)` coloca o item na posição indicada e desloca o resto. Atenção à diferença: `frutas[0] = "kiwi"` não acrescenta nada — ele **substitui** o primeiro item, apagando o que estava lá.',
     },

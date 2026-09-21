@@ -44,13 +44,32 @@ describe('conteúdo das unidades', () => {
   })
 
   it('não distribui a resposta correta sempre no mesmo lugar', () => {
-    // Se todas as corretas estivessem na alternativa A, o estudante aprenderia
-    // a chutar em vez de aprender o conteúdo. A checagem é grosseira de
-    // propósito: exige apenas que haja variedade.
-    const posicoes = CONTEUDO_DAS_UNIDADES.flatMap((unidade) =>
-      unidade.perguntas.map((pergunta) => pergunta.correta),
-    )
-    expect(new Set(posicoes).size).toBeGreaterThanOrEqual(3)
+    // Se todas as corretas estivessem na alternativa A, o estudante aprenderia a
+    // chutar em vez de aprender o conteúdo.
+    //
+    // A checagem é POR UNIDADE, e não somando todas: a versão anterior deste teste
+    // olhava o conjunto inteiro e aceitava desde que houvesse três posições em algum
+    // lugar. Com isso, a unidade 3 passou com as cinco respostas na MESMA posição —
+    // cinco perguntas acertáveis marcando sempre a segunda alternativa. O defeito
+    // estava escondido atrás de uma média que parecia boa.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const posicoes = unidade.perguntas.map((pergunta) => pergunta.correta)
+      const posicoesUsadas = new Set(posicoes)
+
+      expect(
+        posicoesUsadas.size,
+        `A unidade ${unidade.id} concentra as respostas certas em poucas posições: ${posicoes.join(', ')}`,
+      ).toBe(4)
+
+      // E cada posição precisa aparecer de fato como resposta certa de alguma pergunta:
+      // quatro posições distintas em cinco perguntas deixariam uma de fora.
+      for (let indice = 0; indice < 4; indice += 1) {
+        expect(
+          posicoes.includes(indice),
+          `A unidade ${unidade.id} nunca usa a alternativa de índice ${indice} como correta`,
+        ).toBe(true)
+      }
+    }
   })
 
   it('permite aprovar cada unidade com 4 acertos e reprovar com 3', () => {

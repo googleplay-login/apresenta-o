@@ -397,3 +397,62 @@ acontecer sem o domínio ter liberado o destino.
 resposta é uma explicação (`recusar`), e não uma passagem. O cursor de "mãozinha" é do CSS da cena,
 não escrito à mão no `<canvas>`: quem desenha avisa que o mouse está em cima, e o estilo continua na
 folha de estilo.
+
+---
+
+## D-025 — O conteúdo do mundo é separado da casca que o desenha
+**21/09/2026** — decisão de testabilidade, na revisão da Etapa 4.
+
+**Decisão:** `world/ConteudoDaCena.tsx` monta céu, câmera, pontes e ilhas; `world/Cena.tsx` fica com a
+casca — o `<Canvas>`, o WebGL e os eventos de ponteiro que arrastam a câmera.
+
+**Contexto:** um `<Canvas>` do React Three Fiber exige placa de vídeo e um `ResizeObserver` de
+verdade; montá-lo aqui é impossível (registrado em `TEST_REPORT.md`). Com tudo dentro de um arquivo
+só, o mundo era verificado apenas por **dublê**: os testes de página trocavam a cena por um marcador,
+e o pior caso possível — alguém apagar a biblioteca de dentro da ilha, ou o computador da mesa — não
+seria percebido por nenhum teste. Separando o conteúdo da casca, o teste monta a **árvore 3D real**
+com `@react-three/test-renderer`: sem placa de vídeo, sem pixel, mas com os objetos verdadeiros.
+
+**Consequência:** dez testes conferem que existe uma ilha por unidade planejada, que cada ilha tem
+biblioteca, mesa e placa de missão, que há uma ponte para cada par vizinho e nenhuma depois da
+última, que clicar no corpo da ilha escolhe aquela unidade e que a ponte bloqueada **desenha menos
+tábuas** que a liberada. Continua sem provar aparência — para isso é preciso navegador, e continua
+pendente. Os grupos da cena ganharam `name` estável (`ilha:*`, `corpo`, `biblioteca`, `mesa`,
+`placa`, `farol`, `ponte:A->B`) por causa desses testes; um nome trocado por descuido reprova o
+teste em vez de passar despercebido.
+
+---
+
+## D-026 — Nenhuma dependência entra antes do código que a usa
+**21/09/2026** — correção de rumo, na revisão da Etapa 4.
+
+**Decisão:** `pyodide` foi **removido** de `devDependencies` e volta quando a Etapa 9 escrever o
+primeiro código que o usa.
+
+**Contexto:** a dependência tinha sido instalada junto com o pacote, na Etapa 1, "para já ficar".
+Nenhum arquivo a importava: era peso morto no `package.json`, do tipo que envelhece sem ninguém
+notar — e o `src/python/README.md` dizia, ao mesmo tempo, que a dependência nem estava instalada. A
+instalação do Pyodide é dezenas de megabytes; anunciá-la sem uso é ruído na auditoria de
+dependências.
+
+**Consequência:** o `package.json` só lista o que o projeto usa. A Etapa 9 acrescenta o pacote no
+mesmo commit que traz o Web Worker.
+
+---
+
+## D-027 — A posição da alternativa correta varia, e o teste cobra isso por unidade
+**21/09/2026** — defeito real encontrado por revisão, na revisão da Etapa 4.
+
+**Decisão:** em cada unidade, as cinco perguntas distribuem a alternativa correta pelas **quatro
+posições**, usando todas; e o teste passa a exigir essa variedade **unidade por unidade**.
+
+**Contexto:** `u03Strings` tinha as cinco respostas corretas na posição 1. Quem não sabe o conteúdo
+percebe o padrão e acerta 100% — pior: quem estuda de verdade passa a desconfiar do que aprendeu. O
+teste que existia somava todas as unidades em um único conjunto de posições e parava em "há pelo
+menos três posições diferentes no arquivo inteiro", o que uma única unidade viciada satisfazia
+sozinha. O agregado escondia o defeito local.
+
+**Consequência:** as cinco perguntas de cada unidade agora usam posições diferentes, verificadas
+individualmente, e o checklist de `CONTENT_GUIDE.md` ganhou o item correspondente para quem escrever
+as próximas unidades. Corrigir isso mexeu em oito arquivos de conteúdo pedagógico, e é por isso que
+a regra fica escrita: padrão de gabarito é defeito de conteúdo, não detalhe de formatação.

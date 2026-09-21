@@ -139,6 +139,26 @@ a ponte como caminho, e não como enfeite.
 **Limite explícito:** a travessia em 3D é um voo de câmera — não existe avatar que ande pela ponte
 (Etapa 5), nem avatar que atravesse sozinho.
 
+### Revisão da Etapa 4 — o mundo deixou de ser intocável (concluída em 21/09/2026)
+
+A revisão da etapa encontrou dois problemas, e os dois eram do tipo que passa despercebido:
+
+- **A cena não podia ser testada.** Um `<Canvas>` do React Three Fiber exige WebGL, e aqui não há.
+  O conteúdo do mundo passou a morar em `world/ConteudoDaCena.tsx`, separado da casca
+  `world/Cena.tsx` que cria o contexto. Agora **dez testes montam a árvore 3D de verdade** —
+  objetos, estruturas e pontes — sem placa de vídeo (D-025). Se alguém apagar a biblioteca de dentro
+  da ilha, o teste reprova; antes, nada reprovava.
+- **O gabarito estava viciado.** Em `u03Strings`, as cinco respostas corretas estavam na posição 1, e
+  o teste existente conferia a variedade **somando** todas as unidades — o vício de uma passava
+  escondido no conjunto. As cinco perguntas de cada uma das quatro unidades foram redistribuídas
+  pelas quatro posições, e o teste passou a exigir isso unidade por unidade (D-027).
+
+E uma arrumação de dependências: `pyodide` estava instalado desde a Etapa 1 sem nenhum código que o
+usasse. Foi removido, e volta na Etapa 9 com o Web Worker que o usa (D-026).
+
+Nada disso amplia o escopo da Etapa 4: é a mesma etapa, verificada de novo — e agora com o mundo
+propriamente dito sob teste.
+
 ---
 
 ## Etapas seguintes — escopo previsto, não detalhado

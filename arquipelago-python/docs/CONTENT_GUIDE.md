@@ -82,6 +82,22 @@ Prometer "teste secreto inviolável" seria mentira sobre a própria robustez. A 
 para execução de código: quando o Pyodide entrar (Etapa 9), nada afirma que rodar código de
 terceiros é seguro.
 
+## A posição da alternativa correta varia (D-027)
+
+Cinco perguntas, quatro alternativas. Se a correta cai sempre na mesma posição, quem não estudou
+acerta pelo padrão e quem estudou desconfia do que aprendeu — o defeito é pior do que parece.
+
+Regras ao escrever as próximas unidades:
+
+- cada unidade usa as **quatro posições**, sem repetir uma e deixar outra de fora;
+- unidade nova não copia a distribuição da anterior: o padrão que se repete entre ilhas também é
+  padrão;
+- quem escreve confere a posição depois de escrever, e não de memória.
+
+O teste `src/content/conteudo.test.ts` cobra isso **unidade por unidade**. Existe porque já falhou
+uma vez: `u03Strings` tinha as cinco respostas na posição 1, e o teste antigo somava todas as
+unidades antes de conferir, então o vício de uma unidade passava escondido no conjunto.
+
 ## Sem segredo no cliente
 
 Chave de API, senha, token ou qualquer credencial **não** entra no código do navegador. Tudo que
@@ -101,6 +117,7 @@ exibida exatamente como aparece, em bloco de código.
 - [ ] Existe aviso de versão, se o assunto mudou desde o livro.
 - [ ] Os exercícios são próprios e incluem prática de escrever código.
 - [ ] A avaliação tem 5 perguntas e aprova com 4 acertos.
+- [ ] As posições das alternativas corretas usam as quatro posições, conferidas **nesta unidade**.
 - [ ] O enunciado da avaliação diz que não há antifraude.
 - [ ] O texto não tem trecho, nome de exemplo nem exercício do livro.
 - [ ] Nenhum número de página foi inventado (ver D-010).
