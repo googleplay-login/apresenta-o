@@ -29,6 +29,7 @@ Consequências práticas, e o motivo de cada uma:
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
 | `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. `geometria/identidade.ts` diz o que distingue cada ilha (silhueta, marco, vegetação e tom) e `geometria/marcos.ts` constrói os dez marcos. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação e a conferência do exercício (sonda, comparação, veredito) | Existe e testado |
+| `src/ui/theme/` | Tokens visuais, paleta do 3D e a conta da luz (`luzDoMundo.ts`): prevê a cor que chega à tela (luzes somadas e tone mapping) e traz para o orçamento as cores que estouram | Nenhuma cor escrita à mão: tudo sai de token, e o que passa do teto é ajustado no desenho, com teste |
 | `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios (com correção declarada) e perguntas. Também o percurso que o domínio enxerga (`percursoDoConteudo.ts`) | Existe para as 12 unidades escritas, com validador e testes que cobram a forma |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
 | `src/persistence/` | Gravação e leitura do progresso, versionado (formato **3**, com migração da 1 e da 2) e com aviso honesto de falha | Existe e testado |

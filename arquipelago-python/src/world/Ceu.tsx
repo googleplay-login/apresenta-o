@@ -13,8 +13,9 @@ import { criarSorteador, entre } from './geometria/aleatorio'
  * sombra se justificar, ela entra aqui, com medida de desempenho antes e depois.
  *
  * As nuvens são poucas e fixas: elas existem para dar profundidade embaixo das
- * ilhas, não para encher a tela. São caixas achatadas com semente fixa, então a
- * nuvem fica sempre no mesmo lugar — a paisagem não treme a cada carregamento.
+ * ilhas, não para encher a tela. São caixas com semente fixa (e com volume: ver as
+ * medidas no `useMemo` abaixo), então a nuvem fica sempre no mesmo lugar — a
+ * paisagem não treme a cada carregamento.
  *
  * As nuvens são desenhadas **sem luz** (`semLuz`): com a luz do mundo, a face de
  * baixo delas recebia a cor do mar e cada nuvem virava um caco escuro no céu
@@ -33,9 +34,13 @@ export function Ceu() {
         x: Math.cos(angulo) * distancia,
         z: Math.sin(angulo) * distancia,
         y: entre(sortear, -70, -26),
-        largura: entre(sortear, 16, 44),
-        altura: entre(sortear, 3, 7),
-        profundidade: entre(sortear, 14, 34),
+        // Nuvem é **bolo**, e não placa (D-060). Medido: com 16 a 44 de largura
+        // contra 3 a 7 de altura, cada nuvem era uma lâmina achatada de até 10,9
+        // para 1 — na tela, uma laje de papel branco flutuando no céu, com as
+        // quinas à mostra. As medidas abaixo dão de 2,3 a 1 até 4,5 a 1.
+        largura: entre(sortear, 14, 32),
+        altura: entre(sortear, 5, 9),
+        profundidade: entre(sortear, 12, 26),
       }
     })
   }, [])
@@ -66,10 +71,20 @@ export function Ceu() {
         position={[60, 90, 40]}
       />
 
-      {/* Mar distante, bem abaixo: uma laje grande e plana, que a névoa come. */}
+      {/*
+        Mar distante, bem abaixo: uma laje grande e plana, que a névoa come.
+
+        A laje **não** recebe luz, e isso é uma decisão medida (D-060). Com a luz
+        do mundo, a radiação dela chegava a 1,08 — acima do teto de 1,0 que o tone
+        mapping (ACES, o padrão do React Three Fiber) consegue representar. Tudo o
+        que passa do teto vira a mesma cor: a laje ficava chapada, sem a variação
+        de luz que dá perspectiva a uma superfície plana, e clara demais para um
+        chão que devia ficar abaixo do horizonte. Chapada, na cor da névoa, ela lê
+        como o mar que continua até o horizonte — que é o que ela é.
+      */}
       <mesh position={[0, -180, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[900, 900]} />
-        <meshLambertMaterial color={CORES_DERIVADAS.vazio} />
+        <meshBasicMaterial color={CORES_DERIVADAS.marDistante} />
       </mesh>
 
       {nuvens.map((nuvemDaVez, indice) => (

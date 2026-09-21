@@ -528,6 +528,46 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
     await cena.unmount()
   })
 
+  it('a árvore tem tronco de madeira e copa verde, e não só uma cor (D-060)', async () => {
+    // O defeito que a captura de tela mostrou: a árvore inteira — tronco **e**
+    // copa — era desenhada com a cor da madeira. Na tela, a copa saía marrom, e a
+    // árvore virava um torrão de terra em pé, confundível com a pedra solta ao
+    // lado. Este teste cobra as duas partes e a cor de cada uma.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const malhas = ilha
+        .findAll((filho) => filho.instance.type === 'Mesh')
+        .filter((filho) => {
+          const geometria = (filho.instance as unknown as { geometry?: { attributes?: Record<string, unknown> } })
+            .geometry
+          return geometria?.attributes?.color === undefined
+        })
+      const cor = (malha: No) => corDoMaterial(malha)
+      const troncos = malhas.filter((malha) => cor(malha) === CORES_DERIVADAS.tronco)
+      const copas = malhas.filter((malha) => cor(malha) === CORES_DO_MUNDO.conifera)
+
+      expect(troncos.length, `«${unidade.titulo}» ficou sem tronco de árvore`).toBeGreaterThan(0)
+      expect(copas.length, `«${unidade.titulo}» ficou sem copa de árvore`).toBeGreaterThan(0)
+      // Cada árvore tem um tronco e uma copa.
+      expect(copas.length).toBe(troncos.length)
+
+      for (const copa of copas) {
+        const [r, g, b] = corLinear(cor(copa))
+        expect(
+          g,
+          `A copa de «${unidade.titulo}» não é verde: r=${r?.toFixed(3)} g=${g?.toFixed(3)} b=${b?.toFixed(3)}`,
+        ).toBeGreaterThan(r ?? 0)
+        expect(g).toBeGreaterThan(b ?? 0)
+      }
+    }
+
+    await cena.unmount()
+  })
+
   it('o capim é verde em todas as ilhas, inclusive nas de tom quente', async () => {
     // O tom da ilha é tempero, não tinta: a 45% do tom, a ilha de tom rosado
     // ficava com capim rosado. Este teste mede o capim de cada ilha e cobra que o

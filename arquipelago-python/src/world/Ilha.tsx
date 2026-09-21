@@ -23,6 +23,7 @@ import {
   corDaSituacao,
   corDeUnidadeBloqueada,
 } from '../ui/theme/paleta3d'
+import { corNoOrcamentoDeLuz } from '../ui/theme/luzDoMundo'
 
 /**
  * Uma ilha do arquipélago: a pedra, o capim, o marco, as estruturas do estudo e
@@ -236,10 +237,17 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const corDaEstrutura = corDaSituacao(ilha.situacao)
   // O marco mantém o tom da ilha; o que muda quando a unidade ainda não abriu é
   // ele ficar mais perto da névoa, como o capim e a rocha daquela ilha.
-  const corDoMarco =
+  //
+  // A cor passa pelo **orçamento de luz** antes de virar material (D-060). Sem
+  // ele, quatro dos doze tons chegavam à tela acima do teto do tone mapping — o
+  // tom da ilha 6, quase branco, chegava a 1,46 e o marco virava uma silhueta
+  // branca chapada, sem volume. A cor do capim não precisa disso: o tom entra
+  // nela diluído em 22%, e o capim mais claro de todos fica em 0,63.
+  const corDoMarco = corNoOrcamentoDeLuz(
     ilha.situacao === 'bloqueada'
       ? misturar(pecas.tom, CORES_DO_MUNDO.nevoa, 0.4)
-      : pecas.tom
+      : pecas.tom,
+  )
 
   useFrame((_, delta) => {
     if (farol.current !== null) {
@@ -311,7 +319,9 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         </group>
 
         <group name="biblioteca" position={[pecas.posicoes.biblioteca.x, 0, pecas.posicoes.biblioteca.z]}>
-          <Malha3D malha={pecas.biblioteca} cor={CORES_DERIVADAS.parede} />
+          {/* A parede é a cor mais clara do mundo e chega a 1,001 de radiação: passa
+              pelo orçamento de luz como o marco e o avatar (D-060). */}
+          <Malha3D malha={pecas.biblioteca} cor={corNoOrcamentoDeLuz(CORES_DERIVADAS.parede)} />
         </group>
 
         <group name="mesa" position={[pecas.posicoes.mesa.x, 0, pecas.posicoes.mesa.z]}>
@@ -326,7 +336,11 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
           const enfeite = pecas.enfeites[indice]
           return (
             <group key={`arvore-${indice}`} position={[enfeite?.x ?? 0, 0, enfeite?.z ?? 0]}>
-              <Malha3D malha={arvore} cor={CORES_DERIVADAS.tronco} />
+              {/* Duas cores, e não uma (D-060): o tronco é madeira e a copa é o
+                  verde da conífera. Com uma cor só, a copa saía marrom e a árvore
+                  virava um torrão de terra em pé. */}
+              <Malha3D malha={arvore.tronco} cor={CORES_DERIVADAS.tronco} />
+              <Malha3D malha={arvore.copa} cor={CORES_DO_MUNDO.conifera} />
             </group>
           )
         })}

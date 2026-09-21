@@ -55,7 +55,16 @@ const BRANCO = 0xffffff
  * sob ele — e todas são misturas, e não cores novas.
  */
 export const CORES_DERIVADAS = {
-  /** Parede da biblioteca: pedra clara puxada para o creme da interface. */
+  /**
+   * Parede da biblioteca: pedra clara puxada para o creme da interface.
+   *
+   * Medida, esta cor chega à tela com radiação **1,001** — no teto do tone
+   * mapping, e uma superfície no teto perde a variação de luz. A mistura **não**
+   * foi mudada para consertar isso: quem corrige é o orçamento de luz, aplicado
+   * onde o mundo desenha a parede (`corNoOrcamentoDeLuz`, em `Ilha.tsx`). A cor
+   * da paleta continua sendo a que foi aprovada, e a regra vale igual para todas
+   * as superfícies (D-060).
+   */
   parede: misturar(deHex(cores.terreno.pale), deHex(cores.terreno.rochaClara), 0.35),
   /** Telhado: madeira escurecida, para o volume não virar um bloco só. */
   telhado: ajustar(deHex(cores.terreno.madeira), 0.72),
@@ -63,8 +72,29 @@ export const CORES_DERIVADAS = {
   capimClaro: ajustar(deHex(cores.terreno.capim), 1.22),
   /** Rocha logo abaixo do capim: mantém a parede clara no alto. */
   rochaDoAlto: misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.rocha), 0.3),
-  /** Penhasco profundo: quase preto, para a ponta sumir na névoa. */
-  rochaDoFundo: ajustar(deHex(cores.terreno.rocha), 0.55),
+  /**
+   * Penhasco profundo: a pedra escura dissolvida na névoa, na cor e na luz.
+   *
+   * A versão anterior era `ajustar(rocha, 0.55)` — a pedra escurecida em 45%. A
+   * medição mostrou o que isso dava na tela: **#030201**, preto praticamente puro,
+   * e a ponta da ilha virava um bico preto pendurado no céu claro (D-060). A
+   * intenção era a ponta "sumir na névoa", e o caminho para isso não é escurecer:
+   * é a névoa — a cor do horizonte. Misturar com a névoa também é fiel à
+   * profundidade de verdade: o que está longe perde contraste e se aproxima da
+   * cor do ar, e não vira preto.
+   *
+   * O valor 0,12 foi escolhido por medida, entre o bico preto e o cinza chapado:
+   *
+   *  - com `ajustar(rocha, 0.55)` (o valor antigo), a parede do penhasco ficava em
+   *    #100e0e e o bico em #030201 — preto praticamente puro;
+   *  - com 0,28, o bico subia para #676766, mas o gradiente contra o alto da pedra
+   *    caía para **1,11×**: o penhasco virava uma parede cinza uniforme, sem a
+   *    profundidade que é a razão de existir do gradiente;
+   *  - com 0,12, a parede fica em #4d4b48 (um cinza escuro legível, e não um
+   *    buraco), o bico fica em 0,027 de radiação — 34% acima do piso de luz do
+   *    mundo (0,02) — e o gradiente contra o alto da pedra se mantém em **2,2×**.
+   */
+  rochaDoFundo: misturar(deHex(cores.terreno.rocha), deHex(cores.nevoa), 0.12),
   /** Estrutura da ponte: madeira clara, que se destaca sobre a rocha escura. */
   ponte: deHex(cores.terreno.madeiraClara),
   /** Corrimão: madeira escura, para separar do tabuleiro. */
@@ -77,8 +107,20 @@ export const CORES_DERIVADAS = {
   tela: deHex(cores.acento.verde),
   /** Nuvem: branco puxado para o azul do céu. */
   nuvem: misturar(BRANCO, deHex(cores.ceu.alto), 0.25),
-  /** Mar profundo, sob o arquipélago. */
-  vazio: misturar(deHex(cores.mar.fundo), deHex(cores.ceu.horizonte), 0.55),
+  /**
+   * O mar distante, sob o arquipélago: a laje grande que a névoa come.
+   *
+   * O nome antigo era `vazio`, e o nome mentia: a laje é **o mar visto de longe**.
+   * Medida, a cor antiga (`misturar(mar.fundo, ceu.horizonte, 0.55)`) chegava à
+   * tela com radiação **1,18 de 1,0** — o tone mapping não tinha o que fazer com
+   * ela e a laje virava um retângulo de papel branco brilhando no canto da tela
+   * (D-060). O mar distante tem de ser **mais escuro** que o céu, na direção do
+   * horizonte, e não mais claro.
+   *
+   * Com 0,30 a radiação cai para 0,85 e a laje fica #bdd5dc: 112 de distância do
+   * céu, um passo de cor legível no chão da tela.
+   */
+  marDistante: misturar(deHex(cores.mar.fundo), deHex(cores.nevoa), 0.3),
   /** Realce de unidade aprovada: verde da marca, direto do token de estado. */
   aprovada: deHex(coresDeEstado.pronta),
   /** Unidade disponível: âmbar da marca. */

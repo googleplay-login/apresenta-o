@@ -421,6 +421,15 @@ O lote 4 chegou com duas particularidades que a medida resolveu, e as duas ficar
   contas erradas nos marcos recém-escritos (um puxador de pé em vez de deitado, uma coluna mais alta que
   o próprio topo, um `raioOcupado` menor que a peça). O conserto e a regra que fica estão em D-058.
 
+Depois do lote 4, e a partir de uma **captura de tela** do mundo, veio um conserto de cor (D-060). O
+defeito não estava em nenhuma paleta: estava na **luz**. Quatro superfícies chegavam à tela acima do
+teto do tone mapping (o mar distante, a parede da biblioteca e o marco de quatro ilhas — o da ilha 6
+chegava a 1,49) e a ponta do penhasco chegava a `#030201`, quase preto puro. A conta da luz (sRGB →
+linear → luzes somadas → ACES → sRGB) virou módulo de produção e de teste, e a partir dela o mundo aplica
+um **orçamento de luz** nas cores que estoura, no momento de desenhar — a paleta continua intacta. No
+mesmo passo, o mar distante deixou de ser uma laje iluminada (e de se chamar `vazio`), as nuvens
+deixaram de ser lâminas e a árvore passou a ter copa verde, e não marrom.
+
 **Limite explícito:** nenhum lote foi visto em navegador — nenhum navegador com WebGL existe neste
 ambiente. O que eles provam está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real), e a verificação
 de pixel depende de captura de tela de quem tem WebGL.

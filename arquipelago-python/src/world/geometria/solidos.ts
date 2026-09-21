@@ -361,23 +361,42 @@ export function gerarPlaca(opcoes: { readonly altura: number; readonly largura: 
  * Poucas por ilha, de propósito. Árvore em excesso numa ilha suspensa pequena
  * vira silhueta confusa, e o que precisa ficar visível são as estruturas.
  */
-export function gerarArvore(opcoes: { readonly altura: number; readonly raio: number }): Malha {
+export type ArvoreEmPartes = {
+  /** O tronco, que sai do chão e atravessa a copa. */
+  readonly tronco: Malha
+  /** A copa: os dois anéis de folhagem. */
+  readonly copa: Malha
+}
+
+/**
+ * Conífera em duas partes: tronco e copa.
+ *
+ * Por que em partes: até a captura de tela que abriu a D-060, a árvore inteira —
+ * tronco **e** copa — era desenhada com a cor da madeira (`CORES_DERIVADAS.tronco`,
+ * `#60422A`). Na tela, a copa saía marrom e a árvore virava um torrão de terra em
+ * pé: a folhagem não se distinguia do tronco nem da pedra solta ao lado. A cor da
+ * copa é o token da conífera (`cores.terreno.conifera`), que existia na paleta
+ * justamente para isto e não tinha nenhum uso.
+ */
+export function gerarArvore(opcoes: { readonly altura: number; readonly raio: number }): ArvoreEmPartes {
   const { altura, raio } = opcoes
-  return montar([
-    gerarCilindro({ raio: raio * 0.16, altura: altura * 0.42, lados: 6 }),
-    gerarCilindro({
-      raio,
-      altura: altura * 0.34,
-      lados: 7,
-      base: { x: 0, y: altura * 0.4, z: 0 },
-    }),
-    gerarCilindro({
-      raio: raio * 0.7,
-      altura: altura * 0.3,
-      lados: 7,
-      base: { x: 0, y: altura * 0.66, z: 0 },
-    }),
-  ])
+  return {
+    tronco: gerarCilindro({ raio: raio * 0.16, altura: altura * 0.42, lados: 6 }),
+    copa: montar([
+      gerarCilindro({
+        raio,
+        altura: altura * 0.34,
+        lados: 7,
+        base: { x: 0, y: altura * 0.4, z: 0 },
+      }),
+      gerarCilindro({
+        raio: raio * 0.7,
+        altura: altura * 0.3,
+        lados: 7,
+        base: { x: 0, y: altura * 0.66, z: 0 },
+      }),
+    ]),
+  }
 }
 
 /** Bola de pedra solta no capim. Detalhe barato que tira a cara de "caixa vazia". */

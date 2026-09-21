@@ -2,6 +2,22 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import type { Group } from 'three'
 import { CORES_DO_AVATAR } from '../ui/theme/paleta3d'
+import { corNoOrcamentoDeLuz } from '../ui/theme/luzDoMundo'
+
+/**
+ * As cores do avatar, cada uma dentro do orçamento de luz (D-060).
+ *
+ * A cabeça é `#EDEDE8`, e chega à tela com radiação 1,46 — acima do teto do tone
+ * mapping. Sem o ajuste, a cabeça é uma bola branca chapada, sem a sombra que dá
+ * volume à figura. Corrigir aqui, e não na paleta, mantém o token como está: o
+ * que muda é a cor que o mundo desenha.
+ */
+const CORES_DESENHADAS = {
+  corpo: corNoOrcamentoDeLuz(CORES_DO_AVATAR.corpo),
+  membros: corNoOrcamentoDeLuz(CORES_DO_AVATAR.membros),
+  cabeca: corNoOrcamentoDeLuz(CORES_DO_AVATAR.cabeca),
+  mochila: corNoOrcamentoDeLuz(CORES_DO_AVATAR.mochila),
+} as const
 import type { TeclasDeMovimento } from './camera/movimento'
 import {
   chaoEm,
@@ -152,38 +168,38 @@ export function Avatar({
           parecer gente ao lado das estruturas de 1,7 a 2,2 unidades. */}
       <mesh name="corpo" position={[0, 0.62, 0]}>
         <cylinderGeometry args={[0.22, 0.28, 0.84, 8]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.corpo} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.corpo} flatShading />
       </mesh>
 
       <mesh name="cabeca" position={[0, 1.24, 0]}>
         <sphereGeometry args={[0.2, 10, 8]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.cabeca} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.cabeca} flatShading />
       </mesh>
 
       {/* Braços: dois cilindros inclinados, para a figura não ser um poste. */}
       <mesh name="braco-esquerdo" position={[-0.3, 0.72, 0]} rotation={[0, 0, 0.24]}>
         <cylinderGeometry args={[0.07, 0.07, 0.62, 6]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.membros} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.membros} flatShading />
       </mesh>
       <mesh name="braco-direito" position={[0.3, 0.72, 0]} rotation={[0, 0, -0.24]}>
         <cylinderGeometry args={[0.07, 0.07, 0.62, 6]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.membros} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.membros} flatShading />
       </mesh>
 
       {/* Pernas: ficam paradas — não há animação de caminhada nesta etapa. */}
       <mesh name="perna-esquerda" position={[-0.12, 0.2, 0]}>
         <cylinderGeometry args={[0.08, 0.08, 0.42, 6]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.membros} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.membros} flatShading />
       </mesh>
       <mesh name="perna-direita" position={[0.12, 0.2, 0]}>
         <cylinderGeometry args={[0.08, 0.08, 0.42, 6]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.membros} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.membros} flatShading />
       </mesh>
 
       {/* Mochila, nas costas: a figura olha para +z, então as costas ficam em -z. */}
       <mesh name="mochila" position={[0, 0.72, -0.26]}>
         <boxGeometry args={[0.34, 0.44, 0.18]} />
-        <meshLambertMaterial color={CORES_DO_AVATAR.mochila} flatShading />
+        <meshLambertMaterial color={CORES_DESENHADAS.mochila} flatShading />
       </mesh>
     </group>
   )

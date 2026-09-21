@@ -47,6 +47,24 @@ export function paraLinear(componentes: readonly number[]): readonly number[] {
   return componentes.map(canalLinear)
 }
 
+/**
+ * Converte um canal da escala **linear** de volta para sRGB (0 a 1).
+ *
+ * Existe pelo caminho inverso do `canalLinear`: quando uma cor precisa ser
+ * corrigida **em linear** — o caso de trazê-la para dentro do orçamento de luz,
+ * em `ui/theme/luzDoMundo.ts` —, a conta é feita lá e o resultado tem de voltar
+ * para sRGB antes de virar material, porque é assim que o Three.js lê a cor.
+ */
+export function canalSrgb(componente: number): number {
+  const limitado = Math.min(Math.max(componente, 0), 1)
+  return limitado <= 0.0031308 ? limitado * 12.92 : 1.055 * limitado ** (1 / 2.4) - 0.055
+}
+
+/** Converte as três componentes lineares de uma cor (0 a 1) para sRGB. */
+export function paraSrgb(componentes: readonly number[]): readonly number[] {
+  return componentes.map(canalSrgb)
+}
+
 /** Mistura duas cores. `t` de 0 devolve a primeira, de 1 devolve a segunda. */
 export function misturar(uma: Cor3D, outra: Cor3D, t: number): Cor3D {
   const proporcao = Math.min(Math.max(t, 0), 1)

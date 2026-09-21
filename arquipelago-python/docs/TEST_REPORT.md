@@ -6,6 +6,93 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — a cor que chega à tela (captura do mundo, ilhas 9 a 12)
+
+Versão **0.18.0**. Esta execução nasceu de uma **captura de tela** enviada por quem usa o mundo, com o
+pedido de corrigir o que estivesse errado. Quatro defeitos foram encontrados e consertados; a novidade
+deste relatório é que a conferência de cor passou a ser feita **sobre a cor que chega à tela**, e não
+sobre o token da paleta. A decisão completa está em **D-060**.
+
+### 1. O que a conta mostrou, medida
+
+A luz do mundo (meia-esfera de 1,35 + sol de 1,15, em `world/Ceu.tsx`) somada ao material e comprimida
+pelo tone mapping ACES (o padrão do React Three Fiber) explicou os quatro defeitos:
+
+| Superfície | Cor do token | Radiação | O que a tela mostrava |
+|---|---|---|---|
+| laje do mar distante (`vazio`) | `#b9ccd3` | **1,083** | `#cedfe4` — retângulo de papel branco |
+| nuvem | `#f1f4f9` | 1,718 (chapada) | clara, mas com achatamento de até **10,9:1** |
+| parede da biblioteca | `#cac9c4` | **1,001** | no teto do tone mapping |
+| ponta do penhasco | `#201e1c` | 0,022 | `#030201` — bico preto |
+| marco da ilha 6 (tom quase branco) | `#e2e5e8` | **1,463** | silhueta branca, sem volume |
+| marco da ilha 6, bloqueado | `#e0e5ea` | **1,490** | idem |
+| marco da ilha 3 (e bloqueado) | `#6fbdc0` | 0,96 (**1,17**) | no teto, pior bloqueado |
+| marco da ilha 7 (e bloqueado) | `#a7c9d0` | **1,14** (**1,28**) | idem |
+| marco da ilha 10 (e bloqueado) | `#cf9693` | 0,96 (**1,01**) | idem |
+| cabeça do avatar | `#ededd8` | **1,463** | bola branca sem sombra |
+
+### 2. Os consertos, e o número de cada um
+
+1. **Orçamento de luz no desenho** (`corNoOrcamentoDeLuz`, `ui/theme/luzDoMundo.ts`): aplicado ao marco
+   de cada ilha, às cores do avatar e à parede da biblioteca. Oito dos doze tons não mudaram nada;
+   quatro entraram no orçamento. Depois: **todos os marcos ≤ 0,911** de radiação, bloqueados inclusive;
+   o menor par entre os doze marcos desenhados ficou em **33,2** (era 48,9 entre os tons crus) — o par
+   é o das ilhas 6 e 7, dois tons claros e frios.
+2. **Mar distante** (`vazio` → `marDistante`): `misturar(mar.fundo, nevoa, 0.30)` = `#89aeb6`, desenhado
+   **chapado** (`meshBasicMaterial`), como as nuvens. Antes: radiação 1,083. Depois: **0,787**, e a tela
+   mostra `#bdd5dc` — **112 de distância** do céu (`#d7dadd`), contra 42 antes. O mar passou a ser mais
+   escuro que o céu, que é a leitura certa de horizonte.
+3. **Nuvens**: medidas de 14 a 32 de largura, 5 a 9 de altura e 12 a 26 de profundidade. Achatamento
+   máximo: **4,5:1** (era 10,9:1); mínimo 2,3:1.
+4. **Ponta do penhasco**: `misturar(rocha, nevoa, 0.12)` = `#4a4745`. A parede sai de `#100e0e` para
+   `#4d4b48`, a ponta fica com **0,027** de radiação (piso do mundo: 0,02) e o gradiente contra o alto
+   da pedra fica em **2,2×**. Com 0,28 (tentado antes e descartado por medida) o gradiente caía para
+   1,11× e o penhasco virava parede cinza uniforme.
+5. **Árvore**: tronco e copa em malhas separadas — tronco com `CORES_DERIVADAS.tronco`, copa com o token
+   `cores.terreno.conifera`, que existia na paleta e não tinha uso.
+
+### 3. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, na versão 0.18.0.
+
+### 4. Testes automáticos — EXECUTADO
+
+**43 arquivos, 771 testes, todos aprovados** (eram 42 e 750).
+
+O arquivo novo é `src/ui/theme/luzDoMundo.test.ts` (21 testes), e ele cobra: os números das luzes
+iguais aos de `Ceu.tsx`; nenhuma superfície desenhada acima de 1,0; nenhuma superfície grande abaixo do
+piso de 0,02; o mar distante mais escuro que o céu; os doze marcos (bloqueados e liberados) dentro do
+orçamento e ainda distinguíveis entre si; o capim com o tom cru; as cores do avatar dentro do orçamento;
+e um **guarda de texto** que varre os `.tsx` do mundo e recusa cor desenhada como material que não esteja
+classificada como superfície. Os papéis das cores (superfície, fundo, luz, fonte) são conferidos por
+contagem, para a classificação não envelhecer em silêncio.
+
+Em `src/world/`: a árvore em duas partes tem teste novo (tronco de madeira, copa verde, uma parte de
+cada por árvore) — e ele foi conferido **contra o defeito**: com a copa de volta na cor da madeira, o
+teste falha (medido: «A Praia do Primeiro Programa» ficou sem copa de árvore).
+
+### 5. Build de produção — EXECUTADO, passou
+
+    dist/index.html                                0.63 kB │ gzip:   0.40 kB
+    dist/assets/trabalhadorDoPython-BzMdATh1.js    2.60 kB
+    dist/assets/index-gX3ovVZb.css                25.11 kB │ gzip:   4.06 kB
+    dist/assets/index-D_s8EGzc.js                453.20 kB │ gzip: 138.00 kB
+    dist/assets/Cena-DnANYuU5.js                 922.86 kB │ gzip: 246.04 kB
+
+    ✓ built in 642ms
+
+### 6. Não executado
+
+- **Nenhum pixel foi visto por mim.** Não há navegador com WebGL neste ambiente: os quatro defeitos
+  foram encontrados por olho de quem usa e medidos aqui na conta da luz; a confirmação de que o conserto
+  ficou certo na tela é a próxima captura.
+- **Nada foi conferido em tela cheia, nem em outra proporção de janela.** O que os testes provam é a
+  árvore de objetos 3D e a cor calculada, não o enquadramento.
+
+---
+
 ## Execução de 21/09/2026 — lote 4 da Etapa 11 (capítulos 10 e 11: arquivos e testes)
 
 Versão **0.17.0**. Este lote tinha duas metades: duas ilhas novas de conteúdo (unidades 11 e 12) e o

@@ -1,7 +1,9 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, no **lote 4 da Etapa 11 (capítulos 10 e 11)** — o lote que fecha a
-**Parte I** do livro: os onze capítulos de conceitos básicos têm unidade escrita.
+Atualizado em **21/09/2026**, depois do **conserto da cor do mundo** (D-060, versão 0.18.0) — o
+conserto que nasceu de uma captura de tela e que fez o projeto passar a conferir a **cor que chega à
+tela**, e não só a cor da paleta. O lote 4 da Etapa 11 (capítulos 10 e 11) entrou no mesmo dia, e fechou
+a **Parte I** do livro.
 
 ## Onde o projeto está
 
@@ -11,13 +13,14 @@ Atualizado em **21/09/2026**, no **lote 4 da Etapa 11 (capítulos 10 e 11)** —
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: doze ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
 | Conteúdo pedagógico | **existe** para as 12 unidades escritas (capítulos 1 a 11, a Parte I inteira): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060) |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir` — agora com **`try` por medida**, para uma medida impossível virar frase e não derrubar as outras (D-052) —, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
 | Execução de código (Pyodide) | **existe como prova de conceito**: console por ilha, interpretador servido pela própria aplicação, carregado sob demanda (Etapa 9). A ligação do Worker com o navegador é roteiro manual |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
-| Testes de navegador | **não executados** — não há navegador neste ambiente |
+| Testes de navegador | **não executados** — não há navegador neste ambiente. A verificação de imagem é feita por **captura de tela de quem usa**, e foi assim que apareceram as ilhas iguais (D-053), o mundo escuro (D-054), a pedra fora do capim (D-055), a ilha azul-petróleo (D-056), a ponta repetida (D-057) e os quatro defeitos de cor de D-060 |
 | Avaliação | **existe e é honesta**: enunciado que diz que a correção roda no cliente, envio exige todas as respostas, revisão explica todas as perguntas (Etapa 7) |
 
 Badge honesto: **o protótipo já ensina e já avalia, com o mundo desenhado — mas ninguém viu o
@@ -346,6 +349,30 @@ Verificação:
   distintos e **profundidades de pedra distintas**;
 - **o que continua sem prova**: a aparência. Não há navegador com WebGL aqui — a conferência visual
   do conserto é o **item 55** do roteiro manual, e quem olha é quem usa.
+
+### Conserto depois do lote 4: a cor que chega à tela (D-060)
+
+- **o defeito apareceu na segunda captura de tela** (ilhas 9 a 12), e eram quatro: a laje do mar
+  distante era um retângulo de papel branco, as nuvens eram lâminas, o bico de baixo das ilhas era um
+  espeto preto e as árvores eram torrões marrons;
+- **nenhum teste pegava**, porque todo teste de cor comparava o **token** com a paleta, e o token estava
+  certo nos quatro casos. O que decidia a cor era a **luz somada ao material**, comprimida pelo tone
+  mapping ACES (o padrão do React Three Fiber);
+- **a conta virou módulo** (`ui/theme/luzDoMundo.ts`): sRGB → linear, luzes somadas, ACES, sRGB — com os
+  números das luzes guardados e cobrados por teste, para o conserto não envelhecer;
+- **medido antes:** mar distante com **1,083** de radiação; parede da biblioteca com **1,001**; ponta do
+  penhasco com **0,022** (`#030201` na tela); marcos das ilhas 3, 6, 7 e 10 com 0,96 a **1,49** (pior
+  quando a unidade está bloqueada, porque a mistura com a névoa clareia); cabeça do avatar com **1,463**;
+- **consertos:** orçamento de luz aplicado onde o mundo desenha (marco, avatar e parede da biblioteca);
+  `vazio` virou **`marDistante`** (o nome mentia) e passou a ser desenhado chapado, mais escuro que o
+  céu; nuvens com achatamento máximo de 4,5:1 (era 10,9:1); ponta do penhasco em `misturar(rocha, nevoa,
+  0,12)`, com o gradiente de profundidade mantido em 2,2×; e a **árvore ganhou duas cores** (tronco de
+  madeira, copa de conífera — o token existia e não tinha uso);
+- **o preço do orçamento está registrado:** o menor par entre os doze marcos desenhados fica em 33,2; e
+  o valor 0,28 para a ponta foi testado e **descartado por medida** (o penhasco virava parede cinza
+  uniforme);
+- **todos os pixels continuam sem verificação automática:** este conserto foi achado por olho de quem
+  usa e medido aqui; a confirmação na tela é a próxima captura.
 
 ### Etapa 11 — lote 4: capítulos 10 e 11 nas ilhas 11 e 12 (a Parte I fica inteira)
 

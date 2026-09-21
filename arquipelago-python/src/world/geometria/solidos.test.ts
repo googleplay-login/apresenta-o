@@ -11,7 +11,7 @@ import {
   gerarPonte,
   montar,
 } from './solidos'
-import { juntarMalhas } from './ilha'
+import { juntarMalhas, juntarMalhas as juntar } from './ilha'
 
 /** Confere invariantes que valem para toda malha: índices válidos e sem NaN. */
 function conferirMalha(malha: Malha, onde: string) {
@@ -204,11 +204,25 @@ describe('estruturas da ilha', () => {
   })
 
   it('árvore: cresce a partir do chão e não passa da altura', () => {
-    const arvore = gerarArvore({ altura: 5, raio: 1.4 })
-    const caixa = limites(arvore)
+    const { tronco, copa } = gerarArvore({ altura: 5, raio: 1.4 })
+    const caixa = limites(juntar(tronco, copa))
     expect(caixa.y[0]).toBe(0)
     expect(caixa.y[1]).toBeCloseTo(5 * 0.96, 5)
-    conferirMalha(arvore, 'árvore')
+    conferirMalha(tronco, 'tronco da árvore')
+    conferirMalha(copa, 'copa da árvore')
+  })
+
+  it('árvore: o tronco sai do chão e a copa começa acima da metade dele', () => {
+    // A árvore é desenhada em duas cores (tronco de madeira, copa de conífera,
+    // D-060). Se a copa descesse até o chão, o verde cobriria o tronco; se
+    // subisse demais, a árvore ficaria com um buraco no meio.
+    const { tronco, copa } = gerarArvore({ altura: 5, raio: 1.4 })
+    const caixaDoTronco = limites(tronco)
+    const caixaDaCopa = limites(copa)
+    expect(caixaDoTronco.y[0]).toBe(0)
+    expect(caixaDaCopa.y[0]).toBeCloseTo(5 * 0.4, 5)
+    expect(caixaDaCopa.y[0]).toBeLessThan(caixaDoTronco.y[1])
+    expect(caixaDaCopa.y[1]).toBeGreaterThan(caixaDoTronco.y[1])
   })
 
   it('pedra: pequena e no chão', () => {

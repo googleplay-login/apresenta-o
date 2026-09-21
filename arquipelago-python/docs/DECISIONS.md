@@ -1316,3 +1316,78 @@ ensina teste — e o livro manda rodar `unittest.main()`, que depende de existir
 
 **O que continua valendo:** `input()` não funciona neste console (D-051) — a unidade 8 tem trechos
 marcados por isso, e a unidade 11 não usa `input()` em lugar nenhum.
+
+---
+
+## D-060 — A cor que chega à tela: o orçamento de luz, e quatro defeitos que a captura mostrou
+
+**Contexto.** A segunda captura de tela do mundo (ilhas 9 a 12, enviada por quem usa) mostrou quatro
+coisas erradas, todas de **cor e luz**: a laje do mar distante era um retângulo de papel branco; as
+nuvens eram lâminas; o bico de baixo das ilhas era um espeto preto; e as árvores eram torrões marrons.
+Nenhuma delas aparecia em teste, porque todo teste de cor do projeto comparava o **token** com a paleta
+— e o token estava certo nos quatro casos. O que decidia a cor era outra coisa: a **luz do mundo**.
+
+**A medição que faltava.** `world/Ceu.tsx` monta a luz (meia-esfera de 1,35 mais sol de 1,15) e o React
+Three Fiber aplica **tone mapping ACES** por padrão, que comprime a faixa de 0 a 1. Rodei a conta
+completa — sRGB → linear, luzes somadas, ACES, sRGB — para cada cor do mundo, e o resultado explicou a
+captura:
+
+| Superfície | Cor do token | Radiação antes | O que aparecia na tela |
+|---|---|---|---|
+| laje do mar (`vazio`) | `#b9ccd3` | **1,083** | `#cedfe4` — papel branco chapado |
+| nuvem | `#f1f4f9` | 1,718 (sem luz) | branca, mas em forma de lâmina (10,9:1) |
+| parede da biblioteca | `#cac9c4` | **1,001** | no teto do tone mapping |
+| ponta do penhasco | `#201e1c` | 0,022 | `#030201` — buraco preto |
+| marco da ilha 6 | `#e2e5e8` | **1,463** | silhueta branca, sem volume |
+| cabeça do avatar | `#ededd8` | **1,463** | bola branca chapada |
+
+**As decisões.**
+
+1. **A conta virou código de produção e de teste.** `src/ui/theme/luzDoMundo.ts` reproduz o caminho do
+   Three.js e guarda os números das luzes (e o teste cobra que continuem iguais aos de `Ceu.tsx`; se
+   alguém aumentar a luz, o teste acusa antes da captura). A partir daqui, toda conferência de cor do
+   projeto pode ser feita **na cor que chega à tela**, e não só no token.
+
+2. **O orçamento de luz é aplicado no desenho, e não na paleta.** `corNoOrcamentoDeLuz(cor)` traz a cor
+   para dentro do teto (0,92, com folga) mexendo **só na claridade**, na proporção entre os canais — o
+   matiz não muda. Aplicado: no **marco** de cada ilha (`Ilha.tsx`), nas **cores do avatar**
+   (`Avatar.tsx`) e na **parede da biblioteca** (`Ilha.tsx`). Dos doze tons, **oito não precisaram de
+   nada**; quatro (ilhas 3, 6, 7 e 10) entraram no orçamento, e o mesmo passa a valer para o marco
+   **bloqueado**, que era pior (a mistura com a névoa clareia mais). A paleta continua sendo a fonte da
+   verdade: a lista de tons não foi tocada, e o teste que mede a distância entre os doze continua valendo
+   (o menor par dos marcos **desenhados** fica em 33,2 — o par 6 e 7, dois tons claros e frios).
+
+3. **O mar distante deixou de se chamar `vazio`, e deixou de receber luz.** O nome mentia: a laje é o mar
+   visto de longe. E ela é desenhada **chapada** (`meshBasicMaterial`), como as nuvens: o mar que segue
+   até o horizonte é plano de verdade, e uma laje enorme recebendo sol ficaria com um degradê que a
+   distância não tem. A cor nova, `misturar(mar.fundo, névoa, 0,30)`, deixa o mar **mais escuro** que o
+   céu (112 de distância medida entre os dois) — antes ele era mais claro, o que invertia o horizonte.
+
+4. **A ponta do penhasco voltou a ser pedra, e continua funda.** `ajustar(rocha, 0.55)` virou
+   `misturar(rocha, névoa, 0,12)`: a parede sai de `#100e0e` para `#4d4b48`, a ponta fica em 0,027 de
+   radiação (34% acima do piso de 0,02) e o gradiente contra o alto da pedra se mantém em **2,2×**.
+   O valor 0,28 chegou a ser usado e foi **descartado por medida**: ele deixava a ponta em `#676766` e o
+   gradiente em 1,11× — o penhasco virava uma parede cinza uniforme, sem a profundidade que é a razão de
+   existir do gradiente. A ponta "sumir na névoa" não se resolve escurecendo: resolve-se com a névoa.
+
+5. **Nuvem é bolo, não placa.** As medidas viraram 14 a 32 de largura, 5 a 9 de altura e 12 a 26 de
+   profundidade: o achatamento caiu de até **10,9:1** para **2,3:1 a 4,5:1**.
+
+6. **A árvore ganhou duas cores.** Até esta decisão, tronco **e copa** eram desenhados com
+   `CORES_DERIVADAS.tronco` (`#60422a`): na tela, a copa saía marrom e a árvore virava um torrão de
+   terra em pé, confundível com a pedra solta ao lado. `gerarArvore` passou a devolver **tronco** e
+   **copa**, e a copa usa `cores.terreno.conifera` — o token da conífera, que existia na paleta para
+   isto e não tinha nenhum uso.
+
+**O que os testes passaram a cobrar** (arquivo novo, `src/ui/theme/luzDoMundo.test.ts`): nenhuma
+superfície desenhada passa de 1,0 de radiação; as cores de **fundo** (céu, névoa) e de **luz** (a
+meia-luz e o sol) não entram nessa conta, porque não são superfícies — medir a cor do céu como
+superfície dava 1,58, e o céu **é** a luz; nenhuma superfície grande fica abaixo do piso de 0,02;
+o mar distante é mais escuro que o céu; todo tom de ilha, bloqueado ou não, cabe no orçamento; o capim
+segue com o tom cru (diluído em 22%, ele nunca chega perto do teto); a árvore tem tronco de madeira e
+copa verde, uma parte de cada por árvore; e um **guarda de texto** varre os componentes do mundo e
+recusa qualquer cor desenhada como material que não esteja classificada como superfície — é por essa
+fresta que uma cor queimada entra sem ninguém ver.
+
+**O que continua sem prova:** os **pixels**. Este defeito foi achado por olho e medido no código; a
+verificação de que o conserto ficou certo na tela é outra captura.
