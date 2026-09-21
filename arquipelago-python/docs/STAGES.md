@@ -351,11 +351,42 @@ navegador está no roteiro manual de `docs/TEST_REPORT.md`.
 
 ---
 
+## Etapa 11 — Expansão curricular em lotes (em andamento)
+
+Lote 1: **capítulos 4 e 5**, nas ilhas 5 e 6 — "O Moinho das Repetições" e "A Encruzilhada das
+Decisões", com 5 perguntas e 3 exercícios cada, todos com correção.
+
+O que a etapa provou, além do conteúdo novo:
+
+- **Uma unidade nova agora é dado, não código.** Os dois arquivos de conteúdo entraram, cada um com
+  uma linha no plano e no registro, e as ilhas nasceram no mundo com as pontes certas — sem tocar em
+  posição de ilha, trilha, seletor ou ponte. A curva em S, a distância entre centros e o vão das
+  pontes já saíam do índice da unidade.
+- **O que estava escrito à mão nos testes foi o que quebrou.** `0 de 4 ilhas aprovadas` aparecia em
+  dezenas de asserções. Agora as contagens saem do plano (`PLANO_DE_UNIDADES.length`) e do conteúdo
+  real (exercícios, trechos que rodam, exercícios com correção) — e o teste que roda Python de verdade
+  deixou de aceitar "pelo menos dez exercícios com correção" para exigir **todos os que o conteúdo
+  declara** (D-049).
+- **"planejada" virou mentira.** O painel mostrava quatro unidades com ciclo completo como "planejada",
+  e o teste antigo **exigia** isso. O teste passou a comparar o campo com o conteúdo: com conteúdo e
+  marcada como planejada falha; sem conteúdo e marcada como pronta falha igual (D-048).
+- **Conteúdo e correção nascem juntos.** Os 6 exercícios novos têm `correcao` com `limite` declarado, e
+  o teste do interpretador real confere que cada solução de referência **passa** na própria correção —
+  inclusive as que dependem de comentário, de não mexer na lista original e de tipo booleano.
+- **A honestidade sobre o livro continua:** os capítulos 4 e 5 entraram sem o PDF em mãos, com o título
+  em português marcado como **a confirmar** e as páginas em `null`.
+
+**Limite explícito:** o lote 1 não foi visto em navegador — nenhum navegador com WebGL existe neste
+ambiente. O que ele prova está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real).
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11** — expansão curricular em lotes de 2 a 3 unidades, uma autorização por lote.
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; o lote 1 está acima, e os
+  lotes seguintes continuam pelos capítulos 6 em diante.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

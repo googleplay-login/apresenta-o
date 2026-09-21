@@ -1,15 +1,15 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 10 (exercícios com correção automática)**.
+Atualizado em **21/09/2026**, no **lote 1 da Etapa 11 (expansão curricular: capítulos 4 e 5)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 10 concluída; 11 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lote 1 entregue (capítulos 4 e 5, ilhas 5 e 6); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
-| Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Mundo 3D | **existe**: seis ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as duas últimas nasceram do conteúdo, sem código novo de posicionamento |
+| Conteúdo pedagógico | **existe** para as 6 primeiras unidades (capítulos 1 a 5): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir`, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
@@ -27,7 +27,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 699 testes, em 40 arquivos
+    npm test             # 700 testes, em 40 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -71,8 +71,8 @@ que descarta o Worker — a única forma de interromper um laço infinito (D-041
 
 - Projeto Vite + React + TypeScript, dependências **exatas** e lockfile versionado.
 - `src/ui/theme/tokens.ts`: fonte única das cores, com teste de contraste WCAG AA.
-- `src/content/`: as 4 primeiras unidades e a regra de referência ao livro, com página `null` +
-  `referencia-pendente`.
+- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 6 primeiras — capítulos 1 a 5) e a
+  regra de referência ao livro, com página `null` + `referencia-pendente`.
 - `src/`: esqueleto das pastas, cada uma com `README.md` dizendo sua responsabilidade e limites.
 - `docs/`: os documentos de continuidade.
 
@@ -233,6 +233,31 @@ Verificação:
 - a trava de acentuação reprovou a etapa uma vez por causa de um **nome de classe** lido como prosa
   (`"exercicio__nota exercicio__nao-roda"`); a classe virou um token só, e a trava ficou como estava.
 
+### Etapa 11 — lote 1: capítulos 4 e 5 nas ilhas 5 e 6
+
+- `src/content/unidades/u05MoinhoDasRepeticoes.ts`: laço `for` (a variável recebe o item, não o índice),
+  recuo, `range()` com o segundo limite fora, `len`/`sum`/`max`/`min`, fatias, a diferença entre
+  `precos[:]` e `precos` e por que tupla não muda. 3 exercícios (todos com correção), 5 perguntas,
+  1 bloco marcado como "não roda neste console" (a tupla que tenta mudar um item);
+- `src/content/unidades/u06EncruzilhadaDasDecisoes.ts`: `=` não é `==`, `if`/`elif`/`else` com a
+  condição mais estreita primeiro, `and`/`or`/`not`, `in` com listas. 3 exercícios (todos com correção),
+  5 perguntas, 1 bloco marcado (`if idade = 18:` → `SyntaxError`);
+- **uma unidade nova agora é dado, não código**: as ilhas nasceram no mundo com as pontes certas sem
+  tocar em nenhuma conta de posição — a curva, a distância entre centros e o vão das pontes já saíam do
+  índice da unidade (D-049);
+- **o que quebrou foi o que estava escrito à mão**: `0 de 4 ilhas aprovadas` aparecia em dezenas de
+  asserções. Todas as contagens passaram a sair do plano e do conteúdo real, e o teste do interpretador
+  de verdade deixou de aceitar "pelo menos dez exercícios com correção" para exigir **todos os que o
+  conteúdo declara**;
+- **"planejada" virou mentira, e o teste antigo exigia a mentira**: as quatro primeiras unidades já
+  tinham ciclo completo e continuavam marcadas como planejadas. O teste agora compara o campo com o
+  conteúdo, nas duas direções (D-048), e o painel do projeto mostra as seis unidades como prontas;
+- **honestidade sobre o livro mantida**: os capítulos 4 e 5 entraram sem o PDF em mãos — o número do
+  capítulo é certo, o título em português está marcado como **a confirmar** e as páginas continuam
+  `null` (D-050);
+- o lote **não foi visto em navegador nenhum**: o mundo com seis ilhas é provado em teste, e a
+  travessia a pé até as ilhas novas é o item 54 do roteiro manual.
+
 ### Etapa 10 — exercícios com correção automática, e o limite escrito na tela
 
 - `src/learning/correcaoDeExercicio.ts`: a conferência inteira, pura — monta a sonda
@@ -290,7 +315,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 53 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** — nem as ilhas 5 e 6 | Registrado em `TEST_REPORT.md`, com roteiro manual de 54 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |
@@ -304,13 +329,15 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11 — expansão curricular em lotes de 2 a 3 unidades.** O ciclo completo já existe para as
-quatro primeiras ilhas, com correção automática de exercício; a Etapa 11 acrescenta ilhas novas
-escrevendo conteúdo, e não construindo maquinário — cada lote passa pelo mesmo validador, pelos
-mesmos testes e pelo mesmo padrão de correção declarada com limite.
+**Etapa 11, lote 2 — os capítulos 6 em diante, em lotes de 2 a 3 unidades.** O lote 1 (capítulos 4 e 5)
+está entregue; o lote 2 segue o mesmo caminho, que agora está medido: escrever o conteúdo, registrar no
+plano e no registro, e deixar que o validador, os testes de conteúdo e o teste do interpretador de
+verdade digam o que está faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal
+de que a Etapa 4 deixou alguma conta escrita à mão, e o conserto é na conta, não no lote.
 
-Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
-leitura recomendada fala em capítulo e seção, não em página.
+Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null`, o
+título em português dos capítulos novos fica marcado como "a confirmar" e a leitura recomendada fala em
+capítulo e seção, não em página.
 
 ## Como continuar sem mim
 

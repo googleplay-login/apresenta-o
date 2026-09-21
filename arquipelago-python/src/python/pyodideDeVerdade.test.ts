@@ -192,7 +192,7 @@ describe('o código que as ilhas ensinam roda de verdade', () => {
    * de propósito, programa que lê o teclado) têm de estar **marcados** como tal,
    * e o outro teste deste bloco cobra isso.
    */
-  it('todo trecho não marcado roda sem erro, nas quatro unidades', async () => {
+  it('todo trecho não marcado roda sem erro, em todas as unidades', async () => {
     let conferidos = 0
     const problemas: string[] = []
 
@@ -220,7 +220,11 @@ describe('o código que as ilhas ensinam roda de verdade', () => {
       }
     }
 
-    expect(conferidos, 'nenhum trecho de código encontrado no conteúdo').toBeGreaterThanOrEqual(15)
+    // A conta sai do conteúdo: se um trecho for acrescentado e não rodar, este
+    // teste acusa; se a lista de trechos encolher sem ninguém notar, acusa também.
+    const esperados = contarTrechosQueRodam()
+    expect(esperados, 'nenhum trecho de código encontrado no conteúdo').toBeGreaterThanOrEqual(15)
+    expect(conferidos, 'trechos a menos do que o conteúdo tem').toBe(esperados)
     expect(problemas, `Trechos que não rodam:\n${problemas.join('\n')}`).toEqual([])
   }, 180_000)
 
@@ -243,7 +247,10 @@ describe('o código que as ilhas ensinam roda de verdade', () => {
       }
     }
 
-    expect(marcados.length, 'nenhum trecho marcado como "não roda" — a marcação sumiu?').toBeGreaterThanOrEqual(3)
+    expect(marcados.length, 'nenhum trecho marcado como "não roda" — a marcação sumiu?').toBe(
+      contarTrechosMarcados(),
+    )
+    expect(marcados.length).toBeGreaterThanOrEqual(3)
 
     for (const trecho of marcados) {
       const recusa = motivoDaRecusa(trecho.codigo)
@@ -305,7 +312,13 @@ describe('a correção automática, contra o Python de verdade', () => {
       }
     }
 
-    expect(conferidos, 'nenhum exercício com correção no conteúdo').toBeGreaterThanOrEqual(10)
+    // Todos os exercícios com correção, e não "pelo menos dez": é a conta do
+    // conteúdo, para nenhum exercício passar sem ter a solução conferida aqui.
+    const comCorrecao = CONTEUDO_DAS_UNIDADES.flatMap((unidade) => unidade.pratica).filter(
+      (exercicio) => exercicio.correcao !== undefined,
+    ).length
+    expect(comCorrecao).toBeGreaterThanOrEqual(10)
+    expect(conferidos).toBe(comCorrecao)
     expect(problemas, `A correção reprovou a resposta certa:\n${problemas.join('\n')}`).toEqual([])
   }, 180_000)
 
@@ -448,3 +461,39 @@ describe('a correção automática, contra o Python de verdade', () => {
     expect(sondas[0]?.texto).toBe('a§b "c" \n d')
   }, 180_000)
 })
+
+/** Quantos trechos de Python o conteúdo promete que rodam. */
+function contarTrechosQueRodam(): number {
+  let total = 0
+  for (const unidade of CONTEUDO_DAS_UNIDADES) {
+    for (const bloco of unidade.explicacao) {
+      if (bloco.tipo === 'codigo' && bloco.linguagem === 'python' && bloco.naoRodaNoConsole === undefined) {
+        total += 1
+      }
+    }
+    for (const exercicio of unidade.pratica) {
+      if (exercicio.naoRodaNoConsole === undefined) {
+        total += 1
+      }
+    }
+  }
+  return total
+}
+
+/** Quantos trechos o conteúdo marca como "não roda no console". */
+function contarTrechosMarcados(): number {
+  let total = 0
+  for (const unidade of CONTEUDO_DAS_UNIDADES) {
+    for (const bloco of unidade.explicacao) {
+      if (bloco.tipo === 'codigo' && bloco.linguagem === 'python' && bloco.naoRodaNoConsole !== undefined) {
+        total += 1
+      }
+    }
+    for (const exercicio of unidade.pratica) {
+      if (exercicio.naoRodaNoConsole !== undefined) {
+        total += 1
+      }
+    }
+  }
+  return total
+}

@@ -6,6 +6,72 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 11, lote 1 (capítulos 4 e 5: ilhas 5 e 6)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com as duas unidades novas (`u05MoinhoDasRepeticoes`, `u06EncruzilhadaDasDecisoes`), o
+registro em `CONTEUDO_DAS_UNIDADES`, o plano com seis unidades e o teste de verdade com contagem
+derivada do conteúdo.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**40 arquivos, 700 testes, todos passando.** O que a expansão mudou, e o que ela cobra sem precisar
+de teste novo:
+
+| Arquivo | Testes | O que a expansão mudou aqui |
+|---|---|---|
+| `src/content/conteudo.test.ts` | 42 | Passou a percorrer **seis** unidades: forma do conteúdo, correção com `limite`, motivos escritos, gabarito distribuído pelas quatro posições **unidade por unidade**, diagramas com rótulos únicos e nenhum trecho do livro |
+| `src/content/planoDeUnidades.test.ts` | 16 | Dois testes novos, e o antigo trocado: "não promete conteúdo que não existe" (unidade sem conteúdo não pode estar `pronta`) e "não deixa unidade com conteúdo escrito marcada como planejada" — os dois contra o conteúdo real (D-048) |
+| `src/content/percursoDoConteudo.test.ts` | 6 | A conta de exercícios saiu do conteúdo: **18 exercícios** (era 12) e o teste exige que o domínio aceite **todos** eles; a contagem fixa `12` virou o total do próprio conteúdo |
+| `src/python/pyodideDeVerdade.test.ts` | 18 | Roda no Pyodide real **40 trechos** que o conteúdo promete que rodam (eram 23) e os **8 marcados** (eram 6), com as contagens saindo do conteúdo: se um trecho novo não rodar, o teste acusa |
+| `src/app/paginas/Mundo.interacao.test.tsx` | 24 | A contagem do HUD virou `0 de 6 ilhas aprovadas`, derivada de `PLANO_DE_UNIDADES.length`; o percurso de ponta a ponta aprova **seis** ilhas em sequência, com recarga no meio |
+| `src/content/*` (validador) | — | Recusa identificador de exercício repetido entre unidades — é o que garante que `e5-*` e `e6-*` não colidem com nada |
+
+Números do conteúdo, medidos pelo teste que roda Python de verdade: **6 unidades**, **30 blocos de
+código** na explicação, **18 exercícios** (16 com correção), **40 trechos que rodam** e **8 trechos
+marcados** como "não roda neste console".
+
+### 3. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/assets/index-*.js` | 353,72 kB | 110,13 kB |
+| `dist/assets/Cena-*.js` | 912,10 kB | 242,34 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+O pedaço principal cresceu **27,61 kB** (326,11 → 353,72): o conteúdo novo é dado que entra no
+JavaScript. O pedaço da cena 3D **não mudou um byte** — as ilhas 5 e 6 nasceram da conta que já
+existia (D-049), e nenhum código de mundo foi escrito para elas.
+
+### 4. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Nenhum navegador.** As ilhas 5 e 6 nunca foram vistas por ninguém: o que se prova aqui é o mundo
+  montado em teste (seis ilhas, uma ponte por par vizinho), o conteúdo e a correção — não a aparência.
+- **A travessia a pé até as ilhas novas** com o avatar: geometria e mapa caminhável passam em teste,
+  mas a caminhada de verdade é roteiro manual (item 54).
+
+### 5. Roteiro manual das ilhas novas (item 54)
+
+54. **As ilhas 5 e 6 existem, com as pontes certas**: abrir o mundo e contar as ilhas suspensas — devem
+    ser **seis**, na mesma curva em S, com uma ponte entre cada par vizinho (5 pontes). Com as ilhas 4
+    e 5 ainda não aprovadas, as duas pontes novas devem aparecer pela metade, como as outras fechadas.
+    Depois aprovar a ilha 4 (responder as perguntas, 4 de 5) e conferir que a ponte 4–5 fica inteira e
+    que a travessia a pé, com `W`, leva o avatar até a ilha 5; entrar nela e conferir que a missão, a
+    leitura (capítulo 4), a explicação, os 3 exercícios e as 5 perguntas aparecem. Repetir da 5 para a
+    6 (capítulo 5). Os itens 51 a 53 valem igualmente para os exercícios novos — inclusive o do capítulo
+    5, em que a conferência exige um valor **booleano** (`True`), não o texto.
+
+Resultado esperado, somando as etapas 5 a 11: **54 de 54 itens conferidos**. Qualquer item que falhe
+deve ser registrado aqui.
+
 ## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -20,7 +86,7 @@ progresso e o percurso montado a partir do conteúdo.
 
     npm test
 
-**40 arquivos, 697 testes, todos passando.** Os que interessam a esta etapa:
+**40 arquivos, 699 testes, todos passando.** Os que interessam a esta etapa:
 
 | Arquivo | Testes | O que cobre |
 |---|---|---|
@@ -81,7 +147,7 @@ progresso e o percurso montado a partir do conteúdo.
     limpar só a chave do progresso no navegador (não o armazenamento inteiro) e conferir que o selo
     some, e que o resto do armazenamento do site continua intacto.
 
-Resultado esperado, somando as etapas 5 a 10: **53 de 53 itens conferidos**. Qualquer item que falhe
+Resultado esperado, somando as etapas 5 a 10: **53 de 53 itens conferidos**.
 deve ser registrado aqui.
 
 ---

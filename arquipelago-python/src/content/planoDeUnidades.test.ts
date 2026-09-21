@@ -4,7 +4,8 @@ import {
   referenciaEstaCoerente,
   type ReferenciaLivro,
 } from './referenciaLivro'
-import { PLANO_DE_UNIDADES, idsEmOrdem, type UnidadePlanejada } from './planoDeUnidades'
+import { PLANO_DE_UNIDADES, idsEmOrdem } from './planoDeUnidades'
+import { conteudoDaUnidade } from './unidades'
 
 describe('invariantes do plano de unidades', () => {
   it('tem pelo menos uma unidade planejada', () => {
@@ -124,11 +125,25 @@ describe('coerência de ReferenciaLivro', () => {
 })
 
 describe('estado de construção das unidades', () => {
-  it('não declara nenhuma unidade como pronta nesta etapa do projeto', () => {
-    // Garante que a página de status não prometa conteúdo que ainda não existe.
-    // Quando a primeira unidade ficar pronta de verdade, este teste deve ser
-    // atualizado junto com a entrega — e não antes.
-    const situacoes = PLANO_DE_UNIDADES.map((unidade: UnidadePlanejada) => unidade.situacao)
-    expect(situacoes.every((situacao) => situacao === 'planejada')).toBe(true)
+  it('não promete conteúdo que ainda não existe', () => {
+    // A página de status não pode dizer "pronta" de uma unidade sem aula escrita:
+    // seria prometer o que o estudante não encontraria ao entrar.
+    const mentindo = PLANO_DE_UNIDADES.filter(
+      (unidade) => conteudoDaUnidade(unidade.id) === null && unidade.situacao === 'pronta',
+    )
+
+    expect(mentindo.map((unidade) => unidade.id)).toEqual([])
+  })
+
+  it('não deixa unidade com conteúdo escrito marcada como "planejada"', () => {
+    // O contrário também engana, e é o que aconteceu até a Etapa 11: as quatro
+    // primeiras unidades tinham conteúdo completo — missão, leitura, explicação,
+    // exercícios e perguntas — e o painel do projeto continuava mostrando
+    // "planejada". O teste antigo exigia exatamente isso, e por isso mentia junto.
+    const paradas = PLANO_DE_UNIDADES.filter(
+      (unidade) => conteudoDaUnidade(unidade.id) !== null && unidade.situacao === 'planejada',
+    )
+
+    expect(paradas.map((unidade) => unidade.id)).toEqual([])
   })
 })

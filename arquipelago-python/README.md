@@ -9,16 +9,16 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
 ## Estado atual: o protótipo já ensina e já avalia
 
-> **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, um **avatar que
+> **O que existe hoje:** mundo 3D navegável com **seis** ilhas suspensas e pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
-> ciclo de estudo completo das quatro primeiras unidades (missão, estudo, prática, avaliação e
-> resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador, um
+> ciclo de estudo completo das seis primeiras unidades — capítulos 1 a 5 do livro (missão, estudo,
+> prática, avaliação e resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador, um
 > **console de Python de verdade** em cada ilha — interpretador servido pela própria aplicação,
 > carregado só quando a pessoa pede — e a **conferência automática do exercício**, com o limite dela
 > escrito na tela.
 >
-> **O que ainda não existe:** expansão para as unidades seguintes (Etapa 11), animação de caminhada
-> do avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
+> **O que ainda não existe:** expansão para as unidades seguintes (os capítulos 6 em diante),
+> animação de caminhada do avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
 > nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
 > linha reproduzida e sem número de página, porque o PDF não está em mãos.
 >
@@ -30,7 +30,8 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 53 itens está
+> placa de vídeo), mas os pixels continuam **não verificados** — nem as ilhas novas do capítulo 4 e 5
+> foram vistas. O roteiro manual de 54 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -48,7 +49,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 699 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e a conferência no Python de verdade
+    npm test         # 700 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção

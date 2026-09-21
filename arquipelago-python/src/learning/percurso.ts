@@ -40,7 +40,7 @@ export type ProgressoDaUnidade = {
    *
    * É um **marcador pessoal**, escrito pela própria pessoa: não é prova de
    * leitura e não entra em nenhuma conta de aprovação. Guardá-lo importa porque
-   * a trilha tem quatro unidades com quatro leituras, e "onde eu parei" é
+   * a trilha tem uma leitura por unidade, e "onde eu parei" é
    * exatamente o tipo de coisa que se esquece entre uma sessão e outra.
    */
   readonly leituraFeita: boolean

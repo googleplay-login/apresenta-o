@@ -253,7 +253,7 @@ describe('a rota a pé até outra ilha', () => {
     const ultima = mapa.ilhas[3]
     const primeira = mapa.ilhas[0]
     if (ultima === undefined || primeira === undefined) {
-      throw new Error('O mundo tem quatro ilhas')
+      throw new Error('O mundo não tem ilhas')
     }
 
     const rota = rotaAte(mapa, { x: ultima.x, z: ultima.z }, primeira.id)

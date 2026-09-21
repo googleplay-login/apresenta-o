@@ -869,3 +869,59 @@ falar só da leitura. Os testes cobrem: migração da versão 1 (aprovação pre
 exercícios vazios), migração da 2 (leitura preservada, exercícios vazios), arquivo da versão atual
 **sem** o campo (recusado, com aviso), lista com item que não é texto (recusada) e gravação/releitura
 de um exercício conferido com o armazenamento de verdade do jsdom.
+
+## D-048 — O estado de construção da unidade é medido contra o conteúdo, não escrito à mão
+**21/09/2026** — decisão de projeto, na Etapa 11.
+
+**Decisão:** o campo `situacao` de cada unidade planejada passa a acompanhar o que existe: unidade
+com conteúdo escrito não pode estar marcada como `planejada`, e unidade sem conteúdo não pode estar
+marcada como `pronta`. As duas direções são cobradas por teste, contra o conteúdo real, e não contra
+uma lista escrita à mão.
+
+**Contexto:** o teste anterior exigia que **todas** as unidades estivessem como `planejada`, com a
+justificativa de "não prometer conteúdo que ainda não existe". A justificativa era boa; o teste, com o
+tempo, passou a mentir do outro lado: as quatro primeiras unidades já tinham missão, leitura,
+explicação, exercícios e perguntas, e o painel do projeto continuava mostrando "planejada" para elas.
+A lição é a de sempre: **teste que congela o estado do projeto envelhece mentindo** — o que envelhece
+bem é teste que compara o dado com o fato.
+
+**Consequência:** o painel do projeto passou a mostrar "pronta" para as seis unidades escritas, e a
+lista de "o que ainda não existe" perdeu as linhas do Pyodide e da conferência automática, que
+passaram a existir nas Etapas 9 e 10. Um teste verifica que essas linhas não voltem.
+
+## D-049 — Uma unidade nova entra pelo conteúdo, e o mundo se ajusta sozinho
+**21/09/2026** — decisão de arquitetura, na Etapa 11.
+
+**Decisão:** escrever uma unidade nova é acrescentar um arquivo de conteúdo e uma linha no registro.
+Nada de posição de ilha, ponte, trilha, seletor ou contagem escrita à mão em componente: o mundo, a
+trilha em texto, o percurso do domínio e o HUD derivam de `PLANO_DE_UNIDADES` e do conteúdo.
+
+**Contexto:** as duas unidades novas — capítulos 4 e 5 — entraram sem tocar em nenhuma conta de
+posição 3D (a curva em S, a distância entre centros e o vão das pontes já eram calculados a partir do
+índice), e as ilhas apareceram no mundo com as pontes certas. O que **precisou** de ajuste foi o que
+estava escrito à mão nos testes: `0 de 4 ilhas aprovadas`, em dezenas de asserções. Isso não é
+detalhe de teste: era um número do projeto duplicado em vários lugares.
+
+**Consequência:** as contagens dos testes passaram a sair do plano (`${PLANO_DE_UNIDADES.length}`) e
+do conteúdo real (número de exercícios, de trechos que rodam, de exercícios com correção). O teste que
+roda Python de verdade deixou de aceitar "pelo menos dez exercícios com correção" e passou a exigir
+**todos os que o conteúdo declara** — piso solto era o que permitia um exercício novo nascer sem
+conferência.
+
+## D-050 — Capítulo novo entra com o número conferido e o título marcado como não conferido
+**21/09/2026** — decisão de conteúdo, na Etapa 11 (lote 1).
+
+**Decisão:** quando o capítulo de uma unidade nova não pôde ser conferido no sumário da obra, o plano
+guarda o título **como está no original**, seguido de "(do original; título em português a confirmar)".
+A página continua `null`, como em todas as unidades.
+
+**Contexto:** as unidades 5 e 6 vieram do que **sabemos** dos capítulos 4 e 5 — laços com listas e
+`if` —, e não de uma leitura do sumário em português: o PDF não está nesta máquina desde o começo do
+projeto (D-010). Escrever "Trabalhando com listas" e "if" como se fossem os títulos impressos seria
+apresentar uma tradução nossa como se fosse o livro. A alternativa — não escrever título nenhum —
+esconderia informação que o mapa do livro existe para dar: que unidade estuda qual capítulo.
+
+**Consequência:** `docs/BOOK_MAP.md` traz a tabela com a pendência visível, o texto da unidade continua
+citando **capítulo e assunto**, nunca página, e a pendência herdada do PDF ganhou mais um item na lista
+do que precisa ser conferido quando o livro chegar: os títulos dos capítulos 4 e 5 (e, daí em diante, de
+cada lote novo). Nada disso muda o que o estudante estuda — muda o que o projeto afirma saber.

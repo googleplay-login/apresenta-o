@@ -120,7 +120,7 @@ describe('a prática com conferência automática', () => {
   })
 })
 
-describe('a prática com o conteúdo real das quatro unidades', () => {
+describe('a prática com o conteúdo real de todas as unidades', () => {
   it('todo exercício real cai em um dos dois casos: conferível aqui, ou explicado', () => {
     // Cobra do conteúdo de verdade a mesma regra que o validador cobra da forma:
     // nenhum exercício pode chegar à tela sem botão **e** sem explicação.

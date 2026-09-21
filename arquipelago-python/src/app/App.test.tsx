@@ -47,7 +47,7 @@ describe('casca da aplicação', () => {
   it('abre no mundo, não numa página sobre o projeto', () => {
     // A rota padrão é a tela de trabalho. Quem abre o site quer estudar.
     expect(html).toContain('As ilhas do arquipélago')
-    expect(html).toContain('0 de 4 ilhas aprovadas')
+    expect(html).toContain(`0 de ${PLANO_DE_UNIDADES.length} ilhas aprovadas`)
   })
 
   it('tem controles de verdade, e todos declaram o que fazem', () => {
@@ -127,7 +127,13 @@ describe('painel do projeto', () => {
 
   it('lista explicitamente o que ainda não existe', () => {
     expect(painel).toContain('O que ainda não existe')
-    expect(painel).toContain('Pyodide')
+    // O que continua ausente, dito na cara: sem navegador com WebGL, o teste de
+    // navegador automatizado não existe, e as unidades 7 em diante não foram
+    // escritas. O Pyodide saiu desta lista na Etapa 9 — e a conferência do
+    // exercício, na Etapa 10: recurso pronto não fica na lista de ausentes.
+    expect(painel).toContain('Playwright')
+    expect(painel).toContain('unidades 7 em diante')
+    expect(painel).not.toContain('nada de código roda ainda')
   })
 
   it('mostra todas as unidades planejadas', () => {
@@ -151,7 +157,7 @@ describe('painel do projeto', () => {
     // Esta lista envelheceu uma vez: durante três etapas o painel continuou
     // dizendo "nenhuma ilha, nenhuma ponte, nenhum avatar" e "nada é gravado no
     // navegador". Texto de estado que mente é defeito, e o teste trava o retorno.
-    expect(painel).toContain('quatro ilhas suspensas')
+    expect(painel).toMatch(/seis ilhas suspensas/)
     expect(painel).not.toContain('nenhuma ilha, nenhuma ponte')
     expect(painel).not.toContain('nada é gravado no navegador')
     expect(painel).not.toContain('nenhuma pergunta escrita')

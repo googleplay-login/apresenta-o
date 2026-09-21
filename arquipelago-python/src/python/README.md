@@ -36,7 +36,7 @@ binário não pertencem a um repositório público — e é reconstruída a part
 
 **Implementado** (Etapas 9 e 10). Funciona ponta a ponta em teste: `protocolo.test.ts` e
 `nucleoDoPython.test.ts` (puros), `pyodideDeVerdade.test.ts` (o Pyodide **de verdade**, rodando em
-Node, executando o conteúdo real das quatro unidades **e a correção de cada exercício**) e
+Node, executando o conteúdo real das unidades **e a correção de cada exercício**) e
 `src/ui/paineis/ConsoleDoPython.test.tsx` (a tela, com o Worker dublado).
 
 A conferência do exercício não mora aqui: ela é regra pura, em `src/learning/correcaoDeExercicio.ts`.

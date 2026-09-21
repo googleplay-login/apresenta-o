@@ -97,9 +97,16 @@ describe('o domínio aceita os exercícios do conteúdo real', () => {
     }
 
     expect(recusados, `Exercícios recusados pelo domínio:\n${recusados.join('\n')}`).toEqual([])
-    // Se o conteúdo crescer, este número cresce com ele: o teste pede os 12
-    // exercícios escritos até agora, para não passar por acidente com lista vazia.
-    expect(conferidos).toHaveLength(12)
+
+    // A conta sai do próprio conteúdo, e não de um número escrito à mão: o teste
+    // continua valendo quando o percurso crescer. O piso existe para ele não
+    // passar por acidente com lista vazia.
+    const totalNoConteudo = CONTEUDO_DAS_UNIDADES.reduce(
+      (soma, unidade) => soma + unidade.pratica.length,
+      0,
+    )
+    expect(totalNoConteudo).toBeGreaterThanOrEqual(12)
+    expect(conferidos).toHaveLength(totalNoConteudo)
 
     for (const unidade of PERCURSO_DO_CONTEUDO) {
       for (const exercicioId of unidade.exercicios ?? []) {

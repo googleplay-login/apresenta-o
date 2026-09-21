@@ -23,23 +23,31 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
     verificar: 'npm test',
   },
   {
-    item: 'As 4 primeiras unidades mapeadas para o livro, com as páginas marcadas como referência pendente.',
+    item: 'As 6 primeiras unidades mapeadas para o livro, com as páginas marcadas como referência pendente.',
     verificar: 'npm test',
   },
   {
-    item: 'O mundo 3D: quatro ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
+    item: 'O mundo 3D: seis ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O ciclo de estudo das 4 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
+    item: 'O ciclo de estudo das 6 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O conteúdo escrito das 4 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
+    item: 'O conteúdo escrito das 6 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
     verificar: 'npm test',
   },
   {
-    item: 'O progresso salvo no navegador, em formato versionado, com migração da versão anterior.',
+    item: 'O console de Python em cada ilha, com o interpretador servido pela própria aplicação e carregado só quando a pessoa pede.',
+    verificar: 'aba "Mundo", na Prática',
+  },
+  {
+    item: 'A conferência automática do exercício, com o limite dela escrito na tela — sem virar nota nem aprovar ilha.',
+    verificar: 'aba "Mundo", na Prática',
+  },
+  {
+    item: 'O progresso salvo no navegador, em formato versionado, com migração das versões anteriores.',
     verificar: 'npm test',
   },
   {
@@ -54,12 +62,11 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
  * autorizada.
  */
 const AINDA_NAO_EXISTE: readonly string[] = [
-  'A execução de Python no navegador (Pyodide): nada de código roda ainda. É a Etapa 9.',
-  'O exercício corrigido automaticamente: os exercícios existem, mas quem os confere é a pessoa.',
   'A animação de caminhada do avatar: a figura anda, as pernas não se mexem.',
   'O som e a narração: nenhum áudio existe, e não há previsão de ligá-lo por padrão.',
-  'As unidades 5 em diante: só as 4 primeiras têm conteúdo escrito.',
+  'As unidades 7 em diante: só as 6 primeiras têm conteúdo escrito.',
   'O teste de navegador automatizado (Playwright): nenhum navegador com WebGL existe neste ambiente.',
+  'A conferência do exercício não julga estilo nem impede quem quiser enganar: ela roda no cliente, e a tela diz isso.',
 ]
 
 export function PainelDoProjeto() {

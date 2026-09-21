@@ -33,6 +33,14 @@ const primeira = PLANO_DE_UNIDADES[0]
 const segunda = PLANO_DE_UNIDADES[1]
 
 /**
+ * O texto do HUD, montado a partir do plano.
+ *
+ * Escrever o número à mão aqui faria este arquivo inteiro envelhecer em silêncio
+ * cada vez que uma ilha nova fosse escrita — e são dezenas de asserções.
+ */
+const aprovadas = (quantas: number) => `${quantas} de ${PLANO_DE_UNIDADES.length} ilhas aprovadas`
+
+/**
  * Cinco respostas em branco. A mensagem é montada pelo domínio, e não escrita à
  * mão no teste: se o texto mudar, o teste acompanha — o que ele cobra é que a
  * tela diga o que falta, com os números certos.
@@ -369,7 +377,7 @@ describe('progresso guardado no navegador', () => {
     await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
 
     await waitFor(() => {
-      expect(screen.getByText('1 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(1))).toBeTruthy()
     })
 
     const cartao = screen.getByRole('heading', { level: 3, name: segunda?.titulo ?? '' }).closest('li')
@@ -424,9 +432,9 @@ describe('progresso guardado no navegador', () => {
     // A aprovação guardada aparece já na primeira renderização: a leitura vem
     // antes de qualquer gravação, e o efeito de gravação não a apaga.
     await waitFor(() => {
-      expect(screen.getByText('1 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(1))).toBeTruthy()
     })
-    expect(screen.queryByText('0 de 4 ilhas aprovadas')).toBeNull()
+    expect(screen.queryByText(aprovadas(0))).toBeNull()
   })
 
   it('avisa que o progresso não será guardado quando o navegador recusa gravar', async () => {
@@ -440,7 +448,7 @@ describe('progresso guardado no navegador', () => {
 
     expect(await screen.findByText(/não permite guardar dados|não foi possível salvar/i)).toBeTruthy()
     // E o mundo continua jogável: a trilha inteira está na tela.
-    expect(screen.getByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+    expect(screen.getByText(aprovadas(0))).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Entrar' }).length).toBeGreaterThan(0)
   })
 
@@ -460,7 +468,7 @@ describe('progresso guardado no navegador', () => {
     render(<Mundo />)
 
     await waitFor(() => {
-      expect(screen.getByText('1 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(1))).toBeTruthy()
     })
 
     await usuario.click(screen.getByRole('button', { name: 'Apagar meu progresso' }))
@@ -473,7 +481,7 @@ describe('progresso guardado no navegador', () => {
     await usuario.click(screen.getByRole('button', { name: 'Apagar meu progresso' }))
 
     await waitFor(() => {
-      expect(screen.getByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(0))).toBeTruthy()
     })
     expect(window.localStorage.getItem(CHAVE_DO_PROGRESSO)).toBeNull()
     expect(window.localStorage.getItem('outro-site.token')).toBe('nao-mexa')
@@ -482,13 +490,17 @@ describe('progresso guardado no navegador', () => {
 
 describe('fim do percurso escrito', () => {
   it('aprovar a última ilha não promete uma ponte que não existe', async () => {
-    const aprovadas = PLANO_DE_UNIDADES.slice(0, 3).map((unidade) => unidade.id)
+    // Tudo aprovado menos a última: é a última que este teste quer aprovar.
+    const idsAprovados = PLANO_DE_UNIDADES.slice(0, -1).map((unidade) => unidade.id)
     window.localStorage.setItem(
       CHAVE_DO_PROGRESSO,
       JSON.stringify({
         versao: 1,
         unidades: Object.fromEntries(
-          aprovadas.map((id) => [id, { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 } }]),
+          idsAprovados.map((id) => [
+            id,
+            { aprovada: true, tentativas: 1, melhorNota: { acertos: 5, total: 5 } },
+          ]),
         ),
       }),
     )
@@ -498,7 +510,7 @@ describe('fim do percurso escrito', () => {
     render(<Mundo />)
 
     await waitFor(() => {
-      expect(screen.getByText('3 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(PLANO_DE_UNIDADES.length - 1))).toBeTruthy()
     })
 
     await abrirIlha(usuario, ultima?.titulo ?? '')
@@ -514,7 +526,7 @@ describe('fim do percurso escrito', () => {
 
     await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
     await waitFor(() => {
-      expect(screen.getByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(PLANO_DE_UNIDADES.length))).toBeTruthy()
     })
   })
 
@@ -536,7 +548,7 @@ describe('fim do percurso escrito', () => {
     render(<Mundo />)
 
     await waitFor(() => {
-      expect(screen.getByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(PLANO_DE_UNIDADES.length))).toBeTruthy()
     })
     expect(screen.getByText(/Fim do percurso por enquanto/)).toBeTruthy()
 
@@ -564,11 +576,11 @@ describe('alternativa sem 3D', () => {
 })
 
 describe('o protótipo jogável, de ponta a ponta', () => {
-  it('aprova as quatro ilhas em sequência, sobrevive à recarga e fecha o percurso', async () => {
+  it('aprova as ilhas em sequência, sobrevive à recarga e fecha o percurso', async () => {
     const usuario = userEvent.setup()
     const { unmount } = render(<Mundo />)
 
-    expect(await screen.findByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+    expect(await screen.findByText(aprovadas(0))).toBeTruthy()
 
     for (const [indice, unidade] of PLANO_DE_UNIDADES.entries()) {
       const ultima = indice === PLANO_DE_UNIDADES.length - 1
@@ -588,13 +600,13 @@ describe('o protótipo jogável, de ponta a ponta', () => {
         // sobreviver, e a ilha seguinte tem de continuar destravada.
         unmount()
         render(<Mundo />)
-        expect(await screen.findByText('2 de 4 ilhas aprovadas')).toBeTruthy()
+        expect(await screen.findByText(aprovadas(2))).toBeTruthy()
       } else if (!ultima) {
         await usuario.click(screen.getByRole('button', { name: 'Seguir para a próxima ilha' }))
       }
     }
 
-    expect(await screen.findByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+    expect(await screen.findByText(aprovadas(PLANO_DE_UNIDADES.length))).toBeTruthy()
 
     // Fecha o painel e confere o que o mundo diz com o percurso terminado.
     await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
@@ -610,7 +622,7 @@ describe('o protótipo jogável, de ponta a ponta', () => {
       await screen.findByText(/Todas as ilhas escritas até agora foram aprovadas/),
     ).toBeTruthy()
 
-    // E o que ficou guardado: as quatro unidades aprovadas, sem unidade extra.
+    // E o que ficou guardado: as unidades aprovadas, sem unidade extra.
     const guardado = JSON.parse(window.localStorage.getItem(CHAVE_DO_PROGRESSO) ?? '{}') as {
       readonly versao?: number
       readonly unidades?: Record<string, { readonly aprovada?: boolean }>
@@ -689,7 +701,7 @@ describe('o exercício conferido, depois de recarregar', () => {
     render(<Mundo />)
 
     await waitFor(() => {
-      expect(screen.getByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+      expect(screen.getByText(aprovadas(0))).toBeTruthy()
     })
     // A segunda ilha continua bloqueada: o caminho é a avaliação, não a prática.
     const cartao = screen.getByRole('heading', { level: 3, name: segunda?.titulo ?? '' }).closest('li')

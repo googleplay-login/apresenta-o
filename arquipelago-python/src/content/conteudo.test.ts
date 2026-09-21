@@ -6,7 +6,7 @@ import { PERGUNTAS_POR_UNIDADE, foiAprovado } from '../learning/avaliacao'
 import { motivoDaRecusa } from '../python/protocolo'
 
 describe('conteúdo das unidades', () => {
-  it('tem conteúdo escrito para as quatro unidades planejadas', () => {
+  it('tem conteúdo escrito para todas as unidades planejadas', () => {
     expect(CONTEUDO_DAS_UNIDADES.length).toBe(PLANO_DE_UNIDADES.length)
   })
 

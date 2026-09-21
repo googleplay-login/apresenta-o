@@ -195,6 +195,26 @@ roda no cliente é público, por definição.
 Mensagem de erro é **citação literal** do interpretador, e não conteúdo do livro: pode ser
 exibida exatamente como aparece, em bloco de código.
 
+## Acrescentar uma unidade nova
+
+O caminho do lote da Etapa 11, já medido — e ele **não** tem passo de mundo:
+
+1. Escrever `src/content/unidades/uNN<...>.ts` seguindo a forma das unidades existentes: 1 missão, 1
+   bloco de leitura, explicação com diagramas, 3 exercícios e 5 perguntas. Exercício que pode ser
+   conferido aqui leva `correcao` **com `limite`**; exercício que não pode (comando de terminal, por
+   exemplo) leva `naoRodaNoConsole` com o motivo escrito.
+2. Registrar em `src/content/unidades/index.ts` e acrescentar a unidade ao plano
+   (`src/content/planoDeUnidades.ts`) com `ordem`, `tema` e `referencia`.
+3. Marcar `situacao` de acordo com o que existe — `pronta` só com o conteúdo escrito (D-048).
+4. Se o capítulo não foi conferido no sumário, **não inventar o título**: escrever o do original com
+   "(do original; título em português a confirmar)" e deixar a página `null` (D-050).
+5. Deixar os testes cobrarem o resto. Sem escrever teste novo, `npm test` já confere: forma do
+   conteúdo, gabarito, diagramas, identificadores únicos, percurso do domínio, **todos** os exercícios
+   com correção rodando no Pyodide real e o mundo com uma ilha a mais e as pontes certas.
+
+Se algum passo exigir código em `src/world/`, pare: a conta de posição de ilha, trilha ou ponte
+deveria sair do índice da unidade (D-049). O conserto é na conta, não na unidade nova.
+
 ## Checklist antes de considerar uma unidade pronta
 
 - [ ] A missão está escrita como capacidade, não como assunto.
@@ -214,5 +234,6 @@ exibida exatamente como aparece, em bloco de código.
 - [ ] As posições das alternativas corretas usam as quatro posições, conferidas **nesta unidade**.
 - [ ] O enunciado da avaliação diz que não há antifraude.
 - [ ] O texto não tem trecho, nome de exemplo nem exercício do livro.
-- [ ] Nenhum número de página foi inventado (ver D-010).
+- [ ] Nenhum número de página foi inventado (ver D-010), e capítulo que não foi conferido no sumário
+      está marcado como título a confirmar (ver D-050).
 - [ ] O texto está acentuado corretamente.

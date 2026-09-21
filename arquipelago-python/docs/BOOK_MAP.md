@@ -41,9 +41,10 @@ conferido.
 - **Apêndices A a D**: instalar Python; editores de texto; obter ajuda; Git
 - Posfácio
 
-## As quatro primeiras unidades
+## As unidades escritas até agora
 
-Decisão D-001: o capítulo 2 foi dividido em dois recortes.
+Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescentou os capítulos 4 e 5,
+um por ilha.
 
 | # | Unidade | Capítulo | Recorte | Página impressa | Página do PDF |
 |---|---|---|---|---|---|
@@ -51,21 +52,28 @@ Decisão D-001: o capítulo 2 foi dividido em dois recortes.
 | 2 | A Oficina das Variáveis | 2 — Variáveis e tipos de dados simples | Recorte 2a: variáveis, nomes, `print()`, inteiros e floats, `str()`, comentários | `null` | `null` |
 | 3 | A Ilha das Palavras | 2 — mesmo capítulo | Recorte 2b: strings, maiúsculas e minúsculas, espaços em branco, concatenação, f-strings | `null` | `null` |
 | 4 | As Listas do Mercado | 3 — Introdução às listas | Índice zero, alterar, acrescentar, remover, ordenar, erro de índice | `null` | `null` |
+| 5 | O Moinho das Repetições | 4 — *Working with Lists* (título do original, a confirmar em português) | Percorrer com `for`, recuo, `range()`, estatísticas simples, fatias, cópia de lista, tuplas | `null` | `null` |
+| 6 | A Encruzilhada das Decisões | 5 — *if Statements* (título do original, a confirmar em português) | Testes condicionais, `and`/`or`/`not`, `in` com listas, `if`/`elif`/`else` | `null` | `null` |
+
+Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 e 5 foram
+acrescentados na Etapa 11** sem esse material em mãos: o número do capítulo e o assunto são certos, e o
+título em português está marcado como **a confirmar**. É a mesma regra da página (`null`): campo que não
+pode ser conferido não recebe valor inventado.
 
 Todas com `status: 'referencia-pendente'`. A interface mostra "página: referência pendente" em
 vez de um número não verificado.
 
 ### O que cada unidade diz da leitura, sem citar o livro
 
-Desde a Etapa 6, cada uma das quatro unidades carrega, além de `parte` (capítulo e seção) e `porque`:
+Desde a Etapa 6, cada unidade carrega, além de `parte` (capítulo e seção) e `porque`:
 
 | Campo | O que é | Estado |
 |---|---|---|
-| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 4 unidades |
-| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 4 unidades |
-| `pagina` / `paginaPdf` | Número da página | `null` nas 4 — o PDF não está em mãos (D-010) |
+| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 6 unidades |
+| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 6 unidades |
+| `pagina` / `paginaPdf` | Número da página | `null` nas 6 — o PDF não está em mãos (D-010) |
 
-Nenhum dos dois campos novos cita o livro: eles dizem o que **procurar** e como seguir sem ele.
+Nenhum dos dois campos cita o livro: eles dizem o que **procurar** e como seguir sem ele.
 Nem a interface nem o conteúdo copiam trecho, nome de exemplo ou exercício da obra
 (`CONTENT_GUIDE.md`).
 
