@@ -131,6 +131,85 @@ function nomesDentro(no: No): readonly string[] {
   return no.findAll((filho) => comNome(filho) !== '').map(comNome)
 }
 
+/** As malhas dentro de um objeto que trazem cor por vértice. */
+function malhasComCorDeVertice(no: No): readonly No[] {
+  return no
+    .findAll((filho) => filho.instance.type === 'Mesh')
+    .filter((filho) => {
+      const geometria = (filho.instance as unknown as { geometry?: { attributes?: Record<string, unknown> } })
+        .geometry
+      return geometria?.attributes?.color !== undefined
+    })
+}
+
+/** A cor do material de uma malha, como número `0xRRGGBB`. */
+function corDoMaterial(malha: No): number {
+  const material = (malha.instance as unknown as { material?: { color?: { getHex(): number } } }).material
+  if (material?.color === undefined) {
+    throw new Error('A malha não tem material com cor — a árvore 3D mudou de forma?')
+  }
+  return material.color.getHex()
+}
+
+/** As cores por vértice de uma malha, em sequência r, g, b. */
+function coresDeVertice(malha: No): readonly number[] {
+  const geometria = (malha.instance as unknown as {
+    geometry?: { attributes?: { color?: { array: ArrayLike<number> } } }
+  }).geometry
+  const cores = geometria?.attributes?.color?.array
+  if (cores === undefined) {
+    throw new Error('A malha não tem cor por vértice')
+  }
+  return Array.from(cores)
+}
+
+/**
+ * A altura da malha: a distância entre o ponto mais baixo e o mais alto.
+ *
+ * É assim que o teste separa o capim da pedra, e não pelo topo: a pedra também
+ * passa um pouco de zero, porque a malha dela tem tremor vertical. O capim é uma
+ * cúpula de poucos palmos; a pedra desce a altura inteira da ilha.
+ */
+function faixaVerticalDaMalha(malha: No): number {
+  const geometria = (malha.instance as unknown as {
+    geometry?: { attributes?: { position?: { array: ArrayLike<number> } } }
+  }).geometry
+  const posicoes = geometria?.attributes?.position?.array
+  if (posicoes === undefined) {
+    return 0
+  }
+  let menor = Number.POSITIVE_INFINITY
+  let maior = Number.NEGATIVE_INFINITY
+  for (let indice = 1; indice < posicoes.length; indice += 3) {
+    menor = Math.min(menor, posicoes[indice] ?? 0)
+    maior = Math.max(maior, posicoes[indice] ?? 0)
+  }
+  return maior - menor
+}
+
+/** Luminância média das cores por vértice, na escala linear. */
+function luminanciaMedia(cores: readonly number[]): number {
+  let soma = 0
+  let quantidade = 0
+  for (let indice = 0; indice < cores.length; indice += 3) {
+    soma += 0.2126 * (cores[indice] ?? 0) + 0.7152 * (cores[indice + 1] ?? 0) + 0.0722 * (cores[indice + 2] ?? 0)
+    quantidade += 1
+  }
+  return quantidade === 0 ? 0 : soma / quantidade
+}
+
+/** Saturação média das cores por vértice: a distância entre o maior e o menor canal. */
+function saturacaoMedia(cores: readonly number[]): number {
+  let soma = 0
+  let quantidade = 0
+  for (let indice = 0; indice < cores.length; indice += 3) {
+    const canais = [cores[indice] ?? 0, cores[indice + 1] ?? 0, cores[indice + 2] ?? 0]
+    soma += Math.max(...canais) - Math.min(...canais)
+    quantidade += 1
+  }
+  return quantidade === 0 ? 0 : soma / quantidade
+}
+
 /**
  * O ponto mais fundo (y mínimo) das malhas dentro de um objeto.
  *
@@ -273,6 +352,129 @@ describe('o mundo é feito do que o projeto promete', () => {
       expect(pontes[indice]?.[0]).toBe(UNIDADES[indice]?.id)
       expect(pontes[indice]?.[1]).toBe(UNIDADES[indice + 1]?.id)
     }
+
+    await cena.unmount()
+  })
+})
+
+describe('o mundo não é multiplicado por tinta (D-054)', () => {
+  it('malha com cor por vértice é desenhada sem tinta no material', async () => {
+    // O defeito: a pedra e o capim eram pintados por vértice **e** recebiam a cor
+    // da situação no material. O Three.js multiplica as duas coisas, e as paredes
+    // das ilhas saíam em #1a1714 — quase preto. Aqui se cobra o contrário: quem
+    // traz a própria cor não recebe tinta (branco é o elemento neutro).
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    let conferidas = 0
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      for (const malha of malhasComCorDeVertice(ilha)) {
+        conferidas += 1
+        expect(
+          corDoMaterial(malha),
+          `A malha pintada de «${unidade.titulo}» está recebendo tinta além da cor dos vértices`,
+        ).toBe(0xffffff)
+      }
+    }
+
+    // Duas por ilha: a pedra e o capim.
+    expect(conferidas).toBe(UNIDADES.length * 2)
+
+    await cena.unmount()
+  })
+
+  it('as cores por vértice estão na escala linear, e não em sRGB', async () => {
+    // Um cinza médio de paleta (0,5 em sRGB) tem de chegar ao vértice como 0,2159,
+    // que é a codificação linear. Se chegasse como 0,5, a pedra e o capim
+    // sairiam claros demais na tela.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const todasAsCores: number[] = []
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      for (const malha of malhasComCorDeVertice(ilha)) {
+        todasAsCores.push(...coresDeVertice(malha))
+      }
+    }
+
+    // Nenhum canal pode estar na faixa que só existe em sRGB: as cores da paleta
+    // usadas no mundo são escuras, e em escala linear todas ficam abaixo de 0,8.
+    expect(Math.max(...todasAsCores)).toBeLessThan(0.8)
+    // E o capim, que é o mais claro do conjunto, continua bem acima do fundo.
+    expect(Math.max(...todasAsCores)).toBeGreaterThan(0.05)
+
+    await cena.unmount()
+  })
+
+  it('o capim é verde em todas as ilhas, inclusive nas de tom quente', async () => {
+    // O tom da ilha é tempero, não tinta: a 45% do tom, a ilha de tom rosado
+    // ficava com capim rosado. Este teste mede o capim de cada ilha e cobra que o
+    // verde continue sendo o canal dominante.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const capim = malhasComCorDeVertice(ilha).find((malha) => faixaVerticalDaMalha(malha) < 1)
+      if (capim === undefined) {
+        throw new Error(`A ilha «${unidade.titulo}» não tem capim pintado`)
+      }
+
+      const cores = coresDeVertice(capim)
+      const maiorPorCanal = [0, 1, 2].map((canal) => {
+        let maior = 0
+        for (let indice = canal; indice < cores.length; indice += 3) {
+          maior = Math.max(maior, cores[indice] ?? 0)
+        }
+        return maior
+      })
+
+      expect(
+        maiorPorCanal[1],
+        `O capim de «${unidade.titulo}» deixou de ser verde: r=${maiorPorCanal[0]?.toFixed(3)}, g=${maiorPorCanal[1]?.toFixed(3)}, b=${maiorPorCanal[2]?.toFixed(3)}`,
+      ).toBeGreaterThan(maiorPorCanal[0] ?? 0)
+      expect(maiorPorCanal[1]).toBeGreaterThan(maiorPorCanal[2] ?? 0)
+    }
+
+    await cena.unmount()
+  })
+
+  it('a ilha ainda não liberada continua reconhecível pela própria pedra', async () => {
+    // O estado da unidade saiu do material e entrou no gradiente. Se ele não
+    // tivesse ido junto, a ilha bloqueada ficaria igual à liberada — e a pessoa
+    // perderia a única pista visual de por onde começar.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const disponivel = cena.scene.find((no) => comNome(no) === `ilha:${UNIDADE_01}`)
+    const bloqueada = cena.scene.find((no) => comNome(no) === `ilha:${UNIDADE_02}`)
+
+    const pedraDe = (ilha: No) =>
+      malhasComCorDeVertice(ilha).find((malha) => faixaVerticalDaMalha(malha) >= 1)
+
+    const pedraDisponivel = pedraDe(disponivel)
+    const pedraBloqueada = pedraDe(bloqueada)
+    if (pedraDisponivel === undefined || pedraBloqueada === undefined) {
+      throw new Error('Cada ilha deveria ter a pedra pintada')
+    }
+
+    const luz = luminanciaMedia(coresDeVertice(pedraDisponivel))
+    const luzBloqueada = luminanciaMedia(coresDeVertice(pedraBloqueada))
+
+    expect(
+      luzBloqueada,
+      'A pedra da ilha bloqueada deveria ser mais clara: ela se aproxima da névoa',
+    ).toBeGreaterThan(luz)
+    expect(saturacaoMedia(coresDeVertice(pedraBloqueada))).toBeLessThan(
+      saturacaoMedia(coresDeVertice(pedraDisponivel)),
+    )
+    expect(luzBloqueada).toBeGreaterThan(luz * 1.5)
 
     await cena.unmount()
   })

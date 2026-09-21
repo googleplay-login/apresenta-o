@@ -137,6 +137,21 @@ partir do conteúdo real, e não escritos à mão.
 | 9 | A Oficina das Funções | Par de engrenagens | 6,02 | 9,98 | 12 | `#5c4430` |
 | 10 | A Torre das Classes | Torre de anéis | 5,62 | 10,93 | 12 | `#cf9693` |
 
+### A cadeia de cor do mundo (D-054)
+
+Do token até o pixel, a cor percorre três passos, e cada um tem um lugar:
+
+1. **A paleta** (`tokens.ts`) define a cor em sRGB, em texto `#RRGGBB`. Nenhum valor de cor nasce
+   fora dela.
+2. **A mistura** acontece em sRGB (`geometria/pintura.ts`), que é onde a paleta foi pensada.
+3. **O que chega ao vértice** é **convertido para a escala linear** (`canalLinear`), porque o Three.js
+   lê a cor do vértice sem converter. E uma malha que traz cores por vértice é desenhada **sem tinta
+   no material** — o branco é o elemento neutro da multiplicação, e é o que faz a cor da paleta ser a
+   cor que chega à tela, passada apenas pela luz.
+
+O que o desenho **não** faz: multiplicar cor por cor. Era o que deixava as paredes das ilhas em
+`#1a1714`, praticamente pretas, e o defeito só apareceu quando alguém viu o mundo na tela.
+
 Regras que valem para as dez:
 
 - **nenhum tom é valor novo**: todos são misturas de tokens de `tokens.ts`, e o teste
@@ -146,6 +161,9 @@ Regras que valem para as dez:
   marco e no alto do capim — onde não compete com a leitura do estado;
 - **o marco nunca passa da borda**: ele fica a 40% do raio, e o teste cobra que caiba com 2% de folga
   em todas as ilhas;
+- **o tom fica inteiro no marco e entra a 22% no alto do capim**: o tom é assinatura, não tinta. A 45%
+  (o primeiro valor usado), uma ilha de tom rosado ficava com capim rosado — e capim deixava de ser
+  capim. Hoje o teste mede o capim das dez ilhas e cobra que o verde seja o canal dominante;
 - **o marco fica do lado oposto às estruturas do estudo**, para não tapar a biblioteca, a mesa e a
   placa de missão.
 

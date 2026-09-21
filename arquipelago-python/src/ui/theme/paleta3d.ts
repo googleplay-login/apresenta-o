@@ -61,10 +61,6 @@ export const CORES_DERIVADAS = {
   telhado: ajustar(deHex(cores.terreno.madeira), 0.72),
   /** Topo do capim: um passo mais claro, para a grama pegar a luz do céu. */
   capimClaro: ajustar(deHex(cores.terreno.capim), 1.22),
-  /** Capim de unidade bloqueada: dessaturado em direção à névoa. */
-  capimBloqueado: misturar(deHex(cores.terreno.capim), deHex(cores.nevoa), 0.45),
-  /** Rocha de unidade bloqueada: mais perto da névoa, como se ainda estivesse longe. */
-  rochaBloqueada: misturar(deHex(cores.terreno.rocha), deHex(cores.nevoa), 0.4),
   /** Rocha logo abaixo do capim: mantém a parede clara no alto. */
   rochaDoAlto: misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.rocha), 0.3),
   /** Penhasco profundo: quase preto, para a ponta sumir na névoa. */
@@ -167,12 +163,19 @@ export function corDaIlha(tom: number): Cor3D {
   return CORES_DAS_ILHAS[escolhido] ?? CORES_DERIVADAS.aprovada
 }
 
-/** Cor do capim conforme a situação da unidade. */
-export function corDoCapim(situacao: 'bloqueada' | 'disponivel' | 'aprovada'): Cor3D {
-  return situacao === 'bloqueada' ? CORES_DERIVADAS.capimBloqueado : CORES_DO_MUNDO.capim
-}
-
-/** Cor da rocha conforme a situação da unidade. */
-export function corDaRocha(situacao: 'bloqueada' | 'disponivel' | 'aprovada'): Cor3D {
-  return situacao === 'bloqueada' ? CORES_DERIVADAS.rochaBloqueada : CORES_DO_MUNDO.rocha
+/**
+ * Como fica uma cor de terreno quando a unidade ainda **não abriu**.
+ *
+ * É uma mistura em direção à névoa: a ilha bloqueada continua sendo a ilha, com a
+ * forma e o tom dela, mas mais lavada e mais longe — o mesmo tratamento que o
+ * capim e a rocha já recebiam antes, agora aplicado como função, porque a cor do
+ * terreno passou a ser pintada por vértice e uma malha pintada não recebe tinta
+ * do material (ver `Malha.tsx` e a decisão D-054).
+ *
+ * Quem **não** usa isto: as estruturas, a placa de missão e o farol de estado,
+ * que continuam com a cor cheia de `corDaSituacao` — é ela que diz, de perto, se
+ * a unidade está disponível ou aprovada.
+ */
+export function corDeUnidadeBloqueada(cor: Cor3D): Cor3D {
+  return misturar(cor, CORES_DO_MUNDO.nevoa, 0.4)
 }

@@ -19,20 +19,44 @@ import type { Malha } from './geometria/ilha'
  *    a cor do material só serve de base para a multiplicação.
  */
 
-type Props = {
-  readonly malha: Malha | MalhaPintada
-  /** Cor base do material. */
-  readonly cor: number
-  /** Opacidade: usada para a pedra das ilhas ainda não liberadas. */
+type Comuns = {
+  /** Opacidade: usada para o realce e para a pedra das ilhas ainda não liberadas. */
   readonly opacidade?: number
   /** Desenha as duas faces. Ligado só onde existe face aberta de propósito. */
   readonly duasFaces?: boolean
 }
 
+/**
+ * Uma malha **sem** cor própria precisa de tinta; uma malha **pintada** não pode
+ * recebê-la.
+ *
+ * Isto é o tipo, e não um comentário, por causa de um defeito real: a pedra e o
+ * capim das ilhas eram pintados por vértice e **também** recebiam a cor da
+ * situação no material. O Three.js multiplica as duas coisas, e o resultado era
+ * um mundo quase preto — as paredes das ilhas saíam em `#1a1714`, e ninguém
+ * percebeu por sete etapas porque ninguém tinha visto o mundo desenhado.
+ * Multiplicar cor por cor é fácil de escrever e impossível de ver no código.
+ */
+type Props = Comuns &
+  (
+    | { readonly malha: Malha & { readonly cores?: undefined }; readonly cor: number }
+    | { readonly malha: MalhaPintada; readonly cor?: undefined }
+  )
+
 /** Verdadeiro quando a malha traz cores por vértice. */
 function temCores(malha: Malha | MalhaPintada): malha is MalhaPintada {
   return 'cores' in malha && Array.isArray((malha as MalhaPintada).cores)
 }
+
+/**
+ * Branco puro quando a malha traz a própria cor.
+ *
+ * Não é uma cor da paleta, e por isso não mora em `paleta3d.ts`: é a
+ * **ausência de tinta**. Na multiplicação que o Three.js faz, branco é o
+ * elemento neutro — é o que garante que a cor pintada por vértice chegue à tela
+ * como a paleta a definiu, passada apenas pela luz.
+ */
+const SEM_TINTA = 0xffffff
 
 export function Malha3D({ malha, cor, opacidade = 1, duasFaces = false }: Props) {
   const geometria = useMemo(() => {
@@ -54,7 +78,7 @@ export function Malha3D({ malha, cor, opacidade = 1, duasFaces = false }: Props)
   return (
     <mesh geometry={geometria} castShadow={false} receiveShadow={false}>
       <meshLambertMaterial
-        color={cor}
+        color={comCores ? SEM_TINTA : cor}
         vertexColors={comCores}
         flatShading
         transparent={opacidade < 1}

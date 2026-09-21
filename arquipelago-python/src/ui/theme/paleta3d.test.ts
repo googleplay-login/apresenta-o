@@ -4,9 +4,8 @@ import {
   CORES_DERIVADAS,
   CORES_DO_MUNDO,
   corDaIlha,
-  corDaRocha,
   corDaSituacao,
-  corDoCapim,
+  corDeUnidadeBloqueada,
   deHex,
   paraHex,
 } from './paleta3d'
@@ -22,6 +21,11 @@ function todasAsCores(): readonly { readonly nome: string; readonly cor: number 
       cor,
     })),
   ]
+}
+
+/** Média dos canais de uma cor `0xRRGGBB`. Serve para comparar claridade. */
+function mediaDeCanais(cor: number): number {
+  return (((cor >> 16) & 0xff) + ((cor >> 8) & 0xff) + (cor & 0xff)) / 3
 }
 
 describe('conversão hexadecimal', () => {
@@ -146,14 +150,15 @@ describe('cor por situação da unidade', () => {
     expect(new Set(cores).size).toBe(3)
   })
 
-  it('capim e rocha mudam quando a unidade está bloqueada', () => {
-    expect(corDoCapim('bloqueada')).not.toBe(corDoCapim('disponivel'))
-    expect(corDaRocha('bloqueada')).not.toBe(corDaRocha('disponivel'))
-  })
-
-  it('capim e rocha de unidade acessível são os tokens, sem desvio', () => {
-    expect(corDoCapim('disponivel')).toBe(deHex(cores.terreno.capim))
-    expect(corDoCapim('aprovada')).toBe(deHex(cores.terreno.capim))
-    expect(corDaRocha('disponivel')).toBe(deHex(cores.terreno.rocha))
+  it('a unidade bloqueada lava a cor do terreno em direção à névoa', () => {
+    // O terreno de uma ilha ainda não liberada não fica de outra cor: ele fica
+    // mais claro e mais perto da névoa, com a mesma forma e o mesmo tom.
+    const capim = CORES_DO_MUNDO.capim
+    const rocha = CORES_DO_MUNDO.rocha
+    expect(corDeUnidadeBloqueada(capim)).toBe(misturar(capim, CORES_DO_MUNDO.nevoa, 0.4))
+    expect(mediaDeCanais(corDeUnidadeBloqueada(capim))).toBeGreaterThan(mediaDeCanais(capim))
+    expect(mediaDeCanais(corDeUnidadeBloqueada(rocha))).toBeGreaterThan(mediaDeCanais(rocha))
+    expect(corDeUnidadeBloqueada(capim)).not.toBe(capim)
+    expect(corDeUnidadeBloqueada(rocha)).not.toBe(rocha)
   })
 })

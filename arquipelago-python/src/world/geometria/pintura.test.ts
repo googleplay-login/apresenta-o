@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { gerarCaixa } from './solidos'
 import {
   ajustar,
+  canalLinear,
   canais,
   escurecerCores,
   misturar,
@@ -10,6 +11,7 @@ import {
   type Cor3D,
 } from './pintura'
 
+const CINZA = 0x808080
 const VERMELHO = 0xff0000
 const AZUL = 0x0000ff
 const BRANCO = 0xffffff
@@ -89,16 +91,26 @@ describe('pintura por altura', () => {
     }
   })
 
-  it('no meio da faixa, fica no meio das cores', () => {
+  it('no meio da faixa, fica no meio das cores — em escala linear', () => {
     const meio = pintarPorAltura(caixa, { ...gradiente, de: -5, para: 5 })
     const indiceDoMeio = caixa.posicoes.findIndex((_, indice) => indice % 3 === 1)
-    // Primeiro vértice é da face de baixo, em y = 0: com faixa de -5 a 5, ele
-    // está na metade. A cor chega quantizada em 8 bits por canal — 128/255, e
-    // não 0,5 exato —, que é a precisão que a placa de vídeo lê de verdade.
+    // O primeiro vértice é da face de baixo, em y = 0: com faixa de -5 a 5, ele
+    // está na metade da paleta — cinza médio, 0,5 em sRGB.
+    //
+    // O valor gravado **não** é 0,5: é a codificação linear dele, 0,2159. O
+    // Three.js lê a cor do vértice sem converter (a conversão de sRGB para
+    // linear que ele faz sozinho vale para a cor do material, não para o
+    // atributo). Gravar 0,5 aqui fazia a pedra e o capim de todas as ilhas
+    // saírem claros demais — a metade do caminho do defeito D-054.
+    // A cor da paleta passa por 8 bits por canal antes de virar vértice — 128/255,
+    // que é 0,502 em sRGB —, e só então é convertida para linear: 0,2159. É por
+    // isso que o número conferido aqui não é o de `canalLinear(0.5)`, e sim o da
+    // mesma conta sobre o valor quantizado.
     const cor = meio.cores.slice(indiceDoMeio, indiceDoMeio + 3)
     for (const canal of cor) {
-      expect(canal).toBeCloseTo(0.5, 2)
+      expect(canal).toBeCloseTo(canalLinear(128 / 255), 4)
     }
+    expect(cor[0]).toBeLessThan(0.25)
   })
 
   it('fora da faixa, usa a cor da ponta mais próxima', () => {
@@ -124,6 +136,36 @@ describe('pintura por altura', () => {
     expect(() =>
       pintarPorAltura(caixa, { de: 0, para: 10, corDe: PRETO, corPara: BRANCO, degraus: 0 }),
     ).toThrow(/ao menos 1 degrau/)
+  })
+})
+
+describe('conversão para a escala linear', () => {
+  const caixa = gerarCaixa({ largura: 1, altura: 10, profundidade: 1 })
+
+  it('mantém os extremos e escurece os tons médios, como a norma manda', () => {
+    expect(canalLinear(0)).toBe(0)
+    expect(canalLinear(1)).toBe(1)
+    // Valores publicados da norma sRGB: 0,5 → 0,2140 e 0,2 → 0,0331.
+    expect(canalLinear(0.5)).toBeCloseTo(0.214, 4)
+    expect(canalLinear(0.2)).toBeCloseTo(0.0331, 4)
+  })
+
+  it('é monótona e não estoura nas pontas', () => {
+    let anterior = -1
+    for (let passo = 0; passo <= 20; passo += 1) {
+      const atual = canalLinear(passo / 20)
+      expect(atual).toBeGreaterThan(anterior)
+      anterior = atual
+    }
+    expect(canalLinear(-3)).toBe(0)
+    expect(canalLinear(9)).toBe(1)
+  })
+
+  it('é a conversão que a pintura usa: a mesma cor entra e sai coerente', () => {
+    // Uma malha de uma cor só, pintada: o que sai é a codificação linear da cor
+    // da paleta, e nada mais.
+    const pintada = pintarPorAltura(caixa, { de: 0, para: 1, corDe: CINZA, corPara: CINZA })
+    expect(pintada.cores.slice(0, 3)).toEqual(canais(CINZA).map(canalLinear))
   })
 })
 

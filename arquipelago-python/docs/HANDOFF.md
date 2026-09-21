@@ -28,7 +28,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 733 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
+    npm test             # 739 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -255,6 +255,26 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Conserto depois do lote 3: a cor do mundo (D-054)
+
+- **o defeito apareceu na primeira captura de tela do mundo**, enviada por quem usa: as ilhas eram
+  silhuetas quase negras (paredes em `#1a1714`) com o céu claro. Estava assim desde a Etapa 4;
+- eram **duas causas somadas**: a pedra e o capim eram pintados por vértice **e** recebiam a cor da
+  situação no material (o Three.js multiplica as duas), e a cor por vértice era gravada em sRGB, que o
+  Three.js lê como linear (um cinza médio de paleta chegava à tela como 0,74);
+- `geometria/pintura.ts` ganhou `canalLinear`: a mistura continua em sRGB (onde a paleta foi pensada)
+  e só o valor gravado no vértice é convertido para linear;
+- `Malha.tsx` agora **recusa** tinta em malha pintada — pelo **tipo**, não por comentário: `cor` só
+  existe para malha sem cor por vértice. O defeito não pode ser reescrito por acidente;
+- a cor de estado entrou no gradiente (`corDeUnidadeBloqueada`), então a ilha bloqueada continua
+  reconhecível pela própria pedra; as estruturas, a placa e o farol seguem com `corDaSituacao`;
+- **o tom da ilha no capim caiu de 45% para 22%** (D-053 tinha deixado o capim da ilha de tom rosado
+  rosado). O tom fica inteiro no marco, que é a assinatura da ilha;
+- **três testes novos cobram o que faltava**: malha pintada sem tinta (as 20 malhas das dez ilhas),
+  canais abaixo de 0,8 (a faixa que só existe em sRGB) e **o capim é verde nas dez ilhas**;
+- o caminho antigo (`corDaRocha`, `corDoCapim` e as duas cores de terreno bloqueado pré-calculadas)
+  saiu junto, por não ter mais chamador; `escurecerCores` ficou, registrado em D-054.
+
 ### Conserto depois do lote 3: as ilhas estavam todas iguais (D-053)
 
 - **o defeito foi relatado por quem usa o mundo**, e não por um teste: *"as ilhas estão todas
@@ -390,7 +410,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — e foi assim que apareceu o defeito "as ilhas estão todas iguais" (D-053) | Registrado em `TEST_REPORT.md`, com roteiro manual de 55 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053) e o mundo quase preto (D-054) | Registrado em `TEST_REPORT.md`, com roteiro manual de 55 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |

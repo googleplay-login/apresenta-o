@@ -1027,3 +1027,63 @@ distintas**.
 **O que este conserto não faz:** não prova que ficou bonito. Os pixels continuam sem verificação
 automática neste ambiente — quem confere a aparência é quem usa, e foi assim que este defeito
 apareceu (ver `TEST_REPORT.md`, roteiro manual, item 55).
+
+## D-054 — A cor do mundo: pintada por vértice, sem tinta, e na escala certa
+**21/09/2026** — correção de um defeito **visto na tela** por quem usa, na Etapa 11.
+
+**O defeito:** na captura de tela da primeira visita ao mundo, as ilhas apareceram como **silhuetas
+quase negras** — paredes em `#1a1714`, pontas em `#0e0c0a` — com o capim escuro e o céu claro. O
+mundo tinha sido desenhado sete etapas antes e ninguém nunca o tinha visto; o defeito estava lá desde
+então, invisível para uma suíte que nunca olhou cor.
+
+**Duas causas, e as duas se somavam:**
+
+1. **Cor por cor.** A pedra e o capim são **pintados por vértice** (gradiente de altura) e **também**
+   recebiam a cor da situação no material. O Three.js multiplica as duas coisas: rocha `#3A3632` ×
+   gradiente ≈ `#1a1714`. Multiplicar cor por cor é fácil de escrever e impossível de ver no código.
+2. **Escala errada.** O atributo de cor do vértice **não** passa pela conversão de espaço de cor do
+   Three.js (essa conversão vale para a cor do material). O valor pintado era o número de sRGB, e o
+   Three o leu como linear: um cinza médio de paleta (0,5) chegava à tela como 0,74. Isso empurrava
+   tudo para o claro **ao mesmo tempo** que a multiplicação empurrava para o escuro.
+
+Havia ainda um terceiro problema, este introduzido na correção anterior (D-053): o **tom da ilha
+entrava a 45% no alto do capim**, e a ilha de tom rosado ficou com capim rosado. O capim deixava de
+ser capim.
+
+**A decisão:**
+
+- **Toda cor por vértice é gravada em escala linear** (`canalLinear`, em `geometria/pintura.ts`). A
+  mistura continua sendo feita em sRGB, que é onde a paleta foi pensada, e só o valor gravado é
+  convertido.
+- **Malha com cor própria não recebe tinta.** O branco é o elemento neutro da multiplicação, e agora
+  isso é **o tipo**, e não um comentário: `Malha3D` aceita `cor` só para malha sem cor por vértice, e
+  recusa para malha pintada. O defeito não pode ser reescrito por acidente.
+- **A cor de estado entra no gradiente.** `corDeUnidadeBloqueada(cor)` (em `paleta3d.ts`) lava a cor
+  do terreno em direção à névoa, e é ela que a pedra e o capim de uma ilha ainda não liberada recebem.
+  As estruturas, a placa de missão e o farol continuam com a cor cheia de `corDaSituacao` — é ela que
+  diz, de perto, se a unidade está disponível ou aprovada.
+- **O tom da ilha virou tempero no capim: 22%.** A assinatura da ilha é o **marco**, que fica com o
+  tom inteiro; no capim o tom aparece o suficiente para distinguir as ilhas e não o suficiente para
+  descaracterizar o chão. Em ilha alguma o capim deixa de ser verde — e isso agora é teste.
+
+**O que mudou na aparência, medido** (estimativa a partir dos tokens e das duas luzes do mundo, com
+hemisférica 1,35 e direcional 1,15; sem GPU neste ambiente, é conta, não pixel):
+
+| Ponto | Antes | Depois |
+|---|---|---|
+| Parede da pedra | `#1a1714` | `#44413d` |
+| Topo da pedra | `#332e2a` | `#948e89` |
+| Ponta da pedra | `#0e0c0a` | `#1d1b19` |
+| Alto do capim (tom verde) | `#397728` | `#66b261` |
+| Alto do capim (tom quente, ilha 10) | `#477c2c` | `#9cc073` |
+| Alto do capim (tom turquesa, ilha 3) | `#407f2f` | `#81cc80` |
+
+**O que continua sem prova:** os pixels. Não há navegador com WebGL aqui; a captura que revelou o
+defeito é que continua sendo o instrumento de verificação visual (item 55 do roteiro manual). As
+**intensidades das luzes não foram tocadas** nesta correção, de propósito: elas foram escolhidas às
+cegas na Etapa 4 e nunca foram vistas em tela. Se o mundo parecer claro demais agora, esse é o único
+botão — dois números em `Ceu.tsx` —, e a decisão de mexer nele é de quem olha.
+
+**O que ficou de fora, conscientemente:** `escurecerCores` (em `pintura.ts`) continua sem chamador na
+aplicação. Ele multiplica uma cor já pintada, e o estado da unidade bloqueada passou a ser mistura com
+a névoa, não escurecimento. Fica registrado aqui em vez de ser apagado sem autorização.

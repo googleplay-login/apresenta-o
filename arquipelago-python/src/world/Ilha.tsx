@@ -19,9 +19,8 @@ import {
   CORES_DERIVADAS,
   CORES_DO_MUNDO,
   corDaIlha,
-  corDaRocha,
   corDaSituacao,
-  corDoCapim,
+  corDeUnidadeBloqueada,
 } from '../ui/theme/paleta3d'
 
 /**
@@ -56,6 +55,18 @@ type Props = {
 /** Nome do grupo que recebe o clique. Usado pelo teste da árvore 3D. */
 const CORPO_DO_MUNDO = 'corpo'
 
+/**
+ * Quanto do tom da ilha entra no alto do capim.
+ *
+ * O tom é a assinatura da ilha, e o lugar dela é o **marco** — onde ele aparece
+ * inteiro. No capim ele é tempero: a 45% (o primeiro valor que esteve aqui), uma
+ * ilha de tom turquesa ficava com capim turquesa, e o capim deixava de ser capim.
+ * A 22% a diferença entre as ilhas se vê, e o chão continua verde em todas.
+ */
+const TOM_NO_CAPIM = 0.22
+
+
+
 export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const [sobre, setSobre] = useState(false)
   const farol = useRef<Group>(null)
@@ -67,6 +78,13 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
     const { semente } = ilha
     const formato = identidade.formato
     const tom = corDaIlha(identidade.tom)
+
+    // A cor de estado entra nas **duas pontas** do gradiente: a malha é pintada
+    // por vértice, e uma malha pintada não recebe tinta do material — se o estado
+    // não estivesse aqui, a ilha bloqueada ficaria igual à liberada (ver
+    // `Malha.tsx` e a decisão D-054).
+    const comEstado = (cor: number): number =>
+      ilha.situacao === 'bloqueada' ? corDeUnidadeBloqueada(cor) : cor
 
     const rocha = pintarPorAltura(
       gerarRocha({
@@ -82,8 +100,8 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       {
         de: -formato.altura,
         para: 0,
-        corDe: CORES_DERIVADAS.rochaDoFundo,
-        corPara: CORES_DERIVADAS.rochaDoAlto,
+        corDe: comEstado(CORES_DERIVADAS.rochaDoFundo),
+        corPara: comEstado(CORES_DERIVADAS.rochaDoAlto),
         degraus: 6,
       },
     )
@@ -100,13 +118,30 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       {
         de: 0,
         para: 0.4,
-        corDe: corDoCapim(ilha.situacao),
+        corDe: comEstado(CORES_DO_MUNDO.capim),
         // O alto do capim recebe um pouco do tom da ilha: é onde o tom aparece
         // na maior área da tela sem competir com a cor de estado, que fica na
         // base — a parte que diz "esta ilha ainda não abriu".
-        corPara: misturar(CORES_DERIVADAS.capimClaro, tom, 0.45),
+        corPara: comEstado(misturar(CORES_DERIVADAS.capimClaro, tom, TOM_NO_CAPIM)),
         degraus: 3,
       },
+    )
+
+    // Anel de destaque: a mesma cúpula do capim, pintada de uma cor só. Como
+    // toda malha com cor por vértice é desenhada sem tinta, o realce carrega a
+    // cor de estado dentro dele — e o valor da opacidade continua vindo do
+    // componente, porque opacidade não é cor.
+    const corDoRealce = corDaSituacao(ilha.situacao)
+    const realce = pintarPorAltura(
+      gerarTopo({
+        ...TOPO_PADRAO,
+        semente,
+        raio: formato.raioDoTopo,
+        segmentosRadiais: formato.segmentosRadiais,
+        amplitude: formato.amplitudeDaBorda,
+        inclinacao: formato.inclinacaoDoCapim,
+      }),
+      { de: 0, para: 1, corDe: corDoRealce, corPara: corDoRealce },
     )
 
     const marco = gerarMarco(identidade.marco, {
@@ -147,6 +182,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
     return {
       rocha,
       capim,
+      realce,
       marco,
       tom,
       posicoes: {
@@ -192,8 +228,11 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
 
   return (
     <group name={`ilha:${ilha.id}`} position={[ilha.centro[0], ilha.centro[1], ilha.centro[2]]}>
-      <Malha3D malha={pecas.rocha} cor={corDaRocha(ilha.situacao)} />
-      <Malha3D malha={pecas.capim} cor={corDoCapim(ilha.situacao)} duasFaces />
+      {/* Pedra e capim são pintados por vértice: a cor já vem na malha, e o
+          estado da unidade está dentro da pintura. Passar tinta aqui seria
+          multiplicar cor por cor — o defeito que deixou o mundo quase preto. */}
+      <Malha3D malha={pecas.rocha} />
+      <Malha3D malha={pecas.capim} duasFaces />
 
       <group
         // Nome com prefixo para o teste: o Grupo 2 é o corpo interativo da ilha, e
@@ -217,11 +256,7 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         {/* Anel de destaque: some quando a ilha não pode ser visitada, para não
             sugerir um clique que não existe. */}
         {interativo && (sobre || destacada) ? (
-          <Malha3D
-            malha={pecas.capim}
-            cor={corDaEstrutura}
-            opacidade={sobre ? 0.42 : 0.22}
-          />
+          <Malha3D malha={pecas.realce} opacidade={sobre ? 0.42 : 0.22} />
         ) : null}
 
         {/* O marco: a construção que só esta ilha tem. Nome com o tipo, para o

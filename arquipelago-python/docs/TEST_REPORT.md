@@ -6,6 +6,69 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — a cor do mundo (defeito visto em captura de tela)
+
+### 1. O defeito, medido
+
+A primeira captura de tela do mundo, enviada por quem usa, mostrou as ilhas como **silhuetas quase
+negras** — paredes em `#1a1714`, pontas em `#0e0c0a` — com o céu claro ao fundo. Estava assim desde a
+Etapa 4, e nenhum teste percebia: a suíte nunca olhou cor. Duas causas somadas (cor por cor na malha
+pintada, e cor por vértice gravada em sRGB que o Three.js lê como linear) mais uma terceira, da
+correção anterior (tom da ilha a 45% no capim, que deixava o capim rosado na ilha de tom quente). A
+correção está em **D-054**.
+
+### 2. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro. A mudança de `Malha3D` para tipo de união (`cor` só para malha **sem** cor por vértice)
+apontou os dois lugares exatos do defeito antes de qualquer teste rodar.
+
+### 3. Testes automáticos — EXECUTADO
+
+    npm test
+
+**42 arquivos, 739 testes, todos passando** (eram 42 e 733).
+
+| Arquivo | Testes | O que a correção acrescentou |
+|---|---|---|
+| `src/world/geometria/pintura.test.ts` | 20 | Três casos novos: os valores publicados da conversão sRGB → linear (0,5 → 0,2140; 0,2 → 0,0331), a monotonia da função, e a prova de que a pintura grava a cor convertida (era 17) |
+| `src/world/ConteudoDaCena.test.tsx` | 26 | Quatro casos novos na árvore 3D: malha pintada **sem tinta** no material (as 20 malhas das dez ilhas), todos os canais abaixo de 0,8 (a faixa que só existe em sRGB), **o capim é verde nas dez ilhas**, e a pedra da ilha bloqueada continua mais clara e menos saturada que a da liberada (era 22) |
+| `src/ui/theme/paleta3d.test.ts` | 12 | O caminho antigo (`corDaRocha`, `corDoCapim`, e as duas cores de terreno bloqueado pré-calculadas) saiu; entrou `corDeUnidadeBloqueada`, com a prova de que ela clareia a cor e não a substitui (era 13) |
+
+### 4. O que muda na tela, medido
+
+Estimativa a partir dos tokens e das duas luzes do mundo (hemisférica 1,35 e direcional 1,15). **É
+conta, não pixel:** não há GPU neste ambiente.
+
+| Ponto | Antes | Depois |
+|---|---|---|
+| Parede da pedra | `#1a1714` | `#44413d` |
+| Topo da pedra | `#332e2a` | `#948e89` |
+| Ponta da pedra | `#0e0c0a` | `#1d1b19` |
+| Alto do capim (tom verde) | `#397728` | `#66b261` |
+| Alto do capim (tom quente) | `#477c2c` | `#9cc073` |
+| Alto do capim (tom turquesa) | `#407f2f` | `#81cc80` |
+
+### 5. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/assets/index-*.js` | 420,23 kB | 128,50 kB |
+| `dist/assets/Cena-*.js` | 919,25 kB | 244,79 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+### 6. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Os pixels continuam sem verificação automática.** A correção foi medida em conta e provada em
+  teste; **a confirmação de que o mundo ficou bom é de quem olha** — item 55 do roteiro manual.
+- **As intensidades das luzes não foram tocadas.** Elas vieram da Etapa 4, escolhidas às cegas. Se o
+  mundo parecer claro demais depois desta correção, o conserto é o par de números em `Ceu.tsx`, e a
+  decisão é de quem vê.
+
 ## Execução de 21/09/2026 — identidade visual das ilhas (defeito relatado por quem usa)
 
 ### 1. O defeito, e por que a suíte não o via
