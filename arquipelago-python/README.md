@@ -12,16 +12,18 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 > **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
 > ciclo de estudo completo das quatro primeiras unidades (missão, estudo, prática, avaliação e
-> resultado), 5 perguntas por ilha, aprovação com 80% e progresso salvo no próprio navegador.
+> resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador e um
+> **console de Python de verdade** em cada ilha — interpretador servido pela própria aplicação,
+> carregado só quando a pessoa pede.
 >
-> **O que ainda não existe:** execução de código com Pyodide (Etapa 9), animação de caminhada do
+> **O que ainda não existe:** correção automática de exercício (Etapa 10), animação de caminhada do
 > avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
 > nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
 > linha reproduzida e sem número de página, porque o PDF não está em mãos.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 45 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 50 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -33,9 +35,14 @@ funciona, não aparece como botão.
     npm install
     npm run dev
 
+`npm install` traz o Pyodide, e os ganchos de `dev`, `build` e `test` copiam os arquivos do
+interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para refazer a cópia na mão:
+`npm run preparar-pyodide`.
+
 Outros comandos:
 
-    npm test         # 553 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
+    npm test         # 610 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface
+                     # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 
@@ -56,6 +63,16 @@ que seja, e `Esc` fecha o painel.
 Na aba **Avaliação**, o enunciado diz que a correção roda no navegador e que não é antifraude, o
 envio exige todas as respostas (com a lista das que faltam), e a revisão, depois do envio, explica
 todas as perguntas — certas e erradas — junto do placar de tentativas.
+
+Na aba **Prática** de cada ilha está o **console de Python**. Ele não baixa nada ao abrir a página: o
+interpretador vem no clique em *Ligar o Python (baixa cerca de 14 MB uma vez)*, roda dentro de um Web
+Worker (a página não trava enquanto o programa roda) e devolve o que o programa imprimiu, o valor da
+última expressão e — quando falha — a mensagem do Python **inteira**, com traceback, porque ler erro é
+parte do que se aprende. O que o console **não** é, dito na tela e não só aqui: não é o Python do seu
+computador, não é uma caixa à prova de fuga, não lê arquivos e não pede dados pelo teclado — `input()`
+é recusado com a alternativa escrita. Um laço infinito não pode ser interrompido por dentro: o botão
+*Recomeçar do zero* descarta o Worker, e o aviso de 15 segundos serve para a tela dizer que algo
+demora, não para interromper (D-041).
 
 No painel, a aba **Estudo** tem duas seções: *1. Ler no livro* — a parte indicada, o porquê, o que
 procurar e um botão que registra a leitura como feita — e *2. Entender do nosso jeito* — a explicação

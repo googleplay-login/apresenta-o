@@ -61,6 +61,11 @@ function BlocoDaExplicacao({ bloco }: { readonly bloco: Bloco }) {
             <code className={`linguagem-${bloco.linguagem}`}>{bloco.codigo}</code>
           </pre>
           {bloco.legenda ? <figcaption>{bloco.legenda}</figcaption> : null}
+          {bloco.naoRodaNoConsole === undefined ? null : (
+            <p className="explicacao__aviso-do-console" role="note">
+              No console desta ilha: {bloco.naoRodaNoConsole}
+            </p>
+          )}
         </figure>
       )
 

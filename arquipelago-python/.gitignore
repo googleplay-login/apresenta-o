@@ -26,3 +26,11 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# ---------------------------------------------------------------
+# Arquivos do Pyodide copiados do pacote instalado (scripts/preparar-pyodide.mjs).
+# Sao ~14 MB de binario reproduzivel a partir do package-lock.json. Copiar de
+# novo e um comando, e o repositorio e publico: binario grande nao entra.
+# Ver docs/DECISIONS.md (D-040).
+# ---------------------------------------------------------------
+public/pyodide/

@@ -1341,3 +1341,151 @@ kbd {
 .cena--ponte {
   cursor: pointer;
 }
+
+/* ---------------------------------------------------------------
+   Console de Python (Etapa 9)
+
+   O console vive dentro do passo de prática. Ele é uma caixa de
+   ferramenta dentro do painel: superfície própria, código em fonte
+   monoespaçada e a saída em campo separado — saída de programa se lê
+   melhor em bloco de código do que em parágrafo.
+   --------------------------------------------------------------- */
+
+.console {
+  margin-top: var(--espaco-lg);
+  padding: var(--espaco-md);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-painel);
+  background: var(--painel-fundo-elevado);
+}
+
+.console__titulo {
+  margin: 0 0 var(--espaco-xs);
+  font-size: 0.9375rem;
+}
+
+.console__texto {
+  margin: 0 0 var(--espaco-sm);
+  color: var(--texto-secundario);
+  font-size: var(--fonte-legenda);
+}
+
+/*
+ * O aviso do que o console não é. Tem a mesma forma do aviso de
+ * honestidade da avaliação (D-036): se ele fosse só texto claro no meio
+ * dos outros, ninguém leria — e é justamente ele que evita a leitura
+ * errada de que rodar código aqui é seguro.
+ */
+.console__aviso {
+  margin: 0 0 var(--espaco-md);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border: 1px solid var(--painel-borda);
+  border-left: 4px solid var(--acento-ambar);
+  border-radius: var(--raio-chip);
+  color: var(--texto-secundario);
+  font-size: var(--fonte-legenda);
+}
+
+.console__falha,
+.console__recusa {
+  margin: 0 0 var(--espaco-sm);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-left: 4px solid var(--acento-vermelho);
+  border-radius: var(--raio-chip);
+  background: var(--painel-fundo);
+}
+
+.console__controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-sm);
+  align-items: center;
+  margin-bottom: var(--espaco-md);
+}
+
+.console__estado {
+  margin: 0;
+  color: var(--acento-verde);
+  font-weight: 600;
+}
+
+.console__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+}
+
+.console__rotulo {
+  margin: 0;
+  font-size: var(--fonte-legenda);
+  font-weight: 600;
+}
+
+.console__codigo {
+  width: 100%;
+  padding: var(--espaco-sm);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  background: var(--painel-fundo);
+  color: var(--texto-principal);
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-corpo);
+  line-height: 1.5;
+  resize: vertical;
+  tab-size: 4;
+}
+
+.console__ajuda {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: var(--fonte-chip);
+}
+
+.console__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-sm);
+  margin: var(--espaco-md) 0;
+}
+
+.console__saida {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-xs);
+}
+
+.console__resultado {
+  margin: 0;
+  padding: var(--espaco-sm);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  background: var(--painel-fundo);
+  font-family: var(--fonte-mono);
+  font-size: var(--fonte-legenda);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+.console__resultado--erro {
+  border-left: 4px solid var(--acento-vermelho);
+  color: var(--texto-principal);
+}
+
+/*
+ * Motivo pelo qual um trecho não roda no console da ilha (Etapa 9). Vem logo
+ * abaixo do código: quem acabou de ler o trecho é quem vai tentar rodá-lo.
+ *
+ * Classe de um token só, e não `exercicio__nota exercicio__aviso-do-console`:
+ * o teste de acentuação lê string com espaço como prosa, e `nao` sem acento
+ * dentro de uma classe seria acusado como texto de tela sem acento.
+ */
+.explicacao__aviso-do-console,
+.exercicio__aviso-do-console {
+  margin: var(--espaco-xs) 0 0;
+  padding-left: var(--espaco-sm);
+  border-left: 3px solid var(--acento-ambar);
+  color: var(--texto-secundario);
+  font-size: var(--fonte-chip);
+}

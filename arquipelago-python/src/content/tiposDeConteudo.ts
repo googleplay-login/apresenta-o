@@ -23,6 +23,15 @@ export type Bloco =
       /** Legenda opcional, para dizer o que aquele código mostra. */
       readonly legenda?: string
       readonly codigo: string
+      /**
+       * Motivo pelo qual este trecho **não** roda no console da ilha.
+       *
+       * O console de Python roda o que a pessoa digitar; alguns trechos do
+       * conteúdo não fazem sentido lá — comando de terminal, exemplo que mostra
+       * um erro de propósito, programa que pede dados pelo teclado. Em vez de
+       * deixar o estudante descobrir isso travando a tela, o trecho diz por quê.
+       */
+      readonly naoRodaNoConsole?: string
     }
   | { readonly tipo: 'destaque'; readonly titulo: string; readonly texto: string }
   | {
@@ -81,6 +90,8 @@ export type Exercicio = {
   readonly conferencia: string
   /** Solução de referência, para comparar **depois** de tentar. */
   readonly solucao: string
+  /** Motivo pelo qual a solução não roda no console da ilha. Opcional. */
+  readonly naoRodaNoConsole?: string
 }
 
 /** Pergunta de avaliação: quatro alternativas, uma correta. */

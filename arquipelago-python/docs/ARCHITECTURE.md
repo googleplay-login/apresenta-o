@@ -32,7 +32,7 @@ Consequências práticas, e o motivo de cada uma:
 | `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios e perguntas | Existe para 4 unidades |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
 | `src/persistence/` | Gravação e leitura do progresso, versionado (formato **2**, com migração da versão 1) e com aviso honesto de falha | Existe e testado |
-| `src/python/` | Pyodide em Web Worker, sob demanda | Vazio |
+| `src/python/` | Pyodide em Web Worker, sob demanda: protocolo puro, núcleo, trabalhador, gancho do React e o endereço dos arquivos do interpretador | Existe e testado (D-040 a D-043) |
 | `src/ui/` | Componentes, painéis do ciclo (missão, estudo com leitura, prática, avaliação, resultado), tema, tokens visuais e mostruário de cores | Existe |
 | `src/types/` | Apenas tipos transversais | Vazio |
 | `src/utils/` | Apenas auxiliares genéricos sem domínio | Vazio |
@@ -153,6 +153,28 @@ O sinal de espaço merece uma nota, porque é o tipo de coisa que se erra por pa
 e nada no meio da frase. Marcar tudo poluiria o diagrama e sugeriria um problema que não existe
 (D-034).
 
+## Executar código: o caminho até o Worker
+
+O interpretador é grande (13,9 MB) e roda **fora** da interface, num Web Worker. A divisão em
+arquivos segue a mesma ideia da cena 3D: separar o que precisa de navegador do que pode ser conferido
+em teste.
+
+| Arquivo | Precisa de navegador? | O que faz |
+|---|---|---|
+| `src/python/protocolo.ts` | **Não** | Tipos e validação das mensagens, recusas explicadas, texto de erro, junção da saída |
+| `src/python/nucleoDoPython.ts` | **Não** | Atende um pedido de execução e devolve resposta — **nunca lança** |
+| `src/python/interpretadorPyodide.ts` | Node (via `public/pyodide/`) | Carrega o Pyodide e executa código |
+| `src/python/trabalhadorDoPython.ts` | Sim (Worker) | Fiação: escuta e chama o núcleo, sem regra própria |
+| `src/python/usePython.ts` | Sim (Worker, DOM) | Cria o Worker no clique, carrega uma vez, executa, vigia a demora, reinicia |
+
+**O que a fronteira do Worker obriga:** tudo que atravessa tem de ser serializável, e por isso o
+protocolo existe como tipo. Objeto do Pyodide não atravessa: o valor da última expressão é convertido
+para texto **antes** de sair, e o proxy é destruído (`descreverResultado`).
+
+**Recomeçar é descartar.** Não há como interromper um laço infinito por dentro do Python: o botão
+*Recomeçar do zero* chama `terminate()` no Worker e começa outro. O aviso de 15 s **não** interrompe
+nada; ele só faz a tela dizer que algo demora, em vez de ficar parada parecendo travada (D-041).
+
 ## A cena em duas partes, e por quê
 
 O último passo do caminho acima é desenhar. Ele acontece em dois arquivos, e a divisão não é
@@ -174,7 +196,8 @@ automática, porque dependem do desenho na tela.
 Vite + React + TypeScript. Three.js via React Three Fiber (sem Drei, D-021). CSS responsivo sem
 framework. `localStorage` para o progresso (IndexedDB só se o volume exigir, e com autorização).
 Vitest para lógica, render e interação em jsdom (D-020); Playwright para teste de navegador, ainda
-não instalado.
+não instalado. **Pyodide** (CPython compilado para WebAssembly) para rodar código de quem estuda,
+servido pela própria aplicação e carregado sob demanda num Web Worker (D-040).
 
 ### Versões resolvidas em 21/09/2026
 
@@ -193,10 +216,11 @@ não instalado.
 | jsdom / @testing-library/react | 30.1.0 / 16.3.3 | desenvolvimento; `@testing-library/dom` 10.4.2 e `user-event` 14.6.7 junto |
 | @react-three/test-renderer | 9.1.1 | desenvolvimento; monta a árvore 3D sem placa de vídeo (D-025) |
 | @types/node | 26.6.2 | apenas tipos, para a verificação de qualidade em `qa/` |
+| pyodide | 314.0.7 | exata; o CPython que o pacote traz é o 3.14.0 (D-040) |
 
 **Nenhuma dependência sem uso.** `pyodide` chegou a estar instalado na Etapa 1, "para já ficar", e
-foi removido na revisão da Etapa 4: nenhum arquivo o importava (D-026). Ele volta na Etapa 9, no
-mesmo commit que traz o Web Worker que o usa.
+foi removido na revisão da Etapa 4: nenhum arquivo o importava (D-026). Ele voltou na Etapa 9, fixado exato
+(`314.0.7`) e no mesmo commit que traz o Web Worker que o usa (D-040).
 
 Versões fixadas **exatas** (sem `^`) e `package-lock.json` versionado, para que outra pessoa, em
 outra máquina, obtenha exatamente a mesma instalação. Ver `DECISIONS.md` (D-008).
@@ -239,6 +263,8 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | O arquivo guardado de versão anterior é migrado, não descartado | `src/persistence/progressoSalvo.test.ts` | Perda de progresso por causa de um campo novo (D-035) |
 | Nada é gravado antes de o progresso lido chegar ao estado | `src/persistence/useProgressoPersistido.test.tsx` | A primeira passada de efeitos apagar o progresso guardado (D-039) |
 | O protótipo inteiro, da primeira à última ilha, com recarga no meio | `src/app/paginas/Mundo.interacao.test.tsx` | Percurso que só funciona numa sessão, ou que não fecha |
+| **Todo trecho de código do conteúdo roda de verdade** no interpretador real | `src/python/pyodideDeVerdade.test.ts`, `src/content/conteudo.test.ts` | Conteúdo publicado que não roda, ou erro proposital que ninguém sabe que é proposital (D-043) |
+| O console não promete segurança, e recusa o que travaria a página | `src/ui/paineis/ConsoleDoPython.test.tsx`, `src/python/protocolo.test.ts` | Texto que dá garantia falsa, ou tela parada sem explicação (D-041, D-042) |
 
 ## Ambiente de execução (preview remoto)
 

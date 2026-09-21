@@ -76,6 +76,25 @@ function problemasNoDiagrama(
   return problemas
 }
 
+/**
+ * Motivo de não rodar no console: quando existe, precisa **explicar**.
+ *
+ * "Não roda" sem motivo é a mesma coisa que um botão sem efeito: a pessoa fica
+ * sem saber se o problema é o programa dela, o conteúdo ou o console.
+ */
+function problemasNoMotivoDeNaoRodar(
+  motivo: string | undefined,
+  onde: string,
+): readonly string[] {
+  if (motivo === undefined) {
+    return []
+  }
+  if (motivo.trim().length < 40) {
+    return [`${onde}: motivo de não rodar no console curto demais ("${motivo}")`]
+  }
+  return []
+}
+
 /** Reclamações encontradas. Vazio significa conteúdo consistente. */
 export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string[] {
   const problemas: string[] = []
@@ -111,6 +130,12 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
       if (!LINGUAGENS.includes(bloco.linguagem)) {
         problemas.push(`${onde}: bloco de código ${indice + 1} com linguagem desconhecida`)
       }
+      problemas.push(
+        ...problemasNoMotivoDeNaoRodar(
+          bloco.naoRodaNoConsole,
+          `${onde}: bloco de código ${indice + 1}`,
+        ),
+      )
     } else if (bloco.tipo === 'lista') {
       if (bloco.itens.length === 0) {
         problemas.push(`${onde}: lista ${indice + 1} sem itens`)
@@ -142,6 +167,12 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
     if (exercicio.conferencia.trim() === '') {
       problemas.push(`${onde}: exercício ${exercicio.id} sem critério de conferência`)
     }
+    problemas.push(
+      ...problemasNoMotivoDeNaoRodar(
+        exercicio.naoRodaNoConsole,
+        `${onde}: exercício ${exercicio.id}`,
+      ),
+    )
   }
 
   problemas.push(...problemasNasPerguntas(unidade))

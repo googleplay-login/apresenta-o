@@ -3,6 +3,7 @@ import { CONTEUDO_DAS_UNIDADES, conteudoDaUnidade } from './unidades'
 import { gabaritoDaUnidade, problemasNoConteudo } from './validadorDeConteudo'
 import { PLANO_DE_UNIDADES } from './planoDeUnidades'
 import { PERGUNTAS_POR_UNIDADE, foiAprovado } from '../learning/avaliacao'
+import { motivoDaRecusa } from '../python/protocolo'
 
 describe('conteúdo das unidades', () => {
   it('tem conteúdo escrito para as quatro unidades planejadas', () => {
@@ -389,5 +390,38 @@ describe('os diagramas', () => {
       leitura: { ...base.leitura, semOLivro: 'sem livro' },
     }
     expect(problemasNoConteudo(semAlternativa).join(' ')).toContain('curto demais ou vazio')
+  })
+})
+
+describe('o que o console da ilha não roda está marcado como tal', () => {
+  it('todo trecho recusado pelo console explica o motivo', () => {
+    // Este teste amarra conteúdo e console: a mesma função que recusa o programa
+    // na tela (`motivoDaRecusa`) é aplicada a todo trecho de código do conteúdo.
+    // Se um trecho não roda no console, ele **tem** de dizer por quê — senão a
+    // pessoa digita, a tela recusa, e ninguém explica nada.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      for (const bloco of unidade.explicacao) {
+        if (bloco.tipo !== 'codigo' || bloco.linguagem !== 'python') {
+          continue
+        }
+        const motivo = motivoDaRecusa(bloco.codigo)
+        if (motivo !== null) {
+          expect(
+            bloco.naoRodaNoConsole,
+            `Em ${unidade.id}, o bloco «${bloco.legenda ?? bloco.codigo.slice(0, 30)}» é recusado pelo console (${motivo}) e não diz por quê`,
+          ).toBeTruthy()
+        }
+      }
+
+      for (const exercicio of unidade.pratica) {
+        const motivo = motivoDaRecusa(exercicio.solucao)
+        if (motivo !== null) {
+          expect(
+            exercicio.naoRodaNoConsole,
+            `Em ${unidade.id}, a solução de ${exercicio.id} é recusada pelo console (${motivo}) e não diz por quê`,
+          ).toBeTruthy()
+        }
+      }
+    }
   })
 })

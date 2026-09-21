@@ -71,6 +71,8 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       linguagem: 'terminal',
       legenda: 'Conferindo se o Python está instalado. A resposta pode ser um número diferente do mostrado — o que importa é começar com 3.',
       codigo: 'python3 --version',
+      naoRodaNoConsole:
+        'Este é um comando do terminal do seu computador, e não um programa Python: o console da ilha só entende Python.',
     },
     {
       tipo: 'codigo',
@@ -100,6 +102,8 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       linguagem: 'terminal',
       legenda: 'Pedindo ao Python para executar o arquivo',
       codigo: 'python3 primeiro_programa.py',
+      naoRodaNoConsole:
+        'Comando de terminal: ele chama o arquivo do seu computador. No console da ilha, escreva o conteúdo do programa direto no campo.',
     },
     {
       tipo: 'paragrafo',
@@ -144,6 +148,8 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
         'Abra o terminal e descubra qual versão do Python está instalada. Anote o número.',
       conferencia: 'Você deve ter obtido algo como "Python 3.14.2" — começando com 3.',
       solucao: 'python3 --version',
+      naoRodaNoConsole:
+        'Comando de terminal, que só existe no seu computador. Para conferir a versão dentro da ilha, escreva `import sys` e depois `print(sys.version)` no console.',
     },
     {
       id: 'e1-2',
@@ -162,6 +168,8 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       conferencia:
         'Você deve ter visto "SyntaxError" e o Python apontando o arquivo e a linha. Depois de consertar, o programa roda sem mensagem nenhuma de erro.',
       solucao: 'print(Meu nome é Ana)   →  SyntaxError\nprint("Meu nome é Ana")  →  funciona',
+      naoRodaNoConsole:
+        'Esta é a comparação dos dois casos, e não um programa: a primeira linha é justamente a que dá erro, e a seta é anotação nossa. Digite só a segunda linha no console para ver a diferença.',
     },
   ],
 

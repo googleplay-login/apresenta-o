@@ -6,6 +6,117 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 9 (prova de conceito do Pyodide em Web Worker)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com os seis módulos novos, o Worker, o console e os testes que rodam o Pyodide de verdade
+(o arquivo de teste importa a biblioteca e é compilado como qualquer outro).
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 610 testes, 37 arquivos, todos aprovados** (eram 553/33 antes desta etapa).
+
+| O que foi acrescentado | Onde | Testes |
+|---|---|---|
+| Protocolo: recusas explicadas (campo vazio, limite de 4.000 caracteres, `input()`), validação das mensagens, texto de erro nunca vazio, junção da saída com o valor da última expressão | `src/python/protocolo.test.ts` | 16 |
+| Núcleo: execução bem-sucedida, erro de Python, falha antes do Python — e a garantia de que **nunca lança** | `src/python/nucleoDoPython.test.ts` | 7 |
+| **Pyodide de verdade, em Node**: listas, laços, f-string, `import math`, traceback de `TypeError`/`IndexError`/`SyntaxError`, e o conteúdo real das quatro unidades executado | `src/python/pyodideDeVerdade.test.ts` | 12 |
+| A tela do console: o que ela diz antes de baixar, a recusa, a saída, o erro literal, o aviso de demora, o botão de recomeçar e o que ela **não** promete | `src/ui/paineis/ConsoleDoPython.test.tsx` | 21 |
+| Ligação entre conteúdo e console: motivo de recusa com 40 caracteres ou mais, e a lista de trechos que não rodam bate com o que o interpretador de verdade aceita | `src/content/conteudo.test.ts` | 32 (no total) |
+
+**Defeito real encontrado nesta etapa, e por execução — não por leitura.** O teste que roda o
+conteúdo das quatro unidades no interpretador de verdade reprovou três trechos. Dois são erros **de
+propósito**, escritos para a pessoa ver a mensagem do Python: o `TypeError` da conversão com `str()`
+(unidade 2) e o `IndexError` de `frutas[3]` (unidade 4). O terceiro era **defeito de verdade**: a
+unidade 4 escrevia
+
+    de numeros[0]             # remove pelo índice
+
+onde devia estar `del numeros[0]`. Estava publicado desde a reescrita das unidades e nenhum dos 553
+testes anteriores pegou, porque **nenhum deles jamais executou o conteúdo** — todos conferiam forma,
+tipo e tamanho. Corrigido, e os dois trechos propositais passaram a trazer o motivo escrito, visível
+na tela ao lado do código (D-043).
+
+**Prova de que a execução é a execução de verdade, e não uma simulação:** `pyodideDeVerdade.test.ts`
+carrega `public/pyodide/pyodide.mjs`, executa `runPython` com o código real dos blocos e das soluções,
+e compara a mensagem de erro com o que o CPython escreve. A versão exibida na tela ("Python 3.14.0") é
+lida de `sys.version_info` — a primeira tentativa usou `pyodide.version`, que é a versão **do Pyodide**
+(314.0.7), e o teste pegou a troca.
+
+**Achado menor, mas registrado por honestidade:** a trava de acentuação reprovou a etapa uma vez, e
+por um motivo que não era texto sem acento: ela lê **string com espaço** como se fosse prosa, e a
+classe composta `"exercicio__nota exercicio__nao-roda"` foi lida como frase — acusando `nao`, que
+é a forma sem acento. A classe virou um token só (`exercicio__aviso-do-console`), e a trava ficou
+como estava. Enfraquecer a trava para acomodar um nome de classe seria trocar a defesa por
+conveniência.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                             0.63 kB │ gzip:   0.40 kB
+    dist/assets/trabalhadorDoPython-*.js        2.47 kB
+    dist/assets/index-*.css                    23.04 kB │ gzip:   3.81 kB
+    dist/assets/index-*.js                    310.75 kB │ gzip:  98.23 kB
+    dist/assets/Cena-*.js                     912.10 kB │ gzip: 242.34 kB
+
+O Worker sai como **arquivo separado** (2,47 kB) — é o que garante que o interpretador não entre no
+pacote principal. O aviso de pacote grande do empacotador é conhecido e é do mundo 3D (`Cena`), não
+desta etapa; dividir a cena por rota é assunto de desempenho (Etapa 13), não de correção.
+
+### 4. Arquivos do Pyodide servidos pela aplicação — EXECUTADO
+
+Com o servidor de desenvolvimento em `0.0.0.0` e o cabeçalho do host do preview:
+
+| Arquivo | Resultado |
+|---|---|
+| `/pyodide/pyodide.asm.wasm` (9,6 MB) | **200**, `application/wasm` — o tipo certo, que o `WebAssembly.instantiateStreaming` exige |
+| `/pyodide/python_stdlib.zip` (2,5 MB) | **200** |
+| `/pyodide/pyodide.mjs`, `pyodide.asm.mjs`, `pyodide-lock.json` | **200** |
+| `/`, `src/python/usePython.ts`, `src/ui/paineis/ConsoleDoPython.tsx` | **200**, sem erro de transformação |
+
+Nenhuma requisição a host externo: os cinco endereços acima são da própria origem.
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **O Web Worker em um navegador.** Não há navegador neste ambiente. O que os testes cobrem é o
+  protocolo, o núcleo e a tela **com o Worker dublado**; em Node o Pyodide real é carregado **no mesmo
+  processo**, sem Worker. A fiação `postMessage` ↔ navegador é roteiro manual (itens 46 a 50).
+- **O download real pelos ganchos do navegador** (cache HTTP, `Content-Encoding`, bloqueio por
+  política de conteúdo): só no navegador.
+- **Interromper um laço infinito de verdade no navegador**: `terminate()` foi exercitado em teste de
+  unidade com Worker dublado; o comportamento com o Worker real é roteiro manual.
+- **A versão do Python que o Pyodide de verdade relata no navegador**: em Node foi 3.14.0.
+
+### 6. Roteiro manual do console (itens 46 a 50)
+
+46. **O console liga e roda**: abrir a ilha 1 → aba **Prática** → *Rode no console desta ilha*; clicar
+    em **Ligar o Python (baixa cerca de 14 MB uma vez)** e conferir o aviso de carregamento; depois de
+    pronto, conferir a versão do Python mostrada; rodar `print("olá")` e conferir a saída. Na aba
+    *Rede* do navegador, conferir que os pedidos vão para a **própria origem** e que nenhum sai para
+    outro host.
+47. **O download acontece uma vez**: recarregar a página e ligar o console de novo. Na segunda vez, os
+    arquivos grandes (`pyodide.asm.wasm`, `python_stdlib.zip`) devem vir do cache do navegador; fechar
+    a aba e reabrir não deve baixar de novo.
+48. **Laço infinito tem saída**: rodar `while True: pass`. Depois de cerca de 15 segundos deve aparecer
+    o aviso de demora com o botão **Recomeçar do zero**; a página precisa continuar respondendo
+    (rolar, trocar de aba, fechar o painel). Clicar em Recomeçar, esperar carregar e conferir que
+    `print(1)` volta a funcionar.
+49. **`input()` é recusado com explicação**: rodar `nome = input("Seu nome: ")`. Deve aparecer a
+    recusa explicando que não há teclado para o programa ler, com a alternativa escrita no código — e
+    **nada pode travar**. Depois rodar `nome = "Ana"` e conferir que funciona.
+50. **Trecho marcado mostra o motivo**: nas unidades 2 e 4, o bloco da conversão com `str()`, o bloco
+    do índice fora da lista e as soluções marcadas devem exibir o motivo logo abaixo do código, antes
+    de qualquer tentativa de rodar. Rodar os dois trechos de erro proposital e conferir a mensagem
+    real do Python (`TypeError`, `IndexError`).
+
+Resultado esperado: 50 de 50 conferidos. Qualquer item que falhe deve ser registrado aqui.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 8 (persistência e protótipo jogável)
 
 ### 1. Checagem de tipos — EXECUTADO, passou

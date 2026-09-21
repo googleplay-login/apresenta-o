@@ -78,6 +78,8 @@ export const u04Listas: ConteudoDaUnidade = {
       tipo: 'codigo',
       linguagem: 'python',
       codigo: 'frutas = ["banana", "manga", "uva"]\nprint(frutas[3])',
+      naoRodaNoConsole:
+        'Este trecho termina em erro de propósito: ele existe para mostrar a mensagem do `IndexError`. Rode no console e leia o que o Python diz — é assim que se aprende a reconhecer erro de índice.',
     },
     {
       tipo: 'codigo',
@@ -131,7 +133,7 @@ export const u04Listas: ConteudoDaUnidade = {
       linguagem: 'python',
       legenda: 'Mais funções que você vai querer ter à mão',
       codigo:
-        'numeros = [3, 1, 2]\nprint(len(numeros))       # 3   — quantos itens\nprint(max(numeros))       # 3   — o maior\nprint(min(numeros))       # 1   — o menor\nprint(sum(numeros))       # 6   — a soma\nnumeros.reverse()         # inverte a ordem\nde numeros[0]             # remove pelo índice',
+        'numeros = [3, 1, 2]\nprint(len(numeros))       # 3   — quantos itens\nprint(max(numeros))       # 3   — o maior\nprint(min(numeros))       # 1   — o menor\nprint(sum(numeros))       # 6   — a soma\nnumeros.reverse()         # inverte a ordem\ndel numeros[0]            # remove pelo índice',
     },
   ],
 

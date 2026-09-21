@@ -120,6 +120,8 @@ export const u02Variaveis: ConteudoDaUnidade = {
       legenda: 'A conversão explícita com str()',
       codigo:
         'idade = 34\nprint("Idade: " + str(idade))   # funciona\nprint("Idade: " + idade)         # não funciona',
+      naoRodaNoConsole:
+        'A segunda linha termina em erro de propósito: ela existe para você ler a mensagem do Python. Rode até a primeira linha para ver funcionando; depois rode a segunda e leia o `TypeError`.',
     },
     {
       tipo: 'codigo',

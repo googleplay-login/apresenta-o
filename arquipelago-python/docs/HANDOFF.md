@@ -1,18 +1,18 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 8 (persistência e protótipo jogável)**.
+Atualizado em **21/09/2026**, ao final da **Etapa 9 (prova de conceito do Pyodide em Web Worker)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 8 concluída; 9 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 9 concluída; 10 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **2**, com migração da versão anterior, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
-| Execução de código (Pyodide) | **não existe** — Etapa 9 |
+| Execução de código (Pyodide) | **existe como prova de conceito**: console por ilha, interpretador servido pela própria aplicação, carregado sob demanda (Etapa 9). A ligação do Worker com o navegador é roteiro manual |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
 | Testes de navegador | **não executados** — não há navegador neste ambiente |
@@ -26,9 +26,14 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 553 testes, em 33 arquivos
+    npm test             # 610 testes, em 37 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
+
+A primeira instalação precisa de `npm ci` (ou `npm install`) **antes** de qualquer outro comando: os
+arquivos do Pyodide (13,9 MB) são copiados do pacote para `public/pyodide/`, que fica fora do Git.
+Os ganchos `predev`, `prebuild` e `pretest` fazem a cópia sozinhos; para refazer na mão existe
+`npm run preparar-pyodide`.
 
 Páginas:
 
@@ -48,6 +53,12 @@ Dentro do painel, a aba **Estudo** tem duas seções: *1. Ler no livro* — a pa
 o que procurar e o botão que marca a leitura como feita — e *2. Entender do nosso jeito* — a
 explicação original, com os diagramas desenhados em texto. O marcador de leitura é registro, não
 permissão: ele **não** aprova, não abre ponte e não muda nota (D-033).
+
+Na aba **Prática**, cada exercício tem o console de Python da ilha: ele **não** baixa nada ao abrir a
+página — o interpretador só vem no clique em *Ligar o Python (baixa cerca de 14 MB uma vez)*. A
+mensagem de erro aparece inteira, com traceback; `input()` é recusado com a alternativa escrita; e um
+programa que passa de 15 segundos sem responder faz a tela avisar, com o botão *Recomeçar do zero*,
+que descarta o Worker — a única forma de interromper um laço infinito (D-041).
 
 ## O que foi entregue
 
@@ -197,6 +208,26 @@ Verificação:
 - o caminho percorrido pela suíte é o **sem 3D** (não há WebGL no ambiente), que é exatamente a
   alternativa acessível — a mesma de quem usa leitor de tela ou está sem placa de vídeo.
 
+### Etapa 9 — Python de verdade no navegador, com os limites ditos na tela
+
+- `src/python/`: seis arquivos, cada um com uma responsabilidade — `protocolo.ts` (contrato e recusas,
+  puro), `interpretadorPyodide.ts` (carrega e executa), `nucleoDoPython.ts` (atende pedido, nunca
+  lança), `trabalhadorDoPython.ts` (fiação do Worker), `usePython.ts` (gancho do React, com vigia de
+  demora e reinício) e `pyodideLocal.ts` (endereço dos arquivos);
+- `scripts/preparar-pyodide.mjs` copia seis arquivos do pacote para `public/pyodide/` (fora do Git), e
+  roda nos ganchos `predev`, `prebuild` e `pretest` (D-040);
+- `src/ui/paineis/ConsoleDoPython.tsx`, integrado à aba **Prática** de cada unidade, com as soluções
+  dos exercícios oferecidas como sugestão de teste;
+- **`input()` medido, não imaginado:** a sondagem real ficou 170 s sem resposta e sem erro, e o
+  processo teve de ser morto de fora. O console recusa `input(`/`sys.stdin` explicando a alternativa;
+- **o conteúdo passou a ser executado em teste.** `pyodideDeVerdade.test.ts` roda os trechos reais das
+  quatro unidades no interpretador real e achou **um defeito publicado**: `de numeros[0]` onde devia
+  estar `del numeros[0]`, na unidade 4. Os dois trechos que terminam em erro **de propósito** passaram
+  a trazer o motivo escrito, visível ao lado do código (D-043);
+- **nada promete segurança:** o aviso "O que isto não é" e o teste que o cobra (D-041);
+- a trava de acentuação reprovou a etapa uma vez por causa de um **nome de classe** lido como prosa
+  (`"exercicio__nota exercicio__nao-roda"`); a classe virou um token só, e a trava ficou como estava.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -231,9 +262,10 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 45 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 50 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
-| Pyodide não instalado | Sem execução de código no navegador | Etapa 9, que traz o pacote junto com o Web Worker (D-026) |
+| Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
+| `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |
 
 ## Decisões que ainda precisam do usuário
 
@@ -244,12 +276,11 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 9 — prova de conceito do Pyodide em Web Worker.** Hoje o projeto **não** executa código
-Python: a pasta `src/python/` está vazia de propósito, e a dependência foi removida na revisão da
-Etapa 4 porque nada a usava (D-026). A Etapa 9 traz o pacote junto com o Web Worker que o usa,
-carregado sob demanda, e diz em voz alta o que isso **não** é: rodar código de terceiros no navegador
-não é seguro, e nenhuma tela vai prometer isso. O que **não** entra nesta etapa: exercícios com
-correção automática (Etapa 10), que dependem desta prova de conceito.
+**Etapa 10 — exercícios com correção automática.** A prova de conceito da Etapa 9 mostrou que dá para
+rodar Python de verdade no navegador de quem estuda; a Etapa 10 usa isso para corrigir exercício:
+comparar a saída esperada com a saída obtida, dizer o que faltou **sem entregar a resposta**, e não
+premiar coincidência. O que **não** entra: julgar estilo, exigir uma solução única, nem prometer que a
+correção não pode ser enganada — ela roda no cliente, e a tela continua dizendo isso.
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
 leitura recomendada fala em capítulo e seção, não em página.

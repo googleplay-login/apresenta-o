@@ -690,3 +690,89 @@ ignora qualquer gravação enquanto ele não for substituído. Dois testes novos
 prova de mutação foi feita: desligar a guarda faz os dois falharem. O caso geral que fica registrado:
 **estado final correto não prova que o caminho até ele foi correto** — em persistência, a ordem das
 operações é o que decide se o dado sobrevive.
+---
+
+## D-040 — O Pyodide é servido pela própria aplicação, e só é baixado quando alguém pede
+**21/09/2026** — decisão de dependência e de rede, na Etapa 9.
+
+**Decisão:** a versão do Pyodide é fixada **exata** (`pyodide@314.0.7`, `--save-exact`), e os seis
+arquivos que o interpretador precisa são copiados do pacote para `public/pyodide/` por
+`scripts/preparar-pyodide.mjs`, que roda antes de `dev`, de `build` e de `test`. **Nada vem de CDN, e
+nada é buscado em servidor de terceiros.** O Web Worker que carrega o interpretador **só nasce no
+clique** de quem quer rodar código.
+
+**Contexto:** as três alternativas foram consideradas. Carregar de CDN é o caminho mais curto e o
+pior: coloca um terceiro executando código dentro do navegador de quem estuda, cria dependência de
+disponibilidade alheia e não combina com um projeto que versiona tudo e fixa versão exata. Importar
+de `node_modules` no código da aplicação funciona em desenvolvimento e não descreve o que o pacote
+final precisa ter. A terceira — copiar os arquivos para a pasta pública e servir da própria origem —
+é a única em que o build fica completo e o comportamento é o mesmo em desenvolvimento e em produção.
+
+**Consequência:** o download é de cerca de 13,9 MB e o botão **diz isso** antes de baixar ("Ligar o
+Python (baixa cerca de 14 MB uma vez)"). `public/pyodide/` fica fora do Git (13,9 MB de binário não
+pertencem a um repositório público) e é reconstruída a partir do lockfile. Quem clonar o projeto e
+rodar `npm test` sem `npm ci` não encontra os arquivos: os ganchos `predev`, `prebuild` e `pretest`
+existem para que isso não aconteça em silêncio. A aplicação **não funciona sem essa pasta**, e o
+relatório de testes diz como ela é reconstruída.
+
+## D-041 — Não é caixa à prova de fuga, e a tela diz isso em voz alta
+**21/09/2026** — decisão de honestidade sobre segurança, na Etapa 9.
+
+**Decisão:** o console avisa, antes de qualquer coisa rodar, o que ele **não** é: não é o Python do
+computador de quem estuda, não é uma caixa à prova de fuga, não lê arquivos do computador, não pede
+dados pelo teclado, e quem roda código de outra pessoa assume o risco. O texto está na tela, e um
+teste confere que ele está lá **e** que nenhuma frase do tipo "totalmente seguro" aparece no lugar.
+
+**Contexto:** o Pyodide é um CPython de verdade compilado para WebAssembly, rodando no navegador.
+Ele não tem acesso ao sistema de arquivos da máquina nem à rede por padrão, mas WebAssembly dentro
+de uma página não é um compartimento estanque, e a lista de garantias de uma versão pode mudar na
+seguinte. Prometer segurança seria a única coisa realmente imperdoável aqui: quem lê "é seguro" roda
+qualquer coisa, e o projeto passa a ser responsável pelo que acontecer.
+
+**Consequência:** ficam registrados, no texto da tela e não só neste documento, três limites
+concretos: `input()` não funciona (não há teclado para o programa ler); um laço infinito **não** pode
+ser interrompido por dentro — a única saída é **descartar o Worker** e começar outro, e é para isso
+que existe o botão *Recomeçar do zero*; e o aviso de demora (15 s sem resposta) **não** interrompe
+nada, só faz a tela dizer que algo está demorando, em vez de ficar parada parecendo travada. Um teste
+cobre o aviso de demora, o botão e a limpeza do aviso.
+
+## D-042 — A mensagem de erro chega inteira, sem tradução e sem embelezamento
+**21/09/2026** — decisão de conteúdo, na Etapa 9.
+
+**Decisão:** quando o programa falha, a tela mostra a **mensagem literal** do Python, com o
+traceback, como ela saiu do interpretador. A aplicação pode explicar em volta; não reescreve a
+mensagem, não troca `TypeError` por uma frase amigável e não esconde a linha do erro.
+
+**Contexto:** ler mensagem de erro é uma das habilidades que o curso existe para ensinar, e o livro
+usa isso o tempo todo. Uma mensagem reescrita pelo aplicativo ensina a ler a mensagem do aplicativo,
+que não existe em nenhum outro lugar — quando a pessoa for rodar o programa no computador dela, o
+erro vem no formato original e ela não reconhece.
+
+**Consequência:** `nucleoDoPython.atenderExecucao` **nunca lança**: qualquer falha vira resposta
+`erroDePython` com texto literal. Falha fora do Python (carregar o interpretador, conversar com o
+Worker) também tem texto útil: `textoDoErro` tem um último recurso e nunca devolve string vazia —
+tela em branco não é mensagem de erro. Um teste roda o conteúdo real das quatro unidades no
+interpretador de verdade e confere que os trechos que terminam em erro proposital produzem
+`TypeError`, `IndexError` ou `SyntaxError` de verdade, e não silêncio.
+
+## D-043 — Trecho que não roda no console é marcado no conteúdo, com motivo escrito
+**21/09/2026** — decisão de conteúdo e de teste, na Etapa 9.
+
+**Decisão:** o tipo do conteúdo ganhou `naoRodaNoConsole?: string`. Quando um trecho de código **não
+roda** no console da ilha, o **conteúdo** diz por quê, e o motivo aparece **na tela**, logo abaixo do
+código — no estudo e na prática. O validador exige motivo com 40 caracteres ou mais, e recusa motivo
+genérico tipo "não roda". O que **não** é marcado tem de rodar, e isso é cobrado por um teste que
+executa o conteúdo real das quatro unidades no interpretador de verdade.
+
+**Contexto:** o teste novo rodou tudo e reprovou três trechos. Dois eram erros **de propósito** —
+o `TypeError` da conversão com `str()`, na unidade 2, e o `IndexError` de `frutas[3]`, na unidade 4 —
+que existem justamente para a pessoa ver a mensagem do Python. O terceiro era **defeito de verdade**:
+um bloco da unidade 4 escrevia `de numeros[0]` onde devia estar `del numeros[0]`. Estava publicado e
+ninguém tinha visto, porque nenhum teste jamais havia *executado* o conteúdo — os testes conferiam
+forma, tipo e tamanho, nunca o resultado de rodar.
+
+**Consequência:** os dois trechos propositais ficaram marcados, com motivo que ensina em vez de
+esconder ("este trecho termina em erro de propósito: rode e leia o `IndexError`"), e o defeito do
+`del` foi corrigido. Fica registrado o achado, porque ele vale mais que a correção: **validar a
+forma do conteúdo não é validar o conteúdo**. A lista de exceções mora no conteúdo, junto do trecho
+— e não no teste, onde envelheceria sem ninguém perceber.

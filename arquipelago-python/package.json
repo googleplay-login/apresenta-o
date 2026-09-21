@@ -1,19 +1,24 @@
 {
   "name": "arquipelago-python",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "description": "Arquipélago Python — mundo 3D navegável para estudar Python acompanhando o livro Curso Intensivo de Python (Eric Matthes, Novatec).",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/preparar-pyodide.mjs",
     "build": "tsc --noEmit && vite build",
+    "prebuild": "node scripts/preparar-pyodide.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "preparar-pyodide": "node scripts/preparar-pyodide.mjs",
     "test": "vitest run",
+    "pretest": "node scripts/preparar-pyodide.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@react-three/fiber": "9.7.0",
+    "pyodide": "314.0.7",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "three": "0.186.0"

@@ -1,4 +1,5 @@
 import type { Exercicio } from '../../content/tiposDeConteudo'
+import { ConsoleDoPython } from './ConsoleDoPython'
 
 /**
  * Passo 3 do ciclo: a prática.
@@ -11,6 +12,11 @@ import type { Exercicio } from '../../content/tiposDeConteudo'
  *
  * A solução fica fechada até o estudante abrir: tentar antes de ver é o que faz
  * o exercício valer alguma coisa.
+ *
+ * Desde a Etapa 9 há um **console de Python** nesta mesma aba: quem não tem o
+ * Python instalado na máquina pode escrever e rodar o exercício ali, sem sair da
+ * ilha. Ele é carregado apenas quando a pessoa clica — e continua **sem** dizer
+ * que corrige o exercício, porque corrigir é assunto da Etapa 10.
  */
 
 type Props = {
@@ -22,9 +28,9 @@ export function PraticaDaUnidade({ exercicios }: Props) {
     <div className="passo">
       <h3 className="passo__titulo">Prática</h3>
       <p className="passo__aviso">
-        Estes exercícios são escritos por você, no seu Python. A conferência abaixo diz o que
-        observar no resultado — a correção automática só entra quando o ambiente de execução
-        de Python estiver montado e testado.
+        Estes exercícios são escritos por você. A conferência abaixo diz o que observar no
+        resultado. Se você não tem o Python instalado nesta máquina, use o console no fim desta
+        aba: ele roda Python de verdade e mostra a saída na hora.
       </p>
 
       <ol className="exercicios">
@@ -54,10 +60,22 @@ export function PraticaDaUnidade({ exercicios }: Props) {
               <p className="exercicio__nota">
                 Existe mais de um jeito certo. Se o seu resultado confere, ele vale.
               </p>
+              {exercicio.naoRodaNoConsole === undefined ? null : (
+                <p className="exercicio__aviso-do-console" role="note">
+                  No console desta ilha: {exercicio.naoRodaNoConsole}
+                </p>
+              )}
             </details>
           </li>
         ))}
       </ol>
+
+      <ConsoleDoPython
+        sugestoes={exercicios.map((exercicio, indice) => ({
+          titulo: `Usar a solução do exercício ${indice + 1}`,
+          codigo: exercicio.solucao,
+        }))}
+      />
     </div>
   )
 }

@@ -283,11 +283,45 @@ armazenamento) e por roteiro manual — **não** por teste de navegador.
 
 ---
 
+## Etapa 9 — Prova de conceito do Pyodide em Web Worker (concluída em 21/09/2026)
+
+Autorizada como **prova de conceito**, e não como recurso pedagógico completo. O que a etapa precisava
+responder: *dá para rodar Python de verdade no navegador de quem estuda, sem instalar nada e sem
+travar a página?* A resposta é sim, medida com o interpretador real — e com os limites ditos na tela.
+
+- **O interpretador é servido pela própria aplicação**, com versão fixada exata (`pyodide@314.0.7`) e
+  os arquivos copiados do pacote para a pasta pública por um script que roda antes de `dev`, `build` e
+  `test`. Nenhuma busca em CDN, nenhum terceiro executando código no navegador de quem estuda (D-040).
+- **O download só começa no clique** — cerca de 13,9 MB, ditos no rótulo do botão — e acontece uma vez
+  por sessão de página. O Web Worker não nasce ao abrir a ilha: nasce quando alguém pede.
+- **O console diz o que não é**: não é o Python do computador, não é caixa à prova de fuga, não lê
+  arquivos, não pede dados pelo teclado, e quem roda código alheio assume o risco (D-041).
+- **A mensagem de erro chega inteira**, com traceback, sem tradução nem embelezamento — ler erro é
+  parte do que o curso ensina (D-042).
+- **`input()` é recusado com explicação.** Isso foi **medido, não imaginado**: um programa com
+  `input()` ficou 170 s esperando, sem resposta e sem erro, e o processo teve de ser morto de fora.
+  Dentro do console isso seria pior que um erro — a tela parada, sem explicação, e a pessoa achando
+  que o programa dela está errado. A recusa ensina a alternativa (`nome = "Ana"`).
+- **Laço infinito tem saída visível.** Um programa que não responde em 15 s faz a tela dizer que está
+  demorando e oferecer *Recomeçar do zero*, que descarta o Worker — a única forma de interromper um
+  laço por fora. O aviso **não** interrompe nada, e o texto diz isso.
+- **O conteúdo passou a ser executado em teste.** Um teste novo roda os trechos de código das quatro
+  unidades no interpretador de verdade, e achou **um defeito publicado**: `de numeros[0]` onde devia
+  estar `del numeros[0]`. Os trechos que terminam em erro **de propósito** — o `TypeError` da conversão
+  e o `IndexError` do índice fora da lista — passaram a ser marcados no conteúdo, com o motivo escrito
+  e visível na tela ao lado do código (D-043).
+
+**Limite explícito:** o Web Worker **não foi executado em navegador nenhum** — não há navegador nem
+WebGL neste ambiente. O que está provado por teste é o protocolo, o núcleo que atende os pedidos, a
+tela (com o Worker dublado) e o interpretador real rodando o conteúdo real, em Node. A fiação do
+Worker com a página é roteiro manual (itens 46 a 50 de `docs/TEST_REPORT.md`).
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **9** — prova de conceito de Pyodide em Web Worker, carregado sob demanda.
 - **10** — exercícios com correção automática.
 - **11** — expansão curricular em lotes de 2 a 3 unidades, uma autorização por lote.
 - **12** — recursos complementares.

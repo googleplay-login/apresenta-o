@@ -139,6 +139,8 @@ export const u03Strings: ConteudoDaUnidade = {
       conferencia:
         'Digite "  ana  " e confira que a resposta é "ANA", sem espaços antes ou depois.',
       solucao: 'nome = input("Seu nome: ")\nprint(nome.strip().upper())',
+      naoRodaNoConsole:
+        'O console da ilha não tem teclado para o programa ler, e o `input()` ficaria esperando para sempre. Troque a primeira linha por `nome = "  Ana  "` e rode o resto igual.',
     },
     {
       id: 'e3-2',
@@ -158,7 +160,9 @@ export const u03Strings: ConteudoDaUnidade = {
       conferencia:
         'Com a entrada "ilha ", a comparação com "ilha" mostra False; depois de aplicar `.strip()`, mostra True.',
       solucao:
-        'digitado = input("Digite: ")\nprint("[" + digitado + "]")\nprint(digitado == "ilha")\nprint(digitado.strip() == "ilha")',
+        'digitado = input("Digite: ")\nprint("[" + digitado + "]")\nprint(digitado == "ilha")\nprint(digitado.strip() == "ilha")\n# sem poder digitar: troque a primeira linha por\n# digitado = " ilha  " e rode o resto',
+      naoRodaNoConsole:
+        'O `input()` não funciona no console da ilha. Troque a primeira linha por `digitado = " ilha  "` (com os espaços) e rode o resto: o resultado é o mesmo que você veria digitando.',
     },
   ],
 
