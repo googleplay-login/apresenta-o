@@ -69,7 +69,20 @@ export const EXPOENTE_DO_PERFIL = 1.7
  * O topo é aberto de propósito — quem o fecha é o disco de capim, encaixado
  * exatamente no mesmo raio, o que evita faces internas invisíveis.
  */
-export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): Malha {
+export type MalhaDaRocha = Malha & {
+  /**
+   * Irregularidade de cada coluna da **borda do topo**, na ordem das colunas.
+   *
+   * Quem fecha a ilha por cima é o capim, e ele precisa desta lista para não
+   * ficar mais estreito que a pedra em nenhuma direção: com duas irregularidades
+   * sorteadas de forma independente, a pedra aparecia por fora do capim em cerca
+   * de metade das direções — e o topo da ilha virava uma borda cinza em volta de
+   * manchas verdes. Ver `bordaMinima` em `gerarTopo` e a decisão D-055.
+   */
+  readonly bordaDoTopo: readonly number[]
+}
+
+export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): MalhaDaRocha {
   const { segmentosRadiais, aneis, semente, raioDoTopo, altura, amplitude } = opcoes
   const expoenteDoPerfil = opcoes.expoenteDoPerfil ?? EXPOENTE_DO_PERFIL
 
@@ -112,7 +125,17 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): Malha {
       // O tremor vertical acompanha o raio local: pedra real não afina reto, mas
       // também não se dobra. Tremor de tamanho fixo na ponta faria a malha se
       // cruzar, e as faces cruzadas apareceriam viradas para dentro.
-      const tremor = Math.sin(angulo * 3 + semente) * amplitude * 0.55 * raioDoAnel
+      // O **anel do topo** não tem tremor vertical: é o plano em que o capim se
+      // apoia. Com o tremor simétrico, os bicos da pedra subiam acima do capim
+      // (até 0,72 de altura, medido na ilha 1) e apareciam como manchas cinzas no
+      // meio do verde; a irregularidade que importa no topo é a da **borda**, que
+      // vai em `bordaDoTopo`.
+      //
+      // A primeira tentativa foi manter o tremor, só que descendente. O teste de
+      // orientação reprovou: uma coluna descendo 0,6 ao lado de outra no zero
+      // torcia a primeira faixa da parede, e uma face virava para dentro do eixo.
+      // Tremor zero não tem esse risco.
+      const tremor = anel === 0 ? 0 : Math.sin(angulo * 3 + semente) * amplitude * 0.55 * raioDoAnel
       const raio = raioDoAnel * (relevo[coluna] ?? 1)
 
       posicoes.push(Math.cos(angulo) * raio, y + tremor, Math.sin(angulo) * raio)
@@ -134,7 +157,7 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): Malha {
     }
   }
 
-  return { posicoes, indices }
+  return { posicoes, indices, bordaDoTopo: relevo }
 }
 
 export type OpcoesDoTopo = {
@@ -146,6 +169,16 @@ export type OpcoesDoTopo = {
   readonly amplitude: number
   /** Quanto o capim sobe do centro até a borda. Ver `alturaDoTopo`. */
   readonly inclinacao?: number
+  /**
+   * Irregularidade mínima da borda, coluna a coluna.
+   *
+   * Quem fecha a ilha por cima é o capim, e a pedra está logo abaixo dele: se a
+   * borda do capim ficar mais estreita que a da pedra em alguma direção, a
+   * rocha aparece por fora — foi assim que o topo das ilhas virou uma moldura
+   * cinza. Com esta lista, a borda do capim é o **maior** entre o sorteio dele e
+   * o da pedra, coluna a coluna. Ver D-055.
+   */
+  readonly bordaMinima?: readonly number[]
 }
 
 /**
@@ -202,6 +235,13 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
     borda.push(
       coluna === segmentosRadiais ? (borda[0] ?? 1) : entre(sortear, 1 - amplitude, 1 + amplitude),
     )
+  }
+
+  // O capim é o teto da ilha: ele nunca é mais estreito que a pedra embaixo dele.
+  if (opcoes.bordaMinima !== undefined) {
+    for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
+      borda[coluna] = Math.max(borda[coluna] ?? 1, opcoes.bordaMinima[coluna] ?? 1)
+    }
   }
 
   // Centro

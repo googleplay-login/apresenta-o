@@ -53,6 +53,70 @@ describe('perfil da rocha', () => {
   })
 })
 
+describe('rocha — o topo que o capim vai cobrir', () => {
+  it('o anel do topo é plano: nenhuma ponta da pedra sobe acima do capim', () => {
+    // O capim se apoia no plano do topo. Com tremor vertical neste anel, os bicos
+    // da pedra subiam acima dele (até 0,72 de altura na ilha 1) e apareciam como
+    // manchas cinzas no meio do verde — o defeito que a captura de tela mostrou.
+    for (const semente of [1, 7, 99, 12345, 20260421]) {
+      const rocha = gerarRocha({ ...ROCHA_PADRAO, semente, aneis: 7, segmentosRadiais: 18 })
+      const verticesPorAnel = 18 + 1
+      for (let coluna = 0; coluna <= 18; coluna += 1) {
+        const y = rocha.posicoes[coluna * 3 + 1]
+        expect(y, `semente ${semente}, coluna ${coluna}`).toBe(0)
+      }
+      // e a faixa seguinte continua abaixo, sem dobrar sobre o topo
+      const ySegundoAnel = rocha.posicoes[verticesPorAnel * 3 + 1] ?? 0
+      expect(ySegundoAnel).toBeLessThan(0)
+    }
+  })
+
+  it('declara a irregularidade da borda do topo, uma por coluna', () => {
+    const rocha = gerarRocha({ ...ROCHA_PADRAO, segmentosRadiais: 12 })
+    expect(rocha.bordaDoTopo).toHaveLength(13)
+    // A última coluna fecha a volta repetindo a primeira: sem emenda visível.
+    expect(rocha.bordaDoTopo[12]).toBe(rocha.bordaDoTopo[0])
+    // E a borda declarada é a borda mesmo: o raio do anel do topo é o raio do
+    // topo vezes ela.
+    for (let coluna = 0; coluna <= 12; coluna += 1) {
+      const raio = Math.hypot(
+        rocha.posicoes[coluna * 3] ?? 0,
+        rocha.posicoes[coluna * 3 + 2] ?? 0,
+      )
+      expect(raio).toBeCloseTo(ROCHA_PADRAO.raioDoTopo * (rocha.bordaDoTopo[coluna] ?? 1), 6)
+    }
+  })
+
+  it('o capim nunca é mais estreito que a pedra, coluna a coluna', () => {
+    const rocha = gerarRocha({ ...ROCHA_PADRAO, segmentosRadiais: 16, amplitude: 0.16 })
+    const capim = gerarTopo({
+      ...TOPO_PADRAO,
+      segmentosRadiais: 16,
+      raio: ROCHA_PADRAO.raioDoTopo,
+      amplitude: 0.08,
+      bordaMinima: rocha.bordaDoTopo,
+    })
+
+    const verticesPorAnel = 17
+    const base = 1 + (TOPO_PADRAO.aneis - 1) * verticesPorAnel
+
+    for (let coluna = 0; coluna <= 16; coluna += 1) {
+      const raioDaPedra = Math.hypot(
+        rocha.posicoes[coluna * 3] ?? 0,
+        rocha.posicoes[coluna * 3 + 2] ?? 0,
+      )
+      const raioDoCapim = Math.hypot(
+        capim.posicoes[(base + coluna) * 3] ?? 0,
+        capim.posicoes[(base + coluna) * 3 + 2] ?? 0,
+      )
+      expect(
+        raioDoCapim,
+        `coluna ${coluna}: capim ${raioDoCapim.toFixed(3)} < pedra ${raioDaPedra.toFixed(3)}`,
+      ).toBeGreaterThanOrEqual(raioDaPedra - 1e-9)
+    }
+  })
+})
+
 describe('malha da rocha', () => {
   it('gera malha utilizável', () => {
     conferirMalha(gerarRocha(), 'rocha padrão')

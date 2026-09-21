@@ -28,7 +28,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 739 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
+    npm test             # 744 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -255,6 +255,24 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Conserto depois do lote 3: a pedra fora do capim e as nuvens escuras (D-055)
+
+- **a pedra da ilha e o capim sorteavam a própria borda de forma independente** (`semente` e
+  `semente + 7919`). Resultado visível: as pontas da pedra subiam acima do plano do topo (até **0,72**
+  na ilha 1) e apareciam como manchas cinzas no verde; e, em metade das direções, a pedra era mais
+  larga que o capim, virando uma moldura cinza em volta do topo;
+- `gerarRocha` agora **declara** a irregularidade da borda que usou (`bordaDoTopo`) e `gerarTopo`
+  recebe `bordaMinima`: a borda do capim é o maior entre o sorteio dele e o da pedra, coluna a coluna.
+  O capim passa a ser, por construção, o teto da ilha;
+- o **anel do topo da pedra não tem tremor vertical**. A primeira tentativa foi deixar o tremor só
+  descendente, e o teste de orientação reprovou (a coluna que descia torcia a faixa da parede e virava
+  uma face para dentro);
+- **as nuvens eram claras de cor e escuras na tela**: a luz do mundo tem metade da cor do mar, e a face
+  de baixo de cada nuvem recebia só essa metade (calculado: `#4E93A5`). `Malha3D` ganhou `semLuz`, e as
+  nuvens são desenhadas chapadas — é a única forma chapada do mundo, e é de propósito;
+- **dois testes novos cobram o que faltava**: o capim cobre a pedra em cada direção (no teste da
+  árvore 3D, nas dez ilhas) e nenhuma nuvem recebe luz.
+
 ### Conserto depois do lote 3: a cor do mundo (D-054)
 
 - **o defeito apareceu na primeira captura de tela do mundo**, enviada por quem usa: as ilhas eram
@@ -410,7 +428,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053) e o mundo quase preto (D-054) | Registrado em `TEST_REPORT.md`, com roteiro manual de 55 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054) e a pedra fora do capim (D-055) | Registrado em `TEST_REPORT.md`, com roteiro manual de 57 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |

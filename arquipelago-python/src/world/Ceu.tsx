@@ -15,6 +15,10 @@ import { criarSorteador, entre } from './geometria/aleatorio'
  * As nuvens são poucas e fixas: elas existem para dar profundidade embaixo das
  * ilhas, não para encher a tela. São caixas achatadas com semente fixa, então a
  * nuvem fica sempre no mesmo lugar — a paisagem não treme a cada carregamento.
+ *
+ * As nuvens são desenhadas **sem luz** (`semLuz`): com a luz do mundo, a face de
+ * baixo delas recebia a cor do mar e cada nuvem virava um caco escuro no céu
+ * claro. É a única forma chapada do mundo, e é de propósito.
  */
 
 const NUVENS = 14
@@ -63,7 +67,7 @@ export function Ceu() {
           position={[nuvemDaVez.x, nuvemDaVez.y, nuvemDaVez.z]}
           scale={[nuvemDaVez.largura, nuvemDaVez.altura, nuvemDaVez.profundidade]}
         >
-          <Malha3D malha={nuvem} cor={CORES_DERIVADAS.nuvem} duasFaces />
+          <Malha3D malha={nuvem} cor={CORES_DERIVADAS.nuvem} duasFaces semLuz />
         </group>
       ))}
     </>

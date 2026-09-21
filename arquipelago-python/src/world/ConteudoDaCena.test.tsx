@@ -42,6 +42,7 @@ import type { ArrastoPendente } from './CameraLivre'
 import { SEM_TECLAS, type TeclasDeMovimento } from './camera/movimento'
 import { chaoDoMundo, type ChaoDoMundo, type Localizacao } from './mapaCaminhavel'
 import { caminhanteInicial, type Caminhante } from './avatar/passos'
+import { CORES_DERIVADAS } from '../ui/theme/paleta3d'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado } from '../learning/percurso'
 
@@ -129,6 +130,71 @@ function comNome(no: No): string {
 
 function nomesDentro(no: No): readonly string[] {
   return no.findAll((filho) => comNome(filho) !== '').map(comNome)
+}
+
+/** A altura do vértice mais alto de uma malha. */
+function alturaDoTopoDaMalha(malha: No): number {
+  const geometria = (malha.instance as unknown as {
+    geometry?: { attributes?: { position?: { array: ArrayLike<number> } } }
+  }).geometry
+  const posicoes = geometria?.attributes?.position?.array
+  if (posicoes === undefined) {
+    return 0
+  }
+  let maior = Number.NEGATIVE_INFINITY
+  for (let indice = 1; indice < posicoes.length; indice += 3) {
+    maior = Math.max(maior, posicoes[indice] ?? 0)
+  }
+  return maior
+}
+
+/** As posições de uma malha, já em lista de números. */
+function posicoesDaMalha(malha: No): ArrayLike<number> {
+  const geometria = (malha.instance as unknown as {
+    geometry?: { attributes?: { position?: { array: ArrayLike<number> } } }
+  }).geometry
+  const posicoes = geometria?.attributes?.position?.array
+  if (posicoes === undefined) {
+    throw new Error('A malha não tem posições — a árvore 3D mudou de forma?')
+  }
+  return posicoes
+}
+
+const raioEm = (posicoes: ArrayLike<number>, indice: number): number =>
+  Math.hypot(posicoes[indice * 3] ?? 0, posicoes[indice * 3 + 2] ?? 0)
+
+/**
+ * O raio de cada coluna do **anel do topo** da pedra, na ordem das colunas.
+ *
+ * O anel do topo é plano (é o plano em que o capim se apoia), e é o começo da
+ * lista — as faixas seguintes descem. As duas malhas da ilha são geradas com o
+ * mesmo número de colunas e os mesmos ângulos, então a posição na lista é a
+ * mesma direção em ambas.
+ */
+function bordaDoTopoDaPedra(malha: No): readonly number[] {
+  const posicoes = posicoesDaMalha(malha)
+  const colunas: number[] = []
+
+  for (let indice = 0; indice < posicoes.length / 3; indice += 1) {
+    // O anel do topo é a faixa de y zero no começo da lista.
+    if (Math.abs(posicoes[indice * 3 + 1] ?? 0) > 1e-6) {
+      break
+    }
+    colunas.push(raioEm(posicoes, indice))
+  }
+
+  return colunas
+}
+
+/** O raio de cada coluna do **anel externo** do capim: as últimas colunas da lista. */
+function bordaExternaDoCapim(malha: No, quantas: number): readonly number[] {
+  const posicoes = posicoesDaMalha(malha)
+  const total = posicoes.length / 3
+  const colunas: number[] = []
+  for (let indice = total - quantas; indice < total; indice += 1) {
+    colunas.push(raioEm(posicoes, indice))
+  }
+  return colunas
 }
 
 /** As malhas dentro de um objeto que trazem cor por vértice. */
@@ -475,6 +541,81 @@ describe('o mundo não é multiplicado por tinta (D-054)', () => {
       saturacaoMedia(coresDeVertice(pedraDisponivel)),
     )
     expect(luzBloqueada).toBeGreaterThan(luz * 1.5)
+
+    await cena.unmount()
+  })
+})
+
+describe('a ilha é o capim em cima da pedra, e não o contrário (D-055)', () => {
+  it('a pedra termina no plano do topo e o capim cobre a pedra em toda direção', async () => {
+    // Dois defeitos vistos na captura de tela, um em cada ponta desta conta:
+    // a pedra subia **acima** do capim (bicos de até 0,72 virando mancha cinza no
+    // verde) e a pedra aparecia **por fora** do capim (duas irregularidades de
+    // borda sorteadas de forma independente). Aqui os dois são medidos na malha
+    // que vai para a tela, ilha por ilha, direção por direção.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const pintadas = malhasComCorDeVertice(ilha)
+      const pedra = pintadas.find((malha) => faixaVerticalDaMalha(malha) > 1)
+      const capim = pintadas.find((malha) => faixaVerticalDaMalha(malha) <= 1)
+      if (pedra === undefined || capim === undefined) {
+        throw new Error(`A ilha «${unidade.titulo}» deveria ter pedra e capim`)
+      }
+
+      const topoDaPedra = alturaDoTopoDaMalha(pedra)
+      expect(
+        topoDaPedra,
+        `A pedra de «${unidade.titulo}» passa acima do plano do topo em ${topoDaPedra.toFixed(3)}`,
+      ).toBeLessThanOrEqual(0.001)
+
+      // Coluna a coluna: as duas malhas usam os mesmos ângulos, então dá para
+      // comparar direção por direção em vez de só o raio maior.
+      const raiosDaPedra = bordaDoTopoDaPedra(pedra)
+      const raiosDoCapim = bordaExternaDoCapim(capim, raiosDaPedra.length)
+      expect(raiosDoCapim).toHaveLength(raiosDaPedra.length)
+
+      raiosDaPedra.forEach((raioDaPedra, indice) => {
+        const raioDoCapim = raiosDoCapim[indice] ?? 0
+        expect(
+          raioDoCapim,
+          `Em «${unidade.titulo}», direção ${indice}: capim ${raioDoCapim.toFixed(2)} < pedra ${raioDaPedra.toFixed(2)}`,
+        ).toBeGreaterThanOrEqual(raioDaPedra - 0.01)
+      })
+    }
+
+    await cena.unmount()
+  })
+})
+
+describe('o céu tem nuvens, e nuvem não é cascalho (D-055)', () => {
+  it('nenhuma nuvem é escura: as nuvens são desenhadas chapadas, sem luz', async () => {
+    // As nuvens são claras de cor (#F1F4F9), mas a luz deste mundo vem de
+    // meia-esfera — metade céu, metade mar —, então a face de baixo de cada uma
+    // era iluminada pela cor do mar e a nuvem virava um caco escuro no céu claro.
+    // A correção foi desenhar a nuvem sem luz; este teste cobra que continue.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const nuvens = cena.scene.findAll(
+      (no) =>
+        (no.instance as unknown as { type?: string }).type === 'Mesh' &&
+        (no.instance as unknown as { geometry?: { attributes?: { color?: unknown } } }).geometry
+          ?.attributes?.color === undefined &&
+        corDoMaterial(no) === CORES_DERIVADAS.nuvem,
+    )
+
+    expect(nuvens.length).toBeGreaterThan(4)
+    for (const nuvem of nuvens) {
+      expect(
+        (nuvem.instance as unknown as { material?: { type?: string } }).material?.type,
+        'A nuvem voltou a receber luz: ela vai escurecer pela cor do mar',
+      ).toBe('MeshBasicMaterial')
+    }
 
     await cena.unmount()
   })

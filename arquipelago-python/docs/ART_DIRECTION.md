@@ -152,6 +152,22 @@ Do token até o pixel, a cor percorre três passos, e cada um tem um lugar:
 O que o desenho **não** faz: multiplicar cor por cor. Era o que deixava as paredes das ilhas em
 `#1a1714`, praticamente pretas, e o defeito só apareceu quando alguém viu o mundo na tela.
 
+### Quem é o teto da ilha (D-055)
+
+A ilha é a **pedra** (malha aberta em cima, afunilada para baixo) com o **capim** (disco) fechando o
+topo. Três regras garantem que o topo seja sempre verde:
+
+1. **O anel do topo da pedra é plano** — é o plano em que o capim se apoia. Nenhuma ponta da pedra
+   sobe acima dele, senão ela aparece como mancha cinza no meio do verde;
+2. **O capim nunca é mais estreito que a pedra**, coluna a coluna (`bordaMinima`): a borda do capim é
+   o maior entre o sorteio dele e o da pedra. Sem isso, a pedra aparece por fora em metade das
+   direções e o topo vira uma moldura cinza;
+3. **A pedra aparece nas paredes de baixo**, abaixo da borda do capim — que fica `inclinação × raio`
+   acima do plano do topo. É o que faz o topo parecer um pasto sobre a rocha, e não uma tampa.
+
+E as nuvens, que não são sólidos acesos: são desenhadas **chapadas** (`semLuz`). Com a luz do mundo, a
+face de baixo delas recebia a cor do mar (`#3E8E96`) e cada nuvem virava um caco escuro no céu claro.
+
 Regras que valem para as dez:
 
 - **nenhum tom é valor novo**: todos são misturas de tokens de `tokens.ts`, e o teste

@@ -1087,3 +1087,57 @@ botão — dois números em `Ceu.tsx` —, e a decisão de mexer nele é de quem
 **O que ficou de fora, conscientemente:** `escurecerCores` (em `pintura.ts`) continua sem chamador na
 aplicação. Ele multiplica uma cor já pintada, e o estado da unidade bloqueada passou a ser mistura com
 a névoa, não escurecimento. Fica registrado aqui em vez de ser apagado sem autorização.
+
+## D-055 — O capim é o teto da ilha, e nuvem não é cascalho
+**21/09/2026** — correção de dois defeitos **vistos nas capturas de tela** de quem usa, na Etapa 11.
+
+**O que a captura mostrou:** as ilhas apareciam como **barcos** — um casco escuro e afiado embaixo, um
+convés claro por cima, com manchas verdes — e, espalhados no céu claro, **pontinhos escuros** que
+pareciam entulho. Duas coisas diferentes, as duas medidas antes de mexer.
+
+### Defeito 1 — a pedra aparecia acima e por fora do capim
+
+A ilha é a **pedra** (malha aberta em cima, afunilada para baixo) com o **capim** (disco) fechando o
+topo. Os dois eram gerados com a mesma irregularidade nominal, mas **sorteada de forma
+independente**: a pedra usava `semente`, o capim usava `semente + 7919`, e cada um tremia a própria
+borda em ±amplitude. Dois efeitos, medidos na árvore 3D:
+
+| Medida (ilha 1) | Antes | Depois |
+|---|---|---|
+| Altura da ponta mais alta da **pedra** | **+0,72** | **0,00** |
+| Raio máximo da pedra | 7,50 | 7,50 |
+| Raio máximo do capim | 6,87 | 7,50 |
+
+- **Por cima:** o tremor vertical do topo da pedra era simétrico, então metade das pontas da borda
+  subia acima do plano do topo — e o capim fica **no** plano do topo. Os bicos de pedra atravessavam o
+  capim e apareciam como manchas cinzas no verde (era o "convés claro" da captura).
+- **Por fora:** em cerca de metade das direções a pedra era mais larga que o capim, e a borda cinza
+  aparecia em volta do verde (era a "amurada" da captura).
+
+**A decisão:**
+
+- o **anel do topo da pedra não tem tremor vertical** — é o plano em que o capim se apoia. A
+  irregularidade que importa no topo é a da **borda**, e ela continua;
+- `gerarRocha` **declara** a irregularidade que usou (`bordaDoTopo`, uma por coluna) e `gerarTopo`
+  recebe `bordaMinima`: a borda do capim é o **maior** entre o sorteio dele e o da pedra, coluna a
+  coluna. O capim passa a ser, por construção, o teto da ilha;
+- a primeira tentativa foi manter o tremor, só que descendente. **O teste de orientação reprovou**:
+  uma coluna descendo 0,6 ao lado de outra no zero torcia a primeira faixa da parede e uma face
+  virava para dentro do eixo. Tremor zero não tem esse risco — e é por isso que o teste existe.
+
+### Defeito 2 — as nuvens viravam entulho escuro no céu
+
+As catorze nuvens são caixas claras (`#F1F4F9`, quase branco). Mesmo assim apareciam escuras, e a
+causa **não é a cor**: é a luz. A luz do mundo é uma meia-esfera metade céu (`#C7D2E8`) e metade
+**mar** (`#3E8E96`), e a face de baixo de cada nuvem recebe só a metade do mar, sem sol. Calculado com
+os tokens e as duas luzes: a face de baixo saía em **`#4E93A5`**, um verde-acinzentado escuro; num céu
+de `#E5ECF5`, e com a nuvem pequena, o olho lê **cascalho**.
+
+**A decisão:** nuvem é **forma chapada**, não sólido aceso. `Malha3D` ganhou `semLuz`, que desenha a
+malha com material sem iluminação, e `Ceu.tsx` usa `semLuz` nas nuvens. É a única forma chapada do
+mundo, e é de propósito: uma nuvem estilizada é uma silhueta clara contra o céu, e não um objeto com
+face iluminada e face escura.
+
+**O que continua sem prova:** os **pixels**. Não há navegador com WebGL neste ambiente; o que se prova
+aqui é a geometria e a árvore 3D. A confirmação é de quem olha — itens **56** e **57** do roteiro
+manual.

@@ -86,17 +86,22 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
     const comEstado = (cor: number): number =>
       ilha.situacao === 'bloqueada' ? corDeUnidadeBloqueada(cor) : cor
 
+    // A pedra crua primeiro: é dela que sai a irregularidade da borda do topo, e
+    // é ela que o capim recebe para nunca ficar mais estreito que a pedra. A
+    // malha pintada guarda só posições e índices — a borda é lida aqui.
+    const pedraCrua = gerarRocha({
+      ...ROCHA_PADRAO,
+      semente,
+      raioDoTopo: formato.raioDoTopo,
+      altura: formato.altura,
+      segmentosRadiais: formato.segmentosRadiais,
+      aneis: formato.aneis,
+      amplitude: formato.amplitude,
+      expoenteDoPerfil: formato.expoenteDoPerfil,
+    })
+
     const rocha = pintarPorAltura(
-      gerarRocha({
-        ...ROCHA_PADRAO,
-        semente,
-        raioDoTopo: formato.raioDoTopo,
-        altura: formato.altura,
-        segmentosRadiais: formato.segmentosRadiais,
-        aneis: formato.aneis,
-        amplitude: formato.amplitude,
-        expoenteDoPerfil: formato.expoenteDoPerfil,
-      }),
+      pedraCrua,
       {
         de: -formato.altura,
         para: 0,
@@ -114,6 +119,8 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         segmentosRadiais: formato.segmentosRadiais,
         amplitude: formato.amplitudeDaBorda,
         inclinacao: formato.inclinacaoDoCapim,
+        // O capim é o teto da ilha: nunca mais estreito que a pedra embaixo dele.
+        bordaMinima: pedraCrua.bordaDoTopo,
       }),
       {
         de: 0,

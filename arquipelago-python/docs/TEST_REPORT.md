@@ -6,6 +6,66 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — a pedra fora do capim e as nuvens escuras (capturas de tela)
+
+### 1. Os dois defeitos, medidos
+
+A segunda e a terceira capturas de tela do mundo mostraram as ilhas como **barcos** (casco escuro
+afiado, convés claro, manchas verdes) e **pontinhos escuros** espalhados no céu claro. Medidos na
+árvore 3D da ilha 1, antes do conserto:
+
+| Medida | Antes | Depois |
+|---|---|---|
+| Altura da ponta mais alta da pedra | **+0,72** | **0,00** |
+| Raio máximo da pedra | 7,50 | 7,50 |
+| Raio máximo do capim | 6,87 (**menor que a pedra**) | 7,50 |
+| Cor da face de baixo da nuvem (estimada) | `#4E93A5` | `#F1F4F9` (chapada) |
+
+Duas causas, uma em cada malha: a pedra e o capim sorteavam a própria irregularidade de forma
+independente (então a pedra subia acima e aparecia por fora), e as nuvens eram desenhadas **com luz**
+num mundo cuja luz tem metade da cor do mar. A correção está em **D-055**.
+
+### 2. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro.
+
+### 3. Testes automáticos — EXECUTADO
+
+    npm test
+
+**42 arquivos, 744 testes, todos passando** (eram 42 e 739).
+
+| Arquivo | Testes | O que o conserto acrescentou |
+|---|---|---|
+| `src/world/geometria/ilha.test.ts` | 26 | Três casos novos: o anel do topo da pedra é plano em cinco sementes, a borda declarada bate com o raio de cada coluna, e **o capim nunca é mais estreito que a pedra, coluna a coluna** (era 23) |
+| `src/world/ConteudoDaCena.test.tsx` | 28 | Dois casos novos na árvore 3D: a pedra termina no plano do topo e o capim cobre a pedra **em cada direção**, nas dez ilhas; e nenhuma nuvem recebe luz (todas com material chapado) (era 26) |
+
+**Um teste antigo pegou a primeira tentativa.** A correção começou com o tremor do topo só
+descendente. `orientacao.test.ts` reprovou: *"face virada para o eixo, em -2.41, -0.89, 4.31"* — uma
+coluna descendo 0,6 ao lado de outra no zero torcia a primeira faixa da parede. O conserto definitivo
+foi **tremor zero** no anel do topo.
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/assets/index-*.js` | 420,34 kB | 128,54 kB |
+| `dist/assets/Cena-*.js` | 919,40 kB | 244,84 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Os pixels.** Sem navegador com WebGL aqui, o que se prova é a geometria (medida coluna a coluna) e
+  a árvore 3D (material das nuvens). Se o **topo** das ilhas ainda mostrar pedra, ou se as nuvens
+  ficarem claras demais, quem diz é quem olha: itens **56** e **57** do roteiro manual.
+- **A forma geral da ilha não foi julgada**, só medida: o perfil afunilado para baixo (o "casco") é
+  intencional desde a Etapa 4 e não foi tocado.
+
 ## Execução de 21/09/2026 — a cor do mundo (defeito visto em captura de tela)
 
 ### 1. O defeito, medido
@@ -336,7 +396,15 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
     estação, bandeira da torre e o par de engrenagens em sentidos opostos. Nenhuma ilha deve parecer
     a mesma ilha com outro nome. Se alguma parecer, registrar aqui qual e em que ponto.
 
-Resultado esperado, somando as etapas 5 a 11: **55 de 55 itens conferidos**. Qualquer item que falhe
+56. **O topo de cada ilha é capim, não pedra**: olhar o arquipélago de longe e depois de perto. O topo
+    das dez ilhas tem de ser **verde**, com a pedra aparecendo só nas paredes de baixo. Não pode haver
+    mancha cinza ou bege no meio do verde (eram os bicos da pedra atravessando o capim) nem moldura
+    cinza em volta do capim (era a pedra mais larga que o capim).
+57. **As nuvens são claras**: os pontinhos no céu devem ser da cor do céu, quase brancos. Nenhum deles
+    pode parecer cascalho ou entulho escuro flutuando (era a face de baixo de cada nuvem, iluminada
+    pela cor do mar).
+
+Resultado esperado, somando as etapas 5 a 11: **57 de 57 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.
 
 ## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)

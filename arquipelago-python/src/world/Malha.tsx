@@ -24,6 +24,17 @@ type Comuns = {
   readonly opacidade?: number
   /** Desenha as duas faces. Ligado só onde existe face aberta de propósito. */
   readonly duasFaces?: boolean
+  /**
+   * Desenha a forma **chapada**, sem receber luz.
+   *
+   * Existe por causa das nuvens: elas são claras (`#F1F4F9`), mas a luz deste
+   * mundo vem de meia-esfera — metade céu, metade **mar** —, então a face de
+   * baixo de cada nuvem era iluminada pela cor do mar e saía verde-escura. No
+   * céu claro, as nuvens viravam cascalho escuro flutuando (visto na captura de
+   * tela de 21/09/2026). Nuvem é forma, não sólido aceso: quem é chapado não
+   * tem face escura. Ver D-055.
+   */
+  readonly semLuz?: boolean
 }
 
 /**
@@ -58,7 +69,7 @@ function temCores(malha: Malha | MalhaPintada): malha is MalhaPintada {
  */
 const SEM_TINTA = 0xffffff
 
-export function Malha3D({ malha, cor, opacidade = 1, duasFaces = false }: Props) {
+export function Malha3D({ malha, cor, opacidade = 1, duasFaces = false, semLuz = false }: Props) {
   const geometria = useMemo(() => {
     const nova = new BufferGeometry()
     nova.setAttribute('position', new Float32BufferAttribute([...malha.posicoes], 3))
@@ -77,14 +88,24 @@ export function Malha3D({ malha, cor, opacidade = 1, duasFaces = false }: Props)
 
   return (
     <mesh geometry={geometria} castShadow={false} receiveShadow={false}>
-      <meshLambertMaterial
-        color={comCores ? SEM_TINTA : cor}
-        vertexColors={comCores}
-        flatShading
-        transparent={opacidade < 1}
-        opacity={opacidade}
-        side={duasFaces ? DoubleSide : FrontSide}
-      />
+      {semLuz ? (
+        <meshBasicMaterial
+          color={comCores ? SEM_TINTA : cor}
+          vertexColors={comCores}
+          transparent={opacidade < 1}
+          opacity={opacidade}
+          side={duasFaces ? DoubleSide : FrontSide}
+        />
+      ) : (
+        <meshLambertMaterial
+          color={comCores ? SEM_TINTA : cor}
+          vertexColors={comCores}
+          flatShading
+          transparent={opacidade < 1}
+          opacity={opacidade}
+          side={duasFaces ? DoubleSide : FrontSide}
+        />
+      )}
     </mesh>
   )
 }
