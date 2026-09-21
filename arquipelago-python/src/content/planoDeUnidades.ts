@@ -25,6 +25,109 @@ export type UnidadePlanejada = {
   readonly tema: string
   readonly referencia: ReferenciaLivro
   readonly situacao: SituacaoDeConstrucao
+  /** A que trilha do livro a unidade pertence. Ver `TRILHAS`. */
+  readonly trilha: IdDeTrilha
+}
+
+/**
+ * A que parte do livro uma unidade pertence.
+ *
+ * O livro tem duas metades, e elas não são a mesma coisa: a Parte I ensina
+ * conceitos, capítulo a capítulo, e a Parte II é feita de **três projetos**, cada
+ * um com três capítulos. Cada unidade declara a sua trilha, e a trilha declara o
+ * que se espera dela — inclusive o que o **console** consegue rodar ali, que é a
+ * diferença de verdade entre as duas metades (D-061).
+ */
+export type IdDeTrilha =
+  | 'conceitos-basicos'
+  | 'invasao-alienigena'
+  | 'visualizacao-de-dados'
+  | 'aplicacoes-web'
+
+export type Trilha = {
+  readonly id: IdDeTrilha
+  readonly nome: string
+  /** Número do projeto do livro, ou `null` quando a trilha é a dos conceitos. */
+  readonly projeto: number | null
+  /** Capítulos do livro que a trilha cobre, em ordem. */
+  readonly capitulos: readonly number[]
+  readonly resumo: string
+  /** `'escrita'` quando todas as unidades da trilha já têm conteúdo. */
+  readonly situacao: 'escrita' | 'planejada'
+  /**
+   * O que o console da ilha roda nesta trilha.
+   *
+   * Todo texto aqui é **medido** no console do projeto, e não deduzido: `import
+   * pygame`, `import django` e `import matplotlib` foram executados no Pyodide
+   * desta versão, e os três falham (D-061). A trilha dos conceitos é a única em
+   * que o console roda tudo o que as unidades mostram.
+   */
+  readonly oConsoleRoda: string
+}
+
+/**
+ * As trilhas do percurso, na ordem em que aparecem no livro.
+ *
+ * A trilha **planejada** é uma promessa de escopo já registrada em
+ * `docs/BOOK_MAP.md` — ela existe aqui para que a unidade saiba onde vai entrar,
+ * e o teste cobra que uma trilha marcada como `'escrita'` tenha unidades, e que
+ * uma marcada como `'planejada'` não tenha nenhuma. Assim a lista não pode
+ * envelhecer dizendo o que não é.
+ */
+export const TRILHAS: readonly Trilha[] = [
+  {
+    id: 'conceitos-basicos',
+    nome: 'Conceitos básicos',
+    projeto: null,
+    capitulos: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    resumo:
+      'A Parte I do livro: onze capítulos de conceito, um por capítulo, com o capítulo 2 dividido em dois recortes (D-001).',
+    situacao: 'escrita',
+    oConsoleRoda:
+      'Tudo o que as unidades mostram roda neste console, com uma exceção já tratada: o teclado. O `input()` é recusado (D-051), e os trechos que o usam trazem a versão que roda aqui.',
+  },
+  {
+    id: 'invasao-alienigena',
+    nome: 'Projeto 1 — Invasão Alienígena',
+    projeto: 1,
+    capitulos: [12, 13, 14],
+    resumo:
+      'O primeiro projeto do livro: um jogo de nave que atira em uma frota de alienígenas, com vidas, pontos e níveis.',
+    situacao: 'escrita',
+    oConsoleRoda:
+      'A **lógica** do jogo, em Python puro. O Pygame não existe aqui, e não é falta de instalação: medido, `import pygame` falha na distribuição do Pyodide que este projeto usa, e o pacote não está na lista dela — buscar fora exigiria baixar da internet, e este projeto não faz isso (D-040). O que roda é o que o jogo faz com os dados: a nave presa à borda, as balas que saem da tela, a frota que anda e desce, a colisão por retângulo, as vidas, os pontos e o nível que acelera.',
+  },
+  {
+    id: 'visualizacao-de-dados',
+    nome: 'Projeto 2 — Visualização de dados',
+    projeto: 2,
+    capitulos: [15, 16, 17],
+    resumo:
+      'O segundo projeto do livro: gerar dados, ler arquivos CSV e JSON e desenhar gráficos (matplotlib, Pygal, mapas e APIs).',
+    situacao: 'planejada',
+    oConsoleRoda:
+      'A parte de **dados**, em Python puro: `csv`, `json`, `random`, `datetime` e as contas de estatística rodam. O desenho do gráfico não roda: medido, `import matplotlib` falha, e o `numpy` que ele precisa não está na cópia local — o `loadPackage` tentaria baixar do CDN e a rede está bloqueada (D-040).',
+  },
+  {
+    id: 'aplicacoes-web',
+    nome: 'Projeto 3 — Aplicações web',
+    projeto: 3,
+    capitulos: [18, 19, 20],
+    resumo:
+      'O terceiro projeto do livro: um site com Django, contas de usuário, formulários e implantação.',
+    situacao: 'planejada',
+    oConsoleRoda:
+      'O pedaço de **lógica** de uma aplicação web: a função que recebe os dados de um pedido e devolve a resposta. O Django não roda — medido, `import django` falha — e este projeto não levanta servidor nenhum: sem porta, sem rede e sem backend, que é o que as regras do projeto proíbem sem autorização (D-061).',
+  },
+]
+
+/** A trilha de um identificador. Lança se o identificador não existir. */
+export function trilhaDe(id: IdDeTrilha): Trilha {
+  const encontrada = TRILHAS.find((trilha) => trilha.id === id)
+  if (encontrada === undefined) {
+    throw new Error(`Trilha desconhecida: ${id}`)
+  }
+  return encontrada
 }
 
 const PENDENTE = 'referencia-pendente' as const
@@ -56,6 +159,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u02-variaveis-e-print',
@@ -72,6 +176,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u03-strings-por-dentro',
@@ -88,6 +193,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u04-listas-do-mercado',
@@ -104,6 +210,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u05-moinho-das-repeticoes',
@@ -124,6 +231,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u06-encruzilhada-das-decisoes',
@@ -141,6 +249,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u07-farol-dos-registros',
@@ -158,6 +267,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u08-estacao-das-perguntas',
@@ -175,6 +285,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u09-oficina-das-funcoes',
@@ -191,6 +302,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u10-torre-das-classes',
@@ -207,6 +319,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u11-arquivo-das-gavetas',
@@ -223,6 +336,7 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
   },
   {
     id: 'u12-balanca-dos-testes',
@@ -239,6 +353,61 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
       status: PENDENTE,
     },
     situacao: 'pronta',
+    trilha: 'conceitos-basicos',
+  },
+  {
+    id: 'u13-estaleiro-da-nave',
+    ordem: 13,
+    titulo: 'O Estaleiro da Nave',
+    tema:
+      'As configurações do jogo, o laço que desenha cada quadro e a nave como um objeto que se move preso às bordas da janela.',
+    referencia: {
+      capitulo: 12,
+      tituloCapitulo: 'Invasão Alienígena, primeira parte (do original; título em português a confirmar)',
+      recorteProposto:
+        'O primeiro recorte do projeto de jogo: as configurações do jogo em um lugar só, a janela, o laço de quadros com os eventos, a nave como classe com posição e o movimento preso às bordas.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'invasao-alienigena',
+  },
+  {
+    id: 'u14-enxame-dos-discos',
+    ordem: 14,
+    titulo: 'O Enxame dos Discos',
+    tema:
+      'As balas em lista — quem sai da tela é removido — e a frota montada por laços aninhados, que anda de lado e desce ao encostar na borda.',
+    referencia: {
+      capitulo: 13,
+      tituloCapitulo: 'Invasão Alienígena, segunda parte (do original; título em português a confirmar)',
+      recorteProposto:
+        'O segundo recorte do projeto de jogo: acrescentar as balas, removê-las quando saem da tela, limitar quantas ficam no ar, montar a frota em fileiras com laços aninhados e fazer a frota andar e descer.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'invasao-alienigena',
+  },
+  {
+    id: 'u15-placar-da-batalha',
+    ordem: 15,
+    titulo: 'O Placar da Batalha',
+    tema:
+      'Colisão por retângulo, vidas que diminuem, pontos que sobem, nível que acelera a frota e o jogo que recomeça.',
+    referencia: {
+      capitulo: 14,
+      tituloCapitulo: 'Invasão Alienígena, terceira parte (do original; título em português a confirmar)',
+      recorteProposto:
+        'O fecho do projeto de jogo: quando um tiro acerta um alienígena, quando a frota alcança a nave, vidas, pontos, o nível que aumenta com a frota derrotada e o jogo que termina e recomeça.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+    trilha: 'invasao-alienigena',
   },
 ]
 

@@ -166,7 +166,7 @@ export function corDaSituacao(situacao: 'bloqueada' | 'disponivel' | 'aprovada')
  * Os tons das ilhas.
  *
  * Cada ilha recebe um tom, e o tom aparece no marco dela — a construção que só
- * aquela ilha tem. São doze misturas de tokens existentes, e não doze valores
+ * aquela ilha tem. São quinze misturas de tokens existentes, e não quinze valores
  * novos: a regra do projeto continua valendo (D-005), e o teste refaz as misturas
  * a partir dos tokens para provar isso.
  *
@@ -201,6 +201,30 @@ export const CORES_DAS_ILHAS: readonly Cor3D[] = [
   misturar(deHex(cores.mar.fundo), deHex(cores.acento.verdeClaro), 0.2),
   /** Cinza quente: a pedra clara com a madeira — o mais neutro dos doze. */
   misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.madeira), 0.5),
+  // Lote 5 (Etapa 11): os três tons da trilha do projeto de jogo. Foram
+  // procurados por medida, e não escolhidos a dedo (ver D-061): varrendo todas as
+  // misturas de dois tokens, dentro da faixa de claridade de um tom de ilha, este
+  // é o trio que **mantém a maior distância mínima** entre os quinze tons
+  // desenhados — e é essa a medida que vale, porque o orçamento de luz aproxima
+  // os tons claros (D-060).
+  //
+  // A primeira tentativa trouxe um verde-sálvia (`capim + pale × 0,6`) no lugar
+  // do tom do meio, escolhido pela distância **crua** (51,3 dos doze antigos).
+  // Medido depois de desenhar, ele ficava a **28,5** do tom 6 — abaixo do piso de
+  // 30 que o teste cobra —, porque o tom 6 é claro e o orçamento o escurece na
+  // direção dele. O cáqui entrou no lugar e o par mais próximo dos quinze voltou
+  // para **32,1**, que é o par mais próximo dos doze originais: o lote não
+  // empilhou nenhum tom.
+  //
+  // O matiz dos três (13°, 91° e 129°) cai nos buracos que os doze deixavam no
+  // círculo de cores: os antigos vão de 3° a 34° (quentes), 120° (um verde) e
+  // 167° a 210° (azuis e turquesas).
+  /** Terracota queimada: âmbar com vermelho — o tom do fogo que sai da nave. */
+  misturar(deHex(cores.acento.ambar), deHex(cores.acento.vermelho), 0.7),
+  /** Cáqui esverdeado: o mar claro com o âmbar — claro e dessaturado. */
+  misturar(deHex(cores.mar.claro), deHex(cores.acento.ambar), 0.5),
+  /** Verde profundo de alga: o mar fundo com o capim — escuro e saturado. */
+  misturar(deHex(cores.mar.fundo), deHex(cores.terreno.capim), 0.6),
 ] as const
 
 /** O tom de uma ilha, pelo índice. Índices fora da lista dão a volta. */

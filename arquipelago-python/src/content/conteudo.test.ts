@@ -99,6 +99,58 @@ describe('conteúdo das unidades', () => {
   })
 })
 
+describe('a trilha do jogo roda no console, e é isso que ela promete', () => {
+  it('todo exercício do projeto de jogo tem correção automática e roda aqui', () => {
+    // A trilha do projeto de jogo declara, em `oConsoleRoda`, que o que roda é a
+    // lógica em Python puro. Este teste cobra a promessa: nenhum exercício dela
+    // depende de biblioteca gráfica, e nenhum fica sem correção. Se alguém
+    // escrever um exercício com Pygame, ele falha aqui — e a saída certa é
+    // escrever a versão que roda, como manda o validador.
+    const doJogo = CONTEUDO_DAS_UNIDADES.filter((unidade) =>
+      PLANO_DE_UNIDADES.some(
+        (planejada) => planejada.id === unidade.id && planejada.trilha === 'invasao-alienigena',
+      ),
+    )
+    expect(doJogo.length).toBeGreaterThan(0)
+
+    for (const unidade of doJogo) {
+      for (const exercicio of unidade.pratica) {
+        expect(
+          exercicio.correcao,
+          `${unidade.id}/${exercicio.id} está na trilha do jogo e não tem correção automática`,
+        ).toBeDefined()
+        expect(
+          exercicio.solucaoQueRodaNoConsole ?? exercicio.solucao,
+          `${unidade.id}/${exercicio.id} não roda no console desta ilha`,
+        ).not.toContain('import pygame')
+      }
+    }
+  })
+
+  it('nenhum trecho de código da trilha do jogo é mostrado como se rodasse aqui', () => {
+    // Medido: `import pygame` falha neste console (D-061). Se algum trecho de
+    // código da trilha importar a biblioteca, ele precisa dizer por que não roda.
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      const planejada = PLANO_DE_UNIDADES.find((candidata) => candidata.id === unidade.id)
+      if (planejada?.trilha !== 'invasao-alienigena') {
+        continue
+      }
+      for (const bloco of unidade.explicacao) {
+        if (bloco.tipo !== 'codigo') {
+          continue
+        }
+        if (!bloco.codigo.includes('import pygame')) {
+          continue
+        }
+        expect(
+          bloco.naoRodaNoConsole,
+          `Um trecho com Pygame em ${unidade.id} não diz por que não roda`,
+        ).toBeDefined()
+      }
+    }
+  })
+})
+
 describe('validador de conteúdo', () => {
   const base = CONTEUDO_DAS_UNIDADES[0]
 

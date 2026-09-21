@@ -194,6 +194,8 @@ describe('as partes animadas existem e giram no eixo certo', () => {
     'estacao',
     'engrenagens',
     'torre',
+    'enxame',
+    'mira',
   ]
 
   it('todo marco animado tem parte giratória, e nenhum marco parado inventa uma', () => {
@@ -223,6 +225,11 @@ describe('as partes animadas existem e giram no eixo certo', () => {
       torre: 'y',
       arquivo: null,
       balanca: null,
+      // A nave é um corpo parado; o enxame gira o carrossel em torno do próprio
+      // mastro; a agulha da mira gira no plano dos aros, que é o plano xy.
+      nave: null,
+      enxame: 'y',
+      mira: 'z',
     }
 
     for (const { identidade, marco } of ILHAS) {

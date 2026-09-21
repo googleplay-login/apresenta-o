@@ -11,6 +11,9 @@ import { u09OficinaDasFuncoes } from './u09OficinaDasFuncoes'
 import { u10TorreDasClasses } from './u10TorreDasClasses'
 import { u11ArquivoDasGavetas } from './u11ArquivoDasGavetas'
 import { u12BalancaDosTestes } from './u12BalancaDosTestes'
+import { u13EstaleiroDaNave } from './u13EstaleiroDaNave'
+import { u14EnxameDosDiscos } from './u14EnxameDosDiscos'
+import { u15PlacarDaBatalha } from './u15PlacarDaBatalha'
 
 /**
  * Conteúdo escrito até agora, na ordem do percurso.
@@ -32,6 +35,9 @@ export const CONTEUDO_DAS_UNIDADES: readonly ConteudoDaUnidade[] = [
   u10TorreDasClasses,
   u11ArquivoDasGavetas,
   u12BalancaDosTestes,
+  u13EstaleiroDaNave,
+  u14EnxameDosDiscos,
+  u15PlacarDaBatalha,
 ]
 
 /** Conteúdo de uma unidade, ou `null` se ela ainda não foi escrita. */

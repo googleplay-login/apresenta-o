@@ -89,8 +89,12 @@ describe('origem das cores do mundo', () => {
 })
 
 describe('os tons das ilhas', () => {
-  it('são doze, todos diferentes, e nenhum é preto ou branco puro', () => {
-    expect(CORES_DAS_ILHAS).toHaveLength(12)
+  it('os tons são todos diferentes, e nenhum é preto ou branco puro', () => {
+    // A contagem sai do tamanho da lista, e não de um número escrito aqui: o lote
+    // 5 acrescentou os tons 13 a 15, e um literal 12 teria reprovado o crescimento
+    // por motivo errado (D-061). Quem cobra a quantidade é `identidade.test.ts`,
+    // comparando com `TONS_DAS_ILHAS`.
+    expect(CORES_DAS_ILHAS.length).toBeGreaterThanOrEqual(3)
     const unicos = new Set(CORES_DAS_ILHAS)
     expect(unicos.size).toBe(CORES_DAS_ILHAS.length)
 
@@ -120,6 +124,17 @@ describe('os tons das ilhas', () => {
     )
     expect(CORES_DAS_ILHAS[11]).toBe(
       misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.madeira), 0.5),
+    )
+    // As três últimas são do lote 5: os tons da trilha do projeto de jogo.
+    const ultimo = CORES_DAS_ILHAS.length - 1
+    expect(CORES_DAS_ILHAS[ultimo - 2]).toBe(
+      misturar(deHex(cores.acento.ambar), deHex(cores.acento.vermelho), 0.7),
+    )
+    expect(CORES_DAS_ILHAS[ultimo - 1]).toBe(
+      misturar(deHex(cores.mar.claro), deHex(cores.acento.ambar), 0.5),
+    )
+    expect(CORES_DAS_ILHAS[ultimo]).toBe(
+      misturar(deHex(cores.mar.fundo), deHex(cores.terreno.capim), 0.6),
     )
   })
 

@@ -789,6 +789,205 @@ function torre(escala: number): MarcoGerado {
 }
 
 /**
+ * Nave de três aletas: o foguete do projeto de jogo, em pé no capim.
+ *
+ * Silhueta pensada para ser reconhecida de longe e de qualquer ângulo: um corpo
+ * que **afina** para cima, três aletas na base e um bico. É a única construção do
+ * arquipélago com essa forma — as outras são verticais e retas (torre, farol) ou
+ * largas e baixas (mercado, balança), e nenhuma delas afina em três degraus.
+ */
+function nave(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  // Base e corpo em três degraus, cada um mais estreito que o de baixo: é o
+  // degrau que dá a leitura de foguete, e não de poste.
+  const alturaDaBase = 0.24 * escala
+  pecas.push(cilindro(0.95 * escala, alturaDaBase, 9, { x: 0, y: 0, z: 0 }))
+
+  const degraus = [
+    { raio: 0.72, altura: 1.25 },
+    { raio: 0.6, altura: 1.05 },
+    { raio: 0.48, altura: 0.85 },
+  ] as const
+  let y = alturaDaBase
+  for (const degrau of degraus) {
+    pecas.push(cilindro(degrau.raio * escala, degrau.altura * escala, 9, { x: 0, y, z: 0 }))
+    y += degrau.altura * escala
+  }
+
+  // Anel de acoplamento entre o segundo e o terceiro degrau.
+  pecas.push(cilindro(0.68 * escala, 0.16 * escala, 9, { x: 0, y: alturaDaBase + 1.1 * escala, z: 0 }))
+
+  // Bico: mais um degrau, curto e fino, que fecha a ponta.
+  const alturaDoBico = 0.42 * escala
+  pecas.push(cilindro(0.22 * escala, alturaDoBico, 7, { x: 0, y, z: 0 }))
+
+  // Três aletas, a 120° uma da outra. A aleta é uma caixa comprida, montada no
+  // eixo x e girada em torno do eixo vertical — o mesmo caminho dos dentes da
+  // engrenagem: girar em torno de y leva a peça para a volta do corpo.
+  const comprimentoDaAleta = 0.78 * escala
+  const alturaDaAleta = 0.95 * escala
+  for (let aleta = 0; aleta < 3; aleta += 1) {
+    const angulo = (aleta / 3) * Math.PI * 2
+    const bruta = caixa(comprimentoDaAleta, alturaDaAleta, 0.16 * escala, {
+      x: 0.62 * escala,
+      y: alturaDaBase + alturaDaAleta / 2 - 0.12 * escala,
+      z: 0,
+    })
+    pecas.push(rotacionarMalha(bruta, { eixo: 'y', angulo }))
+  }
+
+  return {
+    tipo: 'nave',
+    nome: NOMES_DOS_MARCOS.nave,
+    fixo: montar(pecas),
+    girantes: [],
+    alturaTotal: y + alturaDoBico,
+    // Medido com escala 1: a peça mais alta está em 3,8100 (o bico) e a mais
+    // afastada do centro são as pontas das aletas, em 1,0132.
+    raioOcupado: 1.02 * escala,
+  }
+}
+
+/**
+ * Enxame de discos: um mastro com discos pairando, quatro deles girando em volta.
+ *
+ * A silhueta é a oposta da nave: em vez de um corpo único que sobe, um **monte de
+ * peças soltas** na mesma altura. É o que o projeto de jogo tem de mais
+ * característico — muitos objetos iguais se movendo juntos, e é isso que a parte
+ * giratória mostra.
+ */
+function enxame(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  pecas.push(cilindro(0.62 * escala, 0.18 * escala, 8, { x: 0, y: 0, z: 0 }))
+  pecas.push(cilindro(0.14 * escala, 2.9 * escala, 6, { x: 0, y: 0.18 * escala, z: 0 }))
+
+  // Dois discos parados, presos no mastro: o enxame já começou a subir.
+  pecas.push(cilindro(0.5 * escala, 0.13 * escala, 9, { x: 0.3 * escala, y: 1.15 * escala, z: 0 }))
+  pecas.push(cilindro(0.42 * escala, 0.13 * escala, 9, { x: -0.26 * escala, y: 1.75 * escala, z: 0 }))
+
+  // O carrossel: quatro discos em volta de um cubo central, todos no mesmo plano
+  // local (y = 0), para girarem juntos em torno do eixo do mastro.
+  const distancia = 0.85 * escala
+  const carrossel: Malha[] = [caixa(0.36 * escala, 0.2 * escala, 0.36 * escala, { x: 0, y: 0, z: 0 })]
+  for (let disco = 0; disco < 4; disco += 1) {
+    const angulo = (disco / 4) * Math.PI * 2
+    const braco = caixa(distancia, 0.1 * escala, 0.1 * escala, { x: distancia / 2, y: 0, z: 0 })
+    carrossel.push(rotacionarMalha(braco, { eixo: 'y', angulo }))
+    carrossel.push(
+      deslocarMalha(
+        cilindro(0.38 * escala, 0.14 * escala, 9, { x: 0, y: -0.07 * escala, z: 0 }),
+        { x: Math.cos(angulo) * distancia, y: 0, z: Math.sin(angulo) * distancia },
+      ),
+    )
+  }
+
+  const alturaDoCarrossel = 2.98 * escala
+
+  return {
+    tipo: 'enxame',
+    nome: NOMES_DOS_MARCOS.enxame,
+    fixo: montar(pecas),
+    girantes: [
+      {
+        malha: montar(carrossel),
+        posicao: [0, alturaDoCarrossel, 0],
+        eixo: 'y',
+        voltasPorSegundo: 0.11,
+      },
+    ],
+    // A peça mais alta é o carrossel: o cubo central sobe 0,1 acima do eixo.
+    alturaTotal: alturaDoCarrossel + 0.1 * escala,
+    raioOcupado: distancia + 0.38 * escala,
+  }
+}
+
+/**
+ * Mira de anéis: dois aros concêntricos de pé, e uma agulha girando dentro.
+ *
+ * É a única construção do arquipélago com **buraco no meio**: as outras, vistas
+ * de longe, são massas cheias (torre, arquivo, balança) ou pares de rodas
+ * (engrenagens). Contra o céu, o que se vê aqui é um anel.
+ */
+function mira(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  const alturaDoEixo = 1.9 * escala
+
+  // Base e duas pernas, que seguram o aro pela parte de baixo.
+  pecas.push(caixa(1.7 * escala, 0.2 * escala, 1.1 * escala, { x: 0, y: 0.1 * escala, z: 0 }))
+  for (const lado of [-1, 1] as const) {
+    pecas.push(
+      caixa(0.17 * escala, 1.05 * escala, 0.17 * escala, {
+        x: lado * 0.62 * escala,
+        y: 0.72 * escala,
+        z: 0,
+      }),
+    )
+  }
+
+  // Os dois aros, montados como os dentes de uma engrenagem: caixas curtas na
+  // direção **tangente**, uma a uma em volta do círculo. Raio maior, mais peças.
+  const aro = (raio: number, quantas: number, espessura: number): Malha => {
+    const partes: Malha[] = []
+    const comprimento = (2 * Math.PI * raio) / quantas + espessura * 0.6
+    for (let parte = 0; parte < quantas; parte += 1) {
+      const angulo = (parte / quantas) * Math.PI * 2
+      const barra = caixa(comprimento, espessura, 0.16 * escala, { x: 0, y: 0, z: 0 })
+      partes.push(
+        deslocarMalha(rotacionarMalha(barra, { eixo: 'z', angulo: angulo + Math.PI / 2 }), {
+          x: Math.cos(angulo) * raio,
+          y: Math.sin(angulo) * raio,
+          z: 0,
+        }),
+      )
+    }
+    return montar(partes)
+  }
+
+  const raioDoAro = 1.0 * escala
+  pecas.push(deslocarMalha(aro(raioDoAro, 16, 0.16 * escala), { x: 0, y: alturaDoEixo, z: 0 }))
+  pecas.push(deslocarMalha(aro(raioDoAro * 0.6, 12, 0.13 * escala), { x: 0, y: alturaDoEixo, z: 0 }))
+
+  // O cubo do meio, de onde a agulha sai.
+  pecas.push(
+    deslocarMalha(
+      rotacionarMalha(cilindro(0.14 * escala, 0.22 * escala, 8), { eixo: 'x', angulo: Math.PI / 2 }),
+      { x: 0, y: alturaDoEixo, z: 0.12 * escala },
+    ),
+  )
+
+  // A agulha, montada em volta da origem para girar em torno do eixo z — o mesmo
+  // plano dos aros, à frente deles.
+  const agulha = montar([
+    caixa(1.5 * escala, 0.11 * escala, 0.08 * escala, { x: 0, y: 0, z: 0 }),
+    caixa(0.3 * escala, 0.22 * escala, 0.08 * escala, { x: 0.72 * escala, y: 0, z: 0 }),
+  ])
+
+  return {
+    tipo: 'mira',
+    nome: NOMES_DOS_MARCOS.mira,
+    fixo: montar(pecas),
+    girantes: [
+      {
+        malha: agulha,
+        posicao: [0, alturaDoEixo, 0.12 * escala],
+        eixo: 'z',
+        voltasPorSegundo: 0.09,
+      },
+    ],
+    // Medido com escala 1: a peça mais alta está em 2,9913 — e não nos 2,98 do
+    // topo do aro mais meia espessura, porque as barras são caixas giradas, e as
+    // **quinas** de duas delas passam um pouco do círculo. A folga de 0,01 é a
+    // mesma dos outros marcos. O raio, medido, é 1,0942: a ponta horizontal das
+    // mesmas quinas.
+    alturaTotal: 3.0 * escala,
+    raioOcupado: 1.1 * escala,
+  }
+}
+
+/**
  * Gera o marco de uma ilha.
  *
  * A escala sai do raio da ilha: uma ilha grande recebe um marco grande, e o
@@ -812,6 +1011,9 @@ export function gerarMarco(tipo: TipoDeMarco, opcoes: OpcoesDoMarco): MarcoGerad
     torre,
     arquivo,
     balanca,
+    nave,
+    enxame,
+    mira,
   }
 
   const gerado = marcos[tipo](escala)

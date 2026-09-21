@@ -133,6 +133,30 @@ classes (`class X(object)` virou `class X`), Pygame, Django, Heroku. Ver a tabel
 O aviso diz o que mudou e o que usar hoje. Ele **não** corrige o livro nem sugere que o autor
 errou: em 2015, aquilo era o certo.
 
+## Trilhas: o que o console roda, e o que fica só explicado (D-061)
+
+A partir do capítulo 12, o livro deixa de ensinar conceitos soltos e passa a construir três projetos, e
+dois deles dependem de bibliotecas que **este console não tem**: medido, `import pygame` e
+`import django` falham na distribuição do Pyodide que o projeto usa, e `import matplotlib` também — e
+não há como instalar sem baixar da internet (D-040).
+
+A regra para escrever essas unidades:
+
+1. **A trilha declara, na tela, o que roda ali** (campo `oConsoleRoda` em `planoDeUnidades.ts`), antes
+   da primeira ilha do grupo. O estudante não pode descobrir isso no erro.
+2. **O que se pratica é a lógica**, escrita em Python puro: o movimento preso à borda, a lista que
+   cresce e encolhe, a colisão entre retângulos, a conta que decide o nível. É essa parte que ensina a
+   programar, e é ela que a correção automática confere.
+3. **Nenhum trecho que não roda aparece sem motivo.** Bloco de código que dependa da biblioteca ausente
+   leva `naoRodaNoConsole` com o porquê; exercício sem correção automática leva o mesmo campo. Um teste
+   reprova trecho de Pygame na trilha do jogo sem esse aviso.
+4. **O que a biblioteca faria é dito como descrição, não como código.** "A biblioteca abre a janela com
+   `pygame.display.set_mode(...)`", em texto, é honesto; um bloco de Pygame que ninguém pode rodar é
+   promessa vazia.
+5. **A promessa da trilha é cobrada por teste:** todo exercício da trilha do jogo tem correção
+   automática e roda aqui. Se um exercício precisar de biblioteca gráfica, o teste falha — e a saída é
+   escrever a versão que roda.
+
 ## Tom
 
 - Segunda pessoa, direto: "você vai guardar o valor".

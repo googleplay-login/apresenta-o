@@ -44,9 +44,25 @@ conferido.
 ## As unidades escritas até agora
 
 Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescentou os capítulos 4 e 5
-(lote 1), os capítulos 6 e 7 (lote 2), os capítulos 8 e 9 (lote 3) e os capítulos 10 e 11 (lote 4), um
-por ilha. Com o lote 4, a **Parte I do livro está inteira mapeada** — os onze capítulos têm unidade
-escrita.
+(lote 1), os capítulos 6 e 7 (lote 2), os capítulos 8 e 9 (lote 3), os capítulos 10 e 11 (lote 4) e os
+capítulos 12, 13 e 14 (lote 5), um capítulo por ilha. Com o lote 4, a **Parte I do livro está inteira
+mapeada**; com o **lote 5, o primeiro projeto da Parte II está inteiro** (trilha do jogo, ilhas 13 a 15).
+
+### As trilhas (D-061)
+
+Cada unidade declara a sua trilha, e a trilha declara os capítulos que cobre e **o que o console roda
+ali**. Não é enfeite: a partir da Parte II o console não roda tudo o que o livro mostra, e quem estuda
+precisa saber disso na tela — antes de escrever a primeira linha —, e não no erro.
+
+| Trilha | Projeto | Capítulos | Situação | O que o console roda |
+|---|---|---|---|---|
+| `conceitos-basicos` | — | 1 a 11 | escrita | Tudo, com uma exceção tratada: o `input()` é recusado (D-051) e os trechos que o usam trazem a versão que roda |
+| `invasao-alienigena` | 1 | 12 a 14 | escrita | A **lógica** do jogo em Python puro. O Pygame não existe nesta distribuição do Pyodide (medido) e não há como instalar sem baixar da internet (D-040) |
+| `visualizacao-de-dados` | 2 | 15 a 17 | planejada | A parte de dados (`csv`, `json`, `random`, estatística). O gráfico não: medido, `import matplotlib` falha |
+| `aplicacoes-web` | 3 | 18 a 20 | planejada | A peça pura de lógica (pedido → resposta). O Django não roda (medido), e o projeto não levanta servidor |
+
+As duas trilhas planejadas estão na lista com `situacao: 'planejada'`, e um teste cobra a coerência nos
+dois sentidos: trilha escrita tem unidade, trilha planejada não tem nenhuma.
 
 | # | Unidade | Capítulo | Recorte | Página impressa | Página do PDF |
 |---|---|---|---|---|---|
@@ -62,11 +78,20 @@ escrita.
 | 10 | A Torre das Classes | 9 — *Classes* (título do original, a confirmar em português) | Classe e objeto, `__init__`, `self`, atributos, método que muda o estado, valor padrão, herança com `super()`, biblioteca padrão | `null` | `null` |
 | 11 | O Arquivo das Gavetas | 10 — *Files and Exceptions* (título do original, a confirmar em português) | Ler de um arquivo, escrever, acrescentar sem apagar, exceções com `try`/`except`/`else` ou `finally`, guardar dados com `json` | `null` | `null` |
 | 12 | A Balança dos Testes | 11 — *Testing Your Code* (título do original, a confirmar em português) | Testar uma função, `assert` com mensagem, classe `TestCase` do `unittest`, asserções, ler a mensagem de um teste que falhou | `null` | `null` |
+| 13 | O Estaleiro da Nave | 12 — *Invasão Alienígena*, primeira parte (título do original, a confirmar em português) | As configurações do jogo, a janela e o laço de quadros, a nave como objeto e o movimento preso às bordas | `null` | `null` |
+| 14 | O Enxame dos Discos | 13 — *Invasão Alienígena*, segunda parte (título do original, a confirmar em português) | As balas em lista e a limpeza das que saem da tela, o limite de tiros no ar, a frota em fileiras por laços aninhados, a frota que vira e desce | `null` | `null` |
+| 15 | O Placar da Batalha | 14 — *Invasão Alienígena*, terceira parte (título do original, a confirmar em português) | Colisão por retângulo, o que sai quando um tiro acerta, vidas, pontos, o nível que acelera e o jogo que recomeça | `null` | `null` |
 
-Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 11 foram
+Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 14 foram
 acrescentados na Etapa 11** sem esse material em mãos: o número do capítulo e o assunto são certos, e o
 título em português está marcado como **a confirmar**. É a mesma regra da página (`null`): campo que não
 pode ser conferido não recebe valor inventado.
+
+Uma diferença do lote 5, registrada aqui para não passar por descuido: os títulos dos capítulos 12 a 14
+não trazem o nome do capítulo em inglês, como os anteriores. Do projeto original só se sabe o nome que
+o próprio livro dá ao conjunto — *Invasão Alienígena* —, e o recorte de cada capítulo é descrito como
+"primeira, segunda e terceira parte". Escrever um título em inglês que não foi conferido seria inventar
+no lugar exato onde o projeto decidiu não inventar.
 
 Todas com `status: 'referencia-pendente'`. A interface mostra "página: referência pendente" em
 vez de um número não verificado.

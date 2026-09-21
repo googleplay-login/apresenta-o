@@ -749,6 +749,32 @@ kbd {
   color: var(--texto-secundario);
 }
 
+.trilha__grupo {
+  margin-top: 1.6rem;
+}
+
+.trilha__grupo-titulo {
+  font-size: 1.15rem;
+  margin-bottom: 0.2rem;
+}
+
+.trilha__grupo-texto {
+  color: var(--texto-secundario);
+  margin-bottom: 0.4rem;
+}
+
+/* O que o console roda nesta trilha: é aviso, e não rodapé. A pessoa precisa ler
+   antes de escrever o primeiro programa, e não depois de o erro aparecer. */
+.trilha__grupo-console {
+  background: var(--painel-fundo-elevado);
+  border-left: 3px solid var(--painel-borda);
+  border-radius: 4px;
+  color: var(--texto-secundario);
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  padding: 0.5rem 0.7rem;
+}
+
 .trilha__lista {
   display: flex;
   flex-direction: column;

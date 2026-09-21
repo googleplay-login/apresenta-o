@@ -4,7 +4,7 @@ import {
   referenciaEstaCoerente,
   type ReferenciaLivro,
 } from './referenciaLivro'
-import { PLANO_DE_UNIDADES, idsEmOrdem } from './planoDeUnidades'
+import { PLANO_DE_UNIDADES, TRILHAS, idsEmOrdem, trilhaDe } from './planoDeUnidades'
 import { conteudoDaUnidade } from './unidades'
 
 describe('invariantes do plano de unidades', () => {
@@ -73,6 +73,64 @@ describe('invariantes do plano de unidades', () => {
     const primeira = PLANO_DE_UNIDADES[0]
     expect(primeira).toBeDefined()
     expect(descreverReferencia(primeira!.referencia)).toBe('Cap. 1 — Iniciando (página: referência pendente)')
+  })
+})
+
+describe('as trilhas do livro', () => {
+  it('toda unidade pertence a uma trilha declarada', () => {
+    // A trilha é o que diz de que parte do livro a ilha é, e o que o console
+    // roda ali. Unidade sem trilha declarada seria uma ilha sem lugar no mapa.
+    for (const unidade of PLANO_DE_UNIDADES) {
+      expect(
+        TRILHAS.some((trilha) => trilha.id === unidade.trilha),
+        `A unidade ${unidade.id} aponta para a trilha ${unidade.trilha}, que não existe`,
+      ).toBe(true)
+    }
+  })
+
+  it('o capítulo da unidade está entre os capítulos da trilha dela', () => {
+    for (const unidade of PLANO_DE_UNIDADES) {
+      const trilha = trilhaDe(unidade.trilha)
+      expect(
+        trilha.capitulos.includes(unidade.referencia.capitulo),
+        `A unidade ${unidade.id} é do capítulo ${unidade.referencia.capitulo}, fora da trilha ${trilha.id}`,
+      ).toBe(true)
+    }
+  })
+
+  it('a situação da trilha bate com o que existe: escrita tem unidade, planejada não tem', () => {
+    // Este é o teste que impede a lista de trilhas de envelhecer dizendo que uma
+    // parte está escrita quando ainda não está — e o contrário também.
+    for (const trilha of TRILHAS) {
+      const unidades = PLANO_DE_UNIDADES.filter((unidade) => unidade.trilha === trilha.id)
+      if (trilha.situacao === 'escrita') {
+        expect(unidades.length, `A trilha ${trilha.id} diz que está escrita e não tem unidade`).toBeGreaterThan(0)
+      } else {
+        expect(unidades.length, `A trilha ${trilha.id} diz que está planejada e já tem unidade`).toBe(0)
+      }
+    }
+  })
+
+  it('toda trilha diz o que o console roda ali, e diz com o motivo', () => {
+    // A partir da Parte II o console não roda tudo o que o livro mostra. Uma
+    // trilha que não declarasse isso deixaria a pessoa descobrindo no erro.
+    for (const trilha of TRILHAS) {
+      expect(trilha.oConsoleRoda.trim().length, `A trilha ${trilha.id} não diz o que o console roda`).toBeGreaterThan(60)
+      expect(trilha.resumo.trim().length).toBeGreaterThan(30)
+    }
+  })
+
+  it('as trilhas de projeto são as três do livro, com os capítulos em ordem', () => {
+    const projetos = TRILHAS.filter((trilha) => trilha.projeto !== null)
+    expect(projetos.map((trilha) => trilha.projeto)).toEqual([1, 2, 3])
+    for (const trilha of projetos) {
+      const capitulos = [...trilha.capitulos]
+      expect(capitulos).toEqual([...capitulos].sort((a, b) => a - b))
+      expect(capitulos.length).toBeGreaterThan(1)
+    }
+    // A trilha dos conceitos é a Parte I inteira: os capítulos 1 a 11.
+    const conceitos = TRILHAS.find((trilha) => trilha.id === 'conceitos-basicos')
+    expect(conceitos?.capitulos).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
   })
 })
 

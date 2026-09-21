@@ -1,18 +1,20 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, depois do **conserto da cor do mundo** (D-060, versão 0.18.0) — o
-conserto que nasceu de uma captura de tela e que fez o projeto passar a conferir a **cor que chega à
-tela**, e não só a cor da paleta. O lote 4 da Etapa 11 (capítulos 10 e 11) entrou no mesmo dia, e fechou
-a **Parte I** do livro.
+Atualizado em **21/09/2026**, depois do **lote 5 da Etapa 11** (versão 0.19.0) — o lote que começa a
+**Parte II** do livro e que transformou os três projetos em **trilhas**: cada unidade declara a que parte
+do livro pertence, e cada trilha declara, na tela, **o que o console roda ali**. O lote trouxe o projeto
+1 (capítulos 12 a 14, ilhas 13 a 15). Antes dele, no mesmo dia, entraram o lote 4 (capítulos 10 e 11, que
+fechou a Parte I) e o conserto da cor do mundo (D-060).
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lotes 1, 2, 3 e 4 entregues (capítulos 4 a 11, ilhas 5 a 12); o lote seguinte entra na Parte II do livro (projetos), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1 a 5 entregues (capítulos 4 a 14, ilhas 5 a 15): a Parte I inteira e o primeiro projeto da Parte II; o lote seguinte é o projeto 2 (visualização de dados, capítulos 15 a 17), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: doze ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
-| Conteúdo pedagógico | **existe** para as 12 unidades escritas (capítulos 1 a 11, a Parte I inteira): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Conteúdo pedagógico | **existe** para as 15 unidades escritas (capítulos 1 a 14: a Parte I inteira e o primeiro projeto): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Trilhas | **declaradas**: cada unidade pertence a uma trilha, e cada trilha diz o que o console roda ali — a do jogo diz que roda a lógica, e não a biblioteca gráfica (D-061) |
 | Cor do mundo | **conferida contra a luz**: `ui/theme/luzDoMundo.ts` reproduz a conta do Three.js (luzes somadas + tone mapping ACES) e os testes cobram que nenhuma superfície desenhe queimada nem vire buraco (D-060) |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
@@ -238,6 +240,54 @@ Verificação:
 - a trava de acentuação reprovou a etapa uma vez por causa de um **nome de classe** lido como prosa
   (`"exercicio__nota exercicio__nao-roda"`); a classe virou um token só, e a trava ficou como estava.
 
+### Etapa 10 — exercícios com correção automática, e o limite escrito na tela
+
+- `src/learning/correcaoDeExercicio.ts`: a conferência inteira, pura — monta a sonda
+  (`programaDaConferencia`), separa a medida da saída (`separarSondagem`), compara o que o programa
+  imprimiu (por trecho, **na ordem**), o que ficou guardado (com `repr`, para distinguir `7.0` de `7`)
+  e a forma pedida (linhas não vazias, comentário no **código do estudante**), e devolve o veredito item
+  por item, com o limite (D-044, D-045);
+- `src/content/tiposDeConteudo.ts`: `correcao` no exercício, com `limite` **obrigatório** — correção sem
+  limite declarado é recusada pelo validador;
+- **dez dos doze exercícios passaram a ter correção**, e os dois que não têm trazem o motivo escrito
+  (`naoRodaNoConsole`), visível ao lado do exercício: são comandos de terminal, que só existem no
+  computador de quem estuda;
+- `src/ui/paineis/ConsoleDoPython.tsx` e `PraticaDaUnidade.tsx`: escolha do exercício no console, botão
+  *Rodar e conferir*, veredito com **esperado × obtido**, limite declarado, selo por exercício e o texto
+  que diz, na mesma frase, que o resultado está guardado **e** que isso não aprova a ilha;
+- o exercício conferido entrou no progresso (`exerciciosResolvidos`, formato 3, com migração da 1 e da 2),
+  sem aprovar unidade, sem contar tentativa e sem mudar nota (D-046, D-047);
+- **defeito real encontrado e corrigido**: o Pyodide reaproveitava o espaço de nomes entre execuções, e
+  uma resposta errada (`print(40)`) passava porque `figurinhas` de uma execução anterior sobrevivia.
+  Cada execução passou a rodar num espaço de nomes novo, destruído no fim;
+- o teste que roda Python de verdade cobra que **cada solução de referência passe na própria correção**
+  e que quatro respostas erradas sejam reprovadas, cada uma pelo item certo.
+
+### Etapa 11 — lote 1: capítulos 4 e 5 nas ilhas 5 e 6
+
+- `src/content/unidades/u05MoinhoDasRepeticoes.ts`: laço `for` (a variável recebe o item, não o índice),
+  recuo, `range()` com o segundo limite fora, `len`/`sum`/`max`/`min`, fatias, a diferença entre
+  `precos[:]` e `precos` e por que tupla não muda. 3 exercícios (todos com correção), 5 perguntas,
+  1 bloco marcado como "não roda neste console" (a tupla que tenta mudar um item);
+- `src/content/unidades/u06EncruzilhadaDasDecisoes.ts`: `=` não é `==`, `if`/`elif`/`else` com a
+  condição mais estreita primeiro, `and`/`or`/`not`, `in` com listas. 3 exercícios (todos com correção),
+  5 perguntas, 1 bloco marcado (`if idade = 18:` → `SyntaxError`);
+- **uma unidade nova agora é dado, não código**: as ilhas nasceram no mundo com as pontes certas sem
+  tocar em nenhuma conta de posição — a curva, a distância entre centros e o vão das pontes já saíam do
+  índice da unidade (D-049);
+- **o que quebrou foi o que estava escrito à mão**: `0 de 4 ilhas aprovadas` aparecia em dezenas de
+  asserções. Todas as contagens passaram a sair do plano e do conteúdo real, e o teste do interpretador
+  de verdade deixou de aceitar "pelo menos dez exercícios com correção" para exigir **todos os que o
+  conteúdo declara**;
+- **"planejada" virou mentira, e o teste antigo exigia a mentira**: as quatro primeiras unidades já
+  tinham ciclo completo e continuavam marcadas como planejadas. O teste agora compara o campo com o
+  conteúdo, nas duas direções (D-048), e o painel do projeto mostra as seis unidades como prontas;
+- **honestidade sobre o livro mantida**: os capítulos 4 e 5 entraram sem o PDF em mãos — o número do
+  capítulo é certo, o título em português está marcado como **a confirmar** e as páginas continuam
+  `null` (D-050);
+- o lote **não foi visto em navegador nenhum**: o mundo com seis ilhas é provado em teste, e a
+  travessia a pé até as ilhas novas é o item 54 do roteiro manual.
+
 ### Etapa 11 — lote 2: capítulos 6 e 7 nas ilhas 7 e 8
 
 - `src/content/unidades/u07FarolDosRegistros.ts`: dicionários — chave e valor, acesso e alteração,
@@ -258,73 +308,34 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
-### Conserto depois do lote 3: a ponta da pedra (D-057)
+### Etapa 11 — lote 3: capítulos 8 e 9 nas ilhas 9 e 10
 
-- **a fileira das dez ilhas parecia a mesma ilha repetida**: todas terminavam no mesmo espinho de 0,02
-  do raio do topo. D-053 prometeu "de ilha atarracada a ilha em agulha" e só a agulha veio — porque o
-  raio da ponta estava **escrito dentro de `gerarRocha`**, igual para todas;
-- a ponta passou a ser **da ilha**: `gerarRocha` aceita `pontaDoPerfil` (o padrão 0,02 continua, para
-  quem chamar a geometria sem dizer nada), e `identidadeDaIlha` decide com duas fontes — a **família**
-  vem da posição no percurso (espinho, ponta rombuda, toco: as três aparecem sempre) e o **valor**
-  vem da semente (duas ilhas nunca terminam iguais);
-- medido: a largura da ponta vai de **0,11** (ilha 10, um alfinete) a **2,04** (ilha 9, um toco) — em
-  ilhas de 5 a 7 de raio, quase duas unidades de diferença;
-- o teste novo cobra as três famílias, a diferença entre a menor e a maior ponta, o raio da última
-  faixa da malha, e — na árvore 3D — que as dez pontas medidas não sejam todas o mesmo bico.
-
-### Conserto depois do lote 3: a ilha azul-petróleo e o farol solto (D-056)
-
-- **a ilha parecia uma barbatana azul.** A causa não era a paleta: era a luz. O chão da meia-esfera era
-  a cor do **mar** (`#3E8E96`), e é justamente a face virada para baixo que forma a parede de uma ilha
-  suspensa. A ponta da pedra saía em `#081112` (preto esverdeado) e a luz que chegava lá era `#72b1bd`.
-  O chão da luz passou a ser a rocha clara da paleta (`#8A8580`): mesma luminância (0,237 contra 0,226),
-  croma 0,04 contra 0,26. A parede saiu de `#646b6d` (azulada) para `#6c696a` (neutra), e o capim não
-  mudou;
-- **os pontinhos escuros do céu não eram as nuvens** — a varredura da árvore 3D mostrou que os objetos
-  mais altos da cena são os **faróis de estado**, a 21,8–29,0 de altura nas ilhas 7 a 10. As nuvens já
-  estavam claras e chapadas desde D-055;
-- o farol de estado **ganhou mastro**: um poste fino da paleta desce do farol até o capim, com a base
-  enterrada 0,3. O farol continua na mesma altura e continua girando; o que muda é que agora se vê que
-  ele está em cima de um poste. **A função não foi tocada** — continua um farol por ilha, com a cor do
-  estado dela.
-
-### Conserto depois do lote 3: a pedra fora do capim e as nuvens escuras (D-055)
-
-- **a pedra da ilha e o capim sorteavam a própria borda de forma independente** (`semente` e
-  `semente + 7919`). Resultado visível: as pontas da pedra subiam acima do plano do topo (até **0,72**
-  na ilha 1) e apareciam como manchas cinzas no verde; e, em metade das direções, a pedra era mais
-  larga que o capim, virando uma moldura cinza em volta do topo;
-- `gerarRocha` agora **declara** a irregularidade da borda que usou (`bordaDoTopo`) e `gerarTopo`
-  recebe `bordaMinima`: a borda do capim é o maior entre o sorteio dele e o da pedra, coluna a coluna.
-  O capim passa a ser, por construção, o teto da ilha;
-- o **anel do topo da pedra não tem tremor vertical**. A primeira tentativa foi deixar o tremor só
-  descendente, e o teste de orientação reprovou (a coluna que descia torcia a faixa da parede e virava
-  uma face para dentro);
-- **as nuvens eram claras de cor e escuras na tela**: a luz do mundo tem metade da cor do mar, e a face
-  de baixo de cada nuvem recebia só essa metade (calculado: `#4E93A5`). `Malha3D` ganhou `semLuz`, e as
-  nuvens são desenhadas chapadas — é a única forma chapada do mundo, e é de propósito;
-- **dois testes novos cobram o que faltava**: o capim cobre a pedra em cada direção (no teste da
-  árvore 3D, em todas as ilhas) e nenhuma nuvem recebe luz.
-
-### Conserto depois do lote 3: a cor do mundo (D-054)
-
-- **o defeito apareceu na primeira captura de tela do mundo**, enviada por quem usa: as ilhas eram
-  silhuetas quase negras (paredes em `#1a1714`) com o céu claro. Estava assim desde a Etapa 4;
-- eram **duas causas somadas**: a pedra e o capim eram pintados por vértice **e** recebiam a cor da
-  situação no material (o Three.js multiplica as duas), e a cor por vértice era gravada em sRGB, que o
-  Three.js lê como linear (um cinza médio de paleta chegava à tela como 0,74);
-- `geometria/pintura.ts` ganhou `canalLinear`: a mistura continua em sRGB (onde a paleta foi pensada)
-  e só o valor gravado no vértice é convertido para linear;
-- `Malha.tsx` agora **recusa** tinta em malha pintada — pelo **tipo**, não por comentário: `cor` só
-  existe para malha sem cor por vértice. O defeito não pode ser reescrito por acidente;
-- a cor de estado entrou no gradiente (`corDeUnidadeBloqueada`), então a ilha bloqueada continua
-  reconhecível pela própria pedra; as estruturas, a placa e o farol seguem com `corDaSituacao`;
-- **o tom da ilha no capim caiu de 45% para 22%** (D-053 tinha deixado o capim da ilha de tom rosado
-  rosado). O tom fica inteiro no marco, que é a assinatura da ilha;
-- **três testes novos cobram o que faltava**: malha pintada sem tinta (as 20 malhas de cada ilha),
-  canais abaixo de 0,8 (a faixa que só existe em sRGB) e **o capim é verde em todas as ilhas**;
-- o caminho antigo (`corDaRocha`, `corDoCapim` e as duas cores de terreno bloqueado pré-calculadas)
-  saiu junto, por não ter mais chamador; `escurecerCores` ficou, registrado em D-054.
+- **a sonda da conferência ficou defensiva antes do conteúdo (D-052)**: cada valor medido roda no
+  próprio `try`, e a medida que não pode ser feita vira um item com frase em português ("o programa não
+  tem esse nome quando termina") — sem isso, uma função com o nome trocado derrubava a conferência
+  inteira com um `NameError` que a pessoa não escreveu. O teste do interpretador real passou a exigir
+  que o programa **não** termine com erro nesse caso;
+- `src/content/unidades/u09OficinaDasFuncoes.ts`: definir função, parâmetro × argumento, chamada por
+  posição e por palavra-chave, valor padrão e por que ele vem por último, `return` contra `print` (com o
+  `None` aparecendo na tela), devolver dicionário em vez de fila de valores, lista recebida por
+  referência, e as três formas de `import`. 3 exercícios (todos com correção), 5 perguntas, nenhum
+  trecho marcado;
+- `src/content/unidades/u10TorreDasClasses.ts`: classe como molde × objeto, `__init__` e `self`, dois
+  objetos com estados independentes, método que muda o estado (a conta que deposita), herança com
+  `super().__init__` e um `avisoDeVersao` explicando por que o livro escreve `class Cachorro(object)` e
+  `super(Cachorro, self)` — porque era o certo na época. 3 exercícios (todos com correção), 5 perguntas;
+- **a conferência agora chama o código de quem estuda**: os exercícios do capítulo 8 medem
+  `saudacao("Ana")`, `media([7, 9, 5])` e `descrever_pizza("grande")`; os do capítulo 9 medem
+  `rex.nome`, `Conta("Bia").saldo` e `mimi.falar()`. O `limite` de cada exercício diz isso em português,
+  inclusive que a conferência não exige o nome do parâmetro (as chamadas dela são por posição);
+- **um guarda do projeto apontou um nome de classe CSS como se fosse texto humano**:
+  `qa/acentuacao.test.ts` lê strings com espaço como frases, e o nome de classe de dois tokens foi lido
+  como prosa — o guarda achou ali uma palavra sem acento. Os nomes viraram um token só
+  (`exercicio__aviso-do-console`, `explicacao__aviso-do-console`), sem afrouxar o guarda;
+- as ilhas 9 e 10 nasceram do conteúdo, outra vez sem uma linha nova de posicionamento, e as pontes 8–9
+  e 9–10 fecharam sozinhas (D-049);
+- o lote **não foi visto em navegador nenhum**: o mundo com dez ilhas é provado em teste, e a travessia
+  a pé até as ilhas novas é o item 54 do roteiro manual.
 
 ### Conserto depois do lote 3: as ilhas estavam todas iguais (D-053)
 
@@ -350,29 +361,73 @@ Verificação:
 - **o que continua sem prova**: a aparência. Não há navegador com WebGL aqui — a conferência visual
   do conserto é o **item 55** do roteiro manual, e quem olha é quem usa.
 
-### Conserto depois do lote 4: a cor que chega à tela (D-060)
+### Conserto depois do lote 3: a cor do mundo (D-054)
 
-- **o defeito apareceu na segunda captura de tela** (ilhas 9 a 12), e eram quatro: a laje do mar
-  distante era um retângulo de papel branco, as nuvens eram lâminas, o bico de baixo das ilhas era um
-  espeto preto e as árvores eram torrões marrons;
-- **nenhum teste pegava**, porque todo teste de cor comparava o **token** com a paleta, e o token estava
-  certo nos quatro casos. O que decidia a cor era a **luz somada ao material**, comprimida pelo tone
-  mapping ACES (o padrão do React Three Fiber);
-- **a conta virou módulo** (`ui/theme/luzDoMundo.ts`): sRGB → linear, luzes somadas, ACES, sRGB — com os
-  números das luzes guardados e cobrados por teste, para o conserto não envelhecer;
-- **medido antes:** mar distante com **1,083** de radiação; parede da biblioteca com **1,001**; ponta do
-  penhasco com **0,022** (`#030201` na tela); marcos das ilhas 3, 6, 7 e 10 com 0,96 a **1,49** (pior
-  quando a unidade está bloqueada, porque a mistura com a névoa clareia); cabeça do avatar com **1,463**;
-- **consertos:** orçamento de luz aplicado onde o mundo desenha (marco, avatar e parede da biblioteca);
-  `vazio` virou **`marDistante`** (o nome mentia) e passou a ser desenhado chapado, mais escuro que o
-  céu; nuvens com achatamento máximo de 4,5:1 (era 10,9:1); ponta do penhasco em `misturar(rocha, nevoa,
-  0,12)`, com o gradiente de profundidade mantido em 2,2×; e a **árvore ganhou duas cores** (tronco de
-  madeira, copa de conífera — o token existia e não tinha uso);
-- **o preço do orçamento está registrado:** o menor par entre os doze marcos desenhados fica em 33,2; e
-  o valor 0,28 para a ponta foi testado e **descartado por medida** (o penhasco virava parede cinza
-  uniforme);
-- **todos os pixels continuam sem verificação automática:** este conserto foi achado por olho de quem
-  usa e medido aqui; a confirmação na tela é a próxima captura.
+- **o defeito apareceu na primeira captura de tela do mundo**, enviada por quem usa: as ilhas eram
+  silhuetas quase negras (paredes em `#1a1714`) com o céu claro. Estava assim desde a Etapa 4;
+- eram **duas causas somadas**: a pedra e o capim eram pintados por vértice **e** recebiam a cor da
+  situação no material (o Three.js multiplica as duas), e a cor por vértice era gravada em sRGB, que o
+  Three.js lê como linear (um cinza médio de paleta chegava à tela como 0,74);
+- `geometria/pintura.ts` ganhou `canalLinear`: a mistura continua em sRGB (onde a paleta foi pensada)
+  e só o valor gravado no vértice é convertido para linear;
+- `Malha.tsx` agora **recusa** tinta em malha pintada — pelo **tipo**, não por comentário: `cor` só
+  existe para malha sem cor por vértice. O defeito não pode ser reescrito por acidente;
+- a cor de estado entrou no gradiente (`corDeUnidadeBloqueada`), então a ilha bloqueada continua
+  reconhecível pela própria pedra; as estruturas, a placa e o farol seguem com `corDaSituacao`;
+- **o tom da ilha no capim caiu de 45% para 22%** (D-053 tinha deixado o capim da ilha de tom rosado
+  rosado). O tom fica inteiro no marco, que é a assinatura da ilha;
+- **três testes novos cobram o que faltava**: malha pintada sem tinta (as 20 malhas de cada ilha),
+  canais abaixo de 0,8 (a faixa que só existe em sRGB) e **o capim é verde em todas as ilhas**;
+- o caminho antigo (`corDaRocha`, `corDoCapim` e as duas cores de terreno bloqueado pré-calculadas)
+  saiu junto, por não ter mais chamador; `escurecerCores` ficou, registrado em D-054.
+
+### Conserto depois do lote 3: a pedra fora do capim e as nuvens escuras (D-055)
+
+- **a pedra da ilha e o capim sorteavam a própria borda de forma independente** (`semente` e
+  `semente + 7919`). Resultado visível: as pontas da pedra subiam acima do plano do topo (até **0,72**
+  na ilha 1) e apareciam como manchas cinzas no verde; e, em metade das direções, a pedra era mais
+  larga que o capim, virando uma moldura cinza em volta do topo;
+- `gerarRocha` agora **declara** a irregularidade da borda que usou (`bordaDoTopo`) e `gerarTopo`
+  recebe `bordaMinima`: a borda do capim é o maior entre o sorteio dele e o da pedra, coluna a coluna.
+  O capim passa a ser, por construção, o teto da ilha;
+- o **anel do topo da pedra não tem tremor vertical**. A primeira tentativa foi deixar o tremor só
+  descendente, e o teste de orientação reprovou (a coluna que descia torcia a faixa da parede e virava
+  uma face para dentro);
+- **as nuvens eram claras de cor e escuras na tela**: a luz do mundo tem metade da cor do mar, e a face
+  de baixo de cada nuvem recebia só essa metade (calculado: `#4E93A5`). `Malha3D` ganhou `semLuz`, e as
+  nuvens são desenhadas chapadas — é a única forma chapada do mundo, e é de propósito;
+- **dois testes novos cobram o que faltava**: o capim cobre a pedra em cada direção (no teste da
+  árvore 3D, em todas as ilhas) e nenhuma nuvem recebe luz.
+
+### Conserto depois do lote 3: a ilha azul-petróleo e o farol solto (D-056)
+
+- **a ilha parecia uma barbatana azul.** A causa não era a paleta: era a luz. O chão da meia-esfera era
+  a cor do **mar** (`#3E8E96`), e é justamente a face virada para baixo que forma a parede de uma ilha
+  suspensa. A ponta da pedra saía em `#081112` (preto esverdeado) e a luz que chegava lá era `#72b1bd`.
+  O chão da luz passou a ser a rocha clara da paleta (`#8A8580`): mesma luminância (0,237 contra 0,226),
+  croma 0,04 contra 0,26. A parede saiu de `#646b6d` (azulada) para `#6c696a` (neutra), e o capim não
+  mudou;
+- **os pontinhos escuros do céu não eram as nuvens** — a varredura da árvore 3D mostrou que os objetos
+  mais altos da cena são os **faróis de estado**, a 21,8–29,0 de altura nas ilhas 7 a 10. As nuvens já
+  estavam claras e chapadas desde D-055;
+- o farol de estado **ganhou mastro**: um poste fino da paleta desce do farol até o capim, com a base
+  enterrada 0,3. O farol continua na mesma altura e continua girando; o que muda é que agora se vê que
+  ele está em cima de um poste. **A função não foi tocada** — continua um farol por ilha, com a cor do
+  estado dela.
+
+### Conserto depois do lote 3: a ponta da pedra (D-057)
+
+- **a fileira das dez ilhas parecia a mesma ilha repetida**: todas terminavam no mesmo espinho de 0,02
+  do raio do topo. D-053 prometeu "de ilha atarracada a ilha em agulha" e só a agulha veio — porque o
+  raio da ponta estava **escrito dentro de `gerarRocha`**, igual para todas;
+- a ponta passou a ser **da ilha**: `gerarRocha` aceita `pontaDoPerfil` (o padrão 0,02 continua, para
+  quem chamar a geometria sem dizer nada), e `identidadeDaIlha` decide com duas fontes — a **família**
+  vem da posição no percurso (espinho, ponta rombuda, toco: as três aparecem sempre) e o **valor**
+  vem da semente (duas ilhas nunca terminam iguais);
+- medido: a largura da ponta vai de **0,11** (ilha 10, um alfinete) a **2,04** (ilha 9, um toco) — em
+  ilhas de 5 a 7 de raio, quase duas unidades de diferença;
+- o teste novo cobra as três famílias, a diferença entre a menor e a maior ponta, o raio da última
+  faixa da malha, e — na árvore 3D — que as dez pontas medidas não sejam todas o mesmo bico.
 
 ### Etapa 11 — lote 4: capítulos 10 e 11 nas ilhas 11 e 12 (a Parte I fica inteira)
 
@@ -405,82 +460,54 @@ Verificação:
 - o lote **não foi visto em navegador nenhum**: as duas ilhas novas, os dois marcos e os dois tons são
   provados por medida, e a captura de tela de quem tem WebGL continua sendo a verificação de pixel.
 
-### Etapa 11 — lote 3: capítulos 8 e 9 nas ilhas 9 e 10
+### Conserto depois do lote 4: a cor que chega à tela (D-060)
 
-- **a sonda da conferência ficou defensiva antes do conteúdo (D-052)**: cada valor medido roda no
-  próprio `try`, e a medida que não pode ser feita vira um item com frase em português ("o programa não
-  tem esse nome quando termina") — sem isso, uma função com o nome trocado derrubava a conferência
-  inteira com um `NameError` que a pessoa não escreveu. O teste do interpretador real passou a exigir
-  que o programa **não** termine com erro nesse caso;
-- `src/content/unidades/u09OficinaDasFuncoes.ts`: definir função, parâmetro × argumento, chamada por
-  posição e por palavra-chave, valor padrão e por que ele vem por último, `return` contra `print` (com o
-  `None` aparecendo na tela), devolver dicionário em vez de fila de valores, lista recebida por
-  referência, e as três formas de `import`. 3 exercícios (todos com correção), 5 perguntas, nenhum
-  trecho marcado;
-- `src/content/unidades/u10TorreDasClasses.ts`: classe como molde × objeto, `__init__` e `self`, dois
-  objetos com estados independentes, método que muda o estado (a conta que deposita), herança com
-  `super().__init__` e um `avisoDeVersao` explicando por que o livro escreve `class Cachorro(object)` e
-  `super(Cachorro, self)` — porque era o certo na época. 3 exercícios (todos com correção), 5 perguntas;
-- **a conferência agora chama o código de quem estuda**: os exercícios do capítulo 8 medem
-  `saudacao("Ana")`, `media([7, 9, 5])` e `descrever_pizza("grande")`; os do capítulo 9 medem
-  `rex.nome`, `Conta("Bia").saldo` e `mimi.falar()`. O `limite` de cada exercício diz isso em português,
-  inclusive que a conferência não exige o nome do parâmetro (as chamadas dela são por posição);
-- **um guarda do projeto apontou um nome de classe CSS como se fosse texto humano**:
-  `qa/acentuacao.test.ts` lê strings com espaço como frases, e o nome de classe de dois tokens foi lido
-  como prosa — o guarda achou ali uma palavra sem acento. Os nomes viraram um token só
-  (`exercicio__aviso-do-console`, `explicacao__aviso-do-console`), sem afrouxar o guarda;
-- as ilhas 9 e 10 nasceram do conteúdo, outra vez sem uma linha nova de posicionamento, e as pontes 8–9
-  e 9–10 fecharam sozinhas (D-049);
-- o lote **não foi visto em navegador nenhum**: o mundo com dez ilhas é provado em teste, e a travessia
-  a pé até as ilhas novas é o item 54 do roteiro manual.
+- **o defeito apareceu na segunda captura de tela** (ilhas 9 a 12), e eram quatro: a laje do mar
+  distante era um retângulo de papel branco, as nuvens eram lâminas, o bico de baixo das ilhas era um
+  espeto preto e as árvores eram torrões marrons;
+- **nenhum teste pegava**, porque todo teste de cor comparava o **token** com a paleta, e o token estava
+  certo nos quatro casos. O que decidia a cor era a **luz somada ao material**, comprimida pelo tone
+  mapping ACES (o padrão do React Three Fiber);
+- **a conta virou módulo** (`ui/theme/luzDoMundo.ts`): sRGB → linear, luzes somadas, ACES, sRGB — com os
+  números das luzes guardados e cobrados por teste, para o conserto não envelhecer;
+- **medido antes:** mar distante com **1,083** de radiação; parede da biblioteca com **1,001**; ponta do
+  penhasco com **0,022** (`#030201` na tela); marcos das ilhas 3, 6, 7 e 10 com 0,96 a **1,49** (pior
+  quando a unidade está bloqueada, porque a mistura com a névoa clareia); cabeça do avatar com **1,463**;
+- **consertos:** orçamento de luz aplicado onde o mundo desenha (marco, avatar e parede da biblioteca);
+  `vazio` virou **`marDistante`** (o nome mentia) e passou a ser desenhado chapado, mais escuro que o
+  céu; nuvens com achatamento máximo de 4,5:1 (era 10,9:1); ponta do penhasco em `misturar(rocha, nevoa,
+  0,12)`, com o gradiente de profundidade mantido em 2,2×; e a **árvore ganhou duas cores** (tronco de
+  madeira, copa de conífera — o token existia e não tinha uso);
+- **o preço do orçamento está registrado:** o menor par entre os doze marcos desenhados fica em 33,2; e
+  o valor 0,28 para a ponta foi testado e **descartado por medida** (o penhasco virava parede cinza
+  uniforme);
+- **todos os pixels continuam sem verificação automática:** este conserto foi achado por olho de quem
+  usa e medido aqui; a confirmação na tela é a próxima captura.
 
-### Etapa 11 — lote 1: capítulos 4 e 5 nas ilhas 5 e 6
+### Etapa 11 — lote 5: o primeiro projeto do livro vira trilha (capítulos 12 a 14 nas ilhas 13 a 15)
 
-- `src/content/unidades/u05MoinhoDasRepeticoes.ts`: laço `for` (a variável recebe o item, não o índice),
-  recuo, `range()` com o segundo limite fora, `len`/`sum`/`max`/`min`, fatias, a diferença entre
-  `precos[:]` e `precos` e por que tupla não muda. 3 exercícios (todos com correção), 5 perguntas,
-  1 bloco marcado como "não roda neste console" (a tupla que tenta mudar um item);
-- `src/content/unidades/u06EncruzilhadaDasDecisoes.ts`: `=` não é `==`, `if`/`elif`/`else` com a
-  condição mais estreita primeiro, `and`/`or`/`not`, `in` com listas. 3 exercícios (todos com correção),
-  5 perguntas, 1 bloco marcado (`if idade = 18:` → `SyntaxError`);
-- **uma unidade nova agora é dado, não código**: as ilhas nasceram no mundo com as pontes certas sem
-  tocar em nenhuma conta de posição — a curva, a distância entre centros e o vão das pontes já saíam do
-  índice da unidade (D-049);
-- **o que quebrou foi o que estava escrito à mão**: `0 de 4 ilhas aprovadas` aparecia em dezenas de
-  asserções. Todas as contagens passaram a sair do plano e do conteúdo real, e o teste do interpretador
-  de verdade deixou de aceitar "pelo menos dez exercícios com correção" para exigir **todos os que o
-  conteúdo declara**;
-- **"planejada" virou mentira, e o teste antigo exigia a mentira**: as quatro primeiras unidades já
-  tinham ciclo completo e continuavam marcadas como planejadas. O teste agora compara o campo com o
-  conteúdo, nas duas direções (D-048), e o painel do projeto mostra as seis unidades como prontas;
-- **honestidade sobre o livro mantida**: os capítulos 4 e 5 entraram sem o PDF em mãos — o número do
-  capítulo é certo, o título em português está marcado como **a confirmar** e as páginas continuam
-  `null` (D-050);
-- o lote **não foi visto em navegador nenhum**: o mundo com seis ilhas é provado em teste, e a
-  travessia a pé até as ilhas novas é o item 54 do roteiro manual.
-
-### Etapa 10 — exercícios com correção automática, e o limite escrito na tela
-
-- `src/learning/correcaoDeExercicio.ts`: a conferência inteira, pura — monta a sonda
-  (`programaDaConferencia`), separa a medida da saída (`separarSondagem`), compara o que o programa
-  imprimiu (por trecho, **na ordem**), o que ficou guardado (com `repr`, para distinguir `7.0` de `7`)
-  e a forma pedida (linhas não vazias, comentário no **código do estudante**), e devolve o veredito item
-  por item, com o limite (D-044, D-045);
-- `src/content/tiposDeConteudo.ts`: `correcao` no exercício, com `limite` **obrigatório** — correção sem
-  limite declarado é recusada pelo validador;
-- **dez dos doze exercícios passaram a ter correção**, e os dois que não têm trazem o motivo escrito
-  (`naoRodaNoConsole`), visível ao lado do exercício: são comandos de terminal, que só existem no
-  computador de quem estuda;
-- `src/ui/paineis/ConsoleDoPython.tsx` e `PraticaDaUnidade.tsx`: escolha do exercício no console, botão
-  *Rodar e conferir*, veredito com **esperado × obtido**, limite declarado, selo por exercício e o texto
-  que diz, na mesma frase, que o resultado está guardado **e** que isso não aprova a ilha;
-- o exercício conferido entrou no progresso (`exerciciosResolvidos`, formato 3, com migração da 1 e da 2),
-  sem aprovar unidade, sem contar tentativa e sem mudar nota (D-046, D-047);
-- **defeito real encontrado e corrigido**: o Pyodide reaproveitava o espaço de nomes entre execuções, e
-  uma resposta errada (`print(40)`) passava porque `figurinhas` de uma execução anterior sobrevivia.
-  Cada execução passou a rodar num espaço de nomes novo, destruído no fim;
-- o teste que roda Python de verdade cobra que **cada solução de referência passe na própria correção**
-  e que quatro respostas erradas sejam reprovadas, cada uma pelo item certo.
+- **a decisão que abriu o lote (D-061):** a Parte II do livro são três **projetos**, e três delas
+  dependem de bibliotecas que este console não tem. Medido antes de escrever qualquer linha:
+  `import pygame`, `import django` e `import matplotlib` **falham** nesta distribuição do Pyodide;
+  `sqlite3`, `csv`, `json` e `random` **funcionam** (biblioteca padrão); e `loadPackage` **resolveria a
+  promessa mesmo sem carregar nada**, tentando o CDN para depois falhar em silêncio. Daí as três
+  decisões: a Parte II entra como **trilha**, não como ilha comum; o que se pratica é a **lógica** em
+  Python puro; e a trilha diz isso na tela, antes da primeira ilha do grupo;
+- **o que as unidades ensinam:** o laço de quadros e a nave presa à borda (capítulo 12); as balas em
+  lista, a limpeza das que saem da tela e a frota em fileiras que anda e desce (13); a colisão por
+  retângulo, vidas, pontos, o nível que acelera e o jogo que recomeça (14);
+- **o que ficou de fora, e está dito na tela:** abrir a janela, desenhar a imagem e tocar o som. Nenhum
+  bloco de Pygame aparece como se rodasse, e um teste reprova trecho de Pygame sem o aviso;
+- **as ilhas 13 a 15 ganharam identidade própria:** marcos `nave`, `enxame` e `mira` (o único marco do
+  arquipélago com buraco no meio) e os tons 13 a 15, procurados por medida;
+- **duas medidas erraram e foram corrigidas:** a primeira escolha de tom trazia um verde-sálvia que,
+  **depois de desenhado**, ficava a 28,5 do tom 6 (piso do projeto: 30) — foi trocado por um cáqui e o
+  par mais próximo dos quinze voltou a 32,1; e duas declarações dos marcos novos estavam erradas (raio da
+  nave declarado em 1,55 com real 1,0132; altura da mira em 2,98 com real 2,9913, porque são as
+  **quinas** das barras dos aros que passam do círculo);
+- **duas contas minhas nos exercícios estavam erradas, e o console real pegou:** a frota de `e14-3`
+  parava em 520 e não em 340, e a solução de `e15-3` pedia o nível 4 com a variável já em 3. É para isso
+  que o teste roda as soluções no Pyodide de verdade.
 
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
@@ -530,13 +557,18 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11, lote 5 — a Parte II do livro: os três projetos.** Os lotes 1 a 4 (capítulos 4 a 11) estão
-entregues, e com eles a **Parte I está inteira**: nada mais de conceito básico ficou de fora. O que vem
-agora é de outra natureza — os capítulos 12 a 14 (Pygame), 15 a 17 (visualização de dados: matplotlib,
-CSV, JSON, mapas, APIs) e 18 a 20 (Django) não são ilhas de conteúdo comum: são **trilhas**, com
-dependências que o livro instala e que este console não tem (nem pode ter, sem baixar pacote da
-internet). A decisão de como tratá-las — trilha sem console, console com aviso de indisponível, ou
-recorte do que roda — precisa ser tomada antes do conteúdo, e é a primeira coisa do lote.
+**Etapa 11, lote 6 — o projeto 2: visualização de dados (capítulos 15 a 17, ilhas 16 a 18).** O lote 5
+respondeu a pergunta que faltava (D-061) e entregou o projeto 1 inteiro. O que vem agora já tem forma
+decidida: a trilha `visualizacao-de-dados` está declarada em `TRILHAS` com `situacao: 'planejada'` e com
+o que o console roda ali, e o lote 6 é escrever as três unidades dela — **e virar a situação para
+`'escrita'`**, que é o que o teste cobra.
+
+O recorte que já se sabe, pela medição do lote 5: a parte de **dados** roda (`csv`, `json`, `random`,
+estatística em Python puro), e o **desenho do gráfico** não (`import matplotlib` falha; o `numpy` que ela
+pede não está na cópia local e o CDN está bloqueado). O mesmo cuidado do lote 5 vale aqui: exercício que
+ensine a preparar os dados roda e tem correção automática; o gráfico é descrito, não fingido. Vale
+lembrar também que o livro usa `pygal.i18n` e `Worldmap`, que **não existem mais** — está na tabela de
+adaptações do `BOOK_MAP.md`, e a regra é não ensinar por um caminho morto sem dizer que ele morreu.
 
 O caminho de um lote de conteúdo, para quem continuar: escrever as duas unidades, registrar no plano e
 no registro, deixar o validador, os testes de conteúdo e o teste do interpretador de verdade apontarem o

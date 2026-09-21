@@ -51,6 +51,10 @@ export const MARCOS = [
   'torre',
   'arquivo',
   'balanca',
+  // Lote 5 (Etapa 11): a trilha do projeto de jogo — os capítulos 12 a 14.
+  'nave',
+  'enxame',
+  'mira',
 ] as const
 
 export type TipoDeMarco = (typeof MARCOS)[number]
@@ -69,6 +73,9 @@ export const NOMES_DOS_MARCOS: Readonly<Record<TipoDeMarco, string>> = {
   torre: 'Torre de anéis',
   arquivo: 'Arquivo de gavetas',
   balanca: 'Balança de dois pratos',
+  nave: 'Nave de três aletas',
+  enxame: 'Enxame de discos',
+  mira: 'Mira de anéis',
 }
 
 /** O formato da pedra e do capim de uma ilha. */
@@ -132,7 +139,7 @@ export const FAIXAS = {
 } as const
 
 /** Quantos tons a paleta oferece para as ilhas. Ver `paleta3d.ts`. */
-export const TONS_DAS_ILHAS = 12
+export const TONS_DAS_ILHAS = 15
 
 /**
  * As três famílias de ponta de pedra: como a ilha termina embaixo.

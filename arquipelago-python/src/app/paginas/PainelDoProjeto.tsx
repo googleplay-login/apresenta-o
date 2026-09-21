@@ -1,4 +1,4 @@
-import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
+import { PLANO_DE_UNIDADES, trilhaDe } from '../../content/planoDeUnidades'
 import { descreverReferencia } from '../../content/referenciaLivro'
 import { ESTADO_DO_PROJETO } from '../../learning/resumoDoProjeto'
 import { AVISO_DE_HONESTIDADE } from '../../learning/avaliacao'
@@ -167,12 +167,15 @@ export function PainelDoProjeto() {
         <div className="tabela-rolagem">
           <table className="tabela">
             <caption className="tabela__legenda">
-              Plano das unidades. As quatro primeiras têm conteúdo escrito e ciclo completo no ar.
+              Plano das unidades. As {TOTAL_DE_UNIDADES} têm conteúdo escrito e ciclo completo no ar
+              — as da última trilha com uma diferença declarada: nelas o console roda a lógica, e
+              não a biblioteca gráfica (ver a coluna Trilha e a nota abaixo).
             </caption>
             <thead>
               <tr>
                 <th scope="col">#</th>
                 <th scope="col">Ilha</th>
+                <th scope="col">Trilha</th>
                 <th scope="col">O que ensina</th>
                 <th scope="col">Onde ler no livro</th>
                 <th scope="col">Estado</th>
@@ -185,6 +188,7 @@ export function PainelDoProjeto() {
                   <th scope="row" className="tabela__titulo">
                     {unidade.titulo}
                   </th>
+                  <td>{trilhaDe(unidade.trilha).nome}</td>
                   <td>{unidade.tema}</td>
                   <td className="tabela__referencia">{descreverReferencia(unidade.referencia)}</td>
                   <td>
@@ -195,6 +199,13 @@ export function PainelDoProjeto() {
             </tbody>
           </table>
         </div>
+        <p className="cartao__rodape">
+          A partir do primeiro projeto, o console da ilha roda a <strong>lógica</strong> que o
+          livro escreve, e não a biblioteca gráfica: medido, o Pygame deste capítulo não existe na
+          distribuição do Python que roda no navegador, e buscar o pacote fora exigiria baixar da
+          internet — coisa que este projeto não faz. A trilha de cada unidade diz, em uma frase, o
+          que roda e o que só está explicado.
+        </p>
         <p className="cartao__rodape">
           &quot;Referência pendente&quot; significa que a página do livro ainda não foi
           verificada. O PDF da obra não está no repositório — e não vai estar, porque o

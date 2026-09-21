@@ -6,6 +6,137 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — lote 5: a Parte II vira trilha (capítulos 12 a 14, ilhas 13 a 15)
+
+Versão **0.19.0**. O lote começou por uma medição, porque a pergunta que o `HANDOFF` tinha deixado em
+aberto era exatamente essa: como ensinar três projetos que dependem de bibliotecas que este console não
+tem? A resposta está em **D-061**.
+
+### 1. Medição do console, feita antes de escrever o conteúdo
+
+Executado no Pyodide do projeto (a cópia local de `public/pyodide/`, sem rede):
+
+| Comando | Resultado medido |
+|---|---|
+| `import pygame` | **falha** — não está na distribuição |
+| `import django` | **falha** — idem |
+| `import matplotlib` | **falha** — o `numpy` que ela pede não está na cópia local |
+| `import numpy`, `import pandas`, `import tkinter`, `import turtle` | **falham** |
+| `import sqlite3` | **funciona** — biblioteca padrão (dentro do `python_stdlib.zip`) |
+| `py.loadPackage('numpy')` | **não levanta erro** e **não carrega**: tenta o CDN, a rede está bloqueada, e a promessa resolve assim mesmo |
+| `py.loadPackage('matplotlib')` | idem, com as sete dependências tentadas uma a uma |
+
+A última linha virou decisão de projeto: **não confiar no `loadPackage` para dizer "carregou"**. Ele
+resolve a promessa mesmo quando a carga falha, então o teste de "importou" tem de ser o `import`.
+
+### 2. O que o lote entregou, e o que foi conferido no console de verdade
+
+Os três exercícios de cada unidade nova rodam no Python de verdade e passam na própria correção —
+18 arquivos de teste no total. Durante essa conferência, **duas contas minhas estavam erradas** e o
+console real pegou as duas:
+
+| Onde | O que eu esperava | O que o console mediu |
+|---|---|---|
+| `u14/e14-3` | a frota parada em 340 depois de virar | **520** — a frota vira em 580 e recua dois passos |
+| `u15/e15-3` | `nível 3: 3.0` | nada: a solução pedia o nível 4, porque a variável já valia 3 e o código somava 1 |
+
+Também caiu uma terceira, na mesma bateria: a sonda de `e13-1` procurava `nave.velocidade_da_nave`, e
+uma solução **certa** reprovou com `AttributeError` porque guardava a velocidade com outro nome. A sonda
+passou a medir o **efeito** (um passo para a direita anda exatamente a velocidade), e não o nome do
+atributo — é a regra de D-052 aplicada de novo.
+
+### 3. Medição do mundo com quinze ilhas
+
+| Medida | Valor |
+|---|---|
+| ilhas / pontes | **15 / 14** |
+| x | −145,3 a 145,9 |
+| z | −11,5 a 8,2 |
+| y (topo) | 0,0 a 33,6 |
+| marcos distintos | **15** (portal a mira) |
+| tons distintos | **15** (índices 0 a 14) |
+| espalhamento | 291,3 |
+| câmera de mapa | y 247,6, z 102,0 (limite de distância: 260) |
+| pontas de pedra distintas | 12 (as 3 famílias, com o valor exato saindo da semente) |
+
+### 4. Os tons novos, e a medida que mudou a escolha
+
+Os três tons da trilha do jogo foram procurados por varredura (todas as misturas de dois tokens dentro
+da faixa de claridade de um tom de ilha), exigindo 45 de distância dos doze antigos e matizes separados:
+
+| Tom | Mistura | Matiz | Distância mínima dos doze (crua) | Depois de desenhado |
+|---|---|---|---|---|
+| 13 | âmbar + vermelho × 0,7 | 13° | 48,5 | 48,5 |
+| 14 | mar claro + âmbar × 0,5 | 91° | 51,3 | 51,3 |
+| 15 | mar fundo + capim × 0,6 | 129° | 51,9 | 51,9 |
+
+A primeira tentativa trazia um **verde-sálvia** (`capim + pale × 0,6`, 51,3 cru) no lugar do tom 14. O
+teste do orçamento de luz mede os tons **desenhados**, e ali ele ficava a **28,5** do tom 6 — abaixo do
+piso de 30 do projeto, porque o tom 6 é claro e o orçamento o escurece na direção dele. Com o cáqui, o
+par mais próximo dos quinze voltou a **32,1**, que é o par mais próximo dos doze originais: o lote não
+empilhou nenhum tom.
+
+### 5. Os marcos novos, e as duas declarações que a medida corrigiu
+
+Medido com escala 1 (`raioDaIlha = 6`):
+
+| Marco | Altura declarada × real | Raio declarado × real |
+|---|---|---|
+| `nave` | 3,8100 × 3,8100 | 1,55 → **1,02** × **1,0132** |
+| `enxame` | 3,0800 × 3,0800 | 1,2300 × 1,2300 |
+| `mira` | 2,98 → **3,00** × **2,9913** | 1,08 → **1,10** × **1,0942** |
+
+As duas correções têm a mesma causa e o mesmo risco: as barras dos aros da mira são **caixas giradas**, e
+são as **quinas** delas que passam do círculo — não a espessura no ponto mais alto; e as aletas da nave
+são o que mais se afasta do centro, não a base. Declarar menos do que a peça ocupa é o lado perigoso: a
+peça sairia do capim sem ninguém ver no código.
+
+### 6. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, na versão 0.19.0.
+
+### 7. Testes automáticos — EXECUTADO
+
+**43 arquivos, 779 testes, todos aprovados** (eram 43 e 771). Os testes novos cobram:
+
+- **toda unidade pertence a uma trilha declarada**, e o capítulo dela está entre os da trilha;
+- **a situação da trilha bate com o que existe**: trilha `'escrita'` tem unidade, trilha `'planejada'`
+  não tem nenhuma — assim a lista não envelhece dizendo que uma parte está pronta quando não está;
+- **toda trilha declara o que o console roda ali**, com texto de tamanho suficiente para explicar;
+- **as trilhas de projeto são as três do livro**, com os capítulos em ordem, e a dos conceitos é a
+  Parte I inteira (capítulos 1 a 11);
+- **todo exercício da trilha do jogo tem correção automática e roda aqui**, e nenhum trecho de código da
+  trilha importa Pygame sem dizer por que não roda;
+- **a tela do mundo mostra a trilha de cada grupo e o aviso do console** antes da primeira ilha do grupo.
+
+Três guardiões já existentes pegaram defeitos meus no caminho, e vale registrar quais, porque é a prova
+de que eles servem para alguma coisa: o **gabarito** reprovou a unidade 13 (as cinco respostas certas em
+duas posições, e a correta sendo a mais longa em três perguntas de cinco), o **teste de estilo** reprovou
+três variáveis de CSS que não existem no tema, e o **teste de altura dos marcos** reprovou a mira.
+
+### 8. Build de produção — EXECUTADO, passou
+
+    dist/index.html                                0.63 kB │ gzip:   0.40 kB
+    dist/assets/trabalhadorDoPython-BzMdATh1.js    2.60 kB
+    dist/assets/index-C3PGqUsh.css                25.48 kB │ gzip:   4.12 kB
+    dist/assets/index-0JUJuvGM.js                514.49 kB │ gzip: 155.39 kB
+    dist/assets/Cena-BUJCg8I_.js                 924.93 kB │ gzip: 246.63 kB
+
+    ✓ built in 601ms
+
+### 9. Não executado
+
+- **Nenhum pixel foi visto.** As ilhas 13 a 15, os marcos `nave`, `enxame` e `mira` e os três tons novos
+  nunca foram vistos na tela: os testes provam a árvore de objetos 3D, a geometria medida e a cor
+  calculada, e a verificação de imagem continua dependendo de uma captura de tela de quem tem WebGL.
+- **O jogo do livro não foi jogado** — nem aqui (não há Pygame) nem em outro lugar. O que se prova é que
+  a lógica roda e que a correção aprova as soluções de referência.
+- **Nada foi medido em tela cheia**, em outra proporção de janela, nem com leitor de tela.
+
+---
+
 ## Execução de 21/09/2026 — a cor que chega à tela (captura do mundo, ilhas 9 a 12)
 
 Versão **0.18.0**. Esta execução nasceu de uma **captura de tela** enviada por quem usa o mundo, com o

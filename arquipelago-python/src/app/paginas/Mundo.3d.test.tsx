@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { PonteVisivel } from '../../world/mundoVisivel'
 import { conteudoDaUnidade } from '../../content/unidades'
@@ -122,13 +122,25 @@ describe('mundo com 3D disponível', () => {
     await screen.findByText('cena de mentira')
 
     // Andando: as teclas de voo não aparecem — subir e descer não faz nada a pé.
+    //
+    // A procura é **dentro da ajuda de teclas**, e não na tela inteira: o texto da
+    // unidade 15 tem "pontos que sobem" no tema, e um `queryByText(/sobe/)` solto
+    // encontrava essa frase e reprovava a tela por um motivo que não é o do teste.
+    const ajuda = (): HTMLElement => {
+      const lista = document.querySelector('.ajuda-de-teclas')
+      if (lista === null) {
+        throw new Error('A ajuda de teclas não está na tela')
+      }
+      return lista as HTMLElement
+    }
+
     await usuario.click(screen.getByText('Como pilotar'))
     expect(screen.getByText(/andar pela ilha e pelas pontes/)).toBeTruthy()
-    expect(screen.queryByText(/sobe/)).toBeNull()
+    expect(within(ajuda()).queryByText(/sobe/)).toBeNull()
 
     await usuario.click(screen.getByRole('button', { name: 'Voo livre' }))
     expect(screen.getByText(/ou as setas: voar/)).toBeTruthy()
-    expect(screen.getByText(/sobe/)).toBeTruthy()
+    expect(within(ajuda()).getByText(/sobe/)).toBeTruthy()
   })
 
   it('ensina as teclas enquanto o foco está no mundo', async () => {

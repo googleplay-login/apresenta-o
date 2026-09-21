@@ -1391,3 +1391,87 @@ fresta que uma cor queimada entra sem ninguém ver.
 
 **O que continua sem prova:** os **pixels**. Este defeito foi achado por olho e medido no código; a
 verificação de que o conserto ficou certo na tela é outra captura.
+
+---
+
+## D-061 — A Parte II como trilhas, e o que o console de fato roda
+
+**Contexto.** A Parte I do livro (capítulos 1 a 11) está inteira nas ilhas 1 a 12. A partir daqui o livro
+muda de natureza: a Parte II são **três projetos** — um jogo (Pygame, capítulos 12 a 14), visualização de
+dados (matplotlib e companhia, 15 a 17) e uma aplicação web (Django, 18 a 20). A pergunta que o projeto
+tinha deixado em aberto (`HANDOFF`, "a decisão de como tratá-las precisa ser tomada antes do conteúdo")
+era: como essas unidades entram em um mundo onde o que se aprende se pratica em um console de Python que
+roda no navegador?
+
+**O que foi medido antes de decidir.** No console deste projeto (Pyodide 314.0.7, a cópia local de
+`public/pyodide/`, sem rede):
+
+| Comando | Resultado medido |
+|---|---|
+| `import pygame` | **falha** — a biblioteca não está na distribuição |
+| `import django` | **falha** — idem |
+| `import matplotlib` | **falha** — e o `numpy` que ela pede não está na cópia local |
+| `import numpy`, `import pandas`, `import tkinter`, `import turtle` | **falham**; não estão na cópia local |
+| `import sqlite3` | **funciona** — biblioteca padrão, dentro do `python_stdlib.zip` |
+| `py.loadPackage('numpy')` | **não levanta erro** e ainda assim não carrega: ele tenta o CDN, a rede está bloqueada e a biblioteca continua ausente |
+
+A última linha é a mais perigosa das seis: `loadPackage` **resolve a promessa mesmo quando a carga
+falha**, então um código que confiasse nele para dizer "carregou" mentiria. Buscar fora está fora de
+questão por outro motivo, já registrado: este projeto não baixa nada da internet em tempo de execução
+(D-040).
+
+**As decisões.**
+
+1. **A Parte II entra como trilha, e não como ilha de conteúdo comum.** Cada unidade declara a sua
+   trilha (`trilha` em `planoDeUnidades.ts`), e a trilha declara os capítulos que cobre, a situação dela
+   e — o campo que interessa — **o que o console roda ali**. A tela do mundo agrupa as ilhas por trilha,
+   com o título do grupo e o aviso do console **antes** da primeira ilha do grupo: quem estuda precisa
+   saber que o Pygame não existe nesta ilha antes de escrever a primeira linha, e não depois de o erro
+   aparecer.
+
+2. **O que roda na trilha do jogo é a lógica, em Python puro.** A nave que se move presa à borda, as
+   balas que saem da tela, a frota montada por laços aninhados que anda e desce, a colisão por
+   retângulo, as vidas, os pontos e o nível que acelera: tudo isso é lógica, e a lógica não precisa da
+   biblioteca gráfica para existir. O desenho — abrir a janela, desenhar a imagem, tocar o som — é
+   apresentado como o que a biblioteca faz, com o motivo escrito na tela. **Nenhum trecho de Pygame é
+   mostrado como se rodasse aqui**, e um teste cobra isso (trecho com `import pygame` sem
+   `naoRodaNoConsole` reprova).
+
+3. **Todo exercício da trilha do jogo roda e tem correção automática.** É a consequência prática da
+   decisão 2, e virou teste: se alguém escrever um exercício que dependa de biblioteca gráfica, o teste
+   falha e a saída é escrever a versão que roda. Sem isso, a trilha teria exercícios que a correção não
+   conseguiria conferir — e a promessa da trilha ("o que roda é a lógica") ficaria só no texto.
+
+4. **Nada de servidor para a trilha do Django.** As regras do projeto proíbem backend sem autorização, e
+   as regras não foram afrouxadas para caber o capítulo: quando a trilha 3 for escrita, o que se
+   escreverá é a peça pura — uma função que recebe os dados de um pedido e devolve a resposta. Sem
+   porta, sem rede, sem processo servidor.
+
+5. **As trilhas ainda não escritas existem na lista, com a situação declarada.** `visualizacao-de-dados`
+   e `aplicacoes-web` estão em `TRILHAS` com `situacao: 'planejada'`, e um teste cobra a coerência nos
+   dois sentidos: trilha escrita tem unidade, trilha planejada não tem nenhuma. Assim a lista não pode
+   envelhecer dizendo que uma parte está pronta quando não está.
+
+**O lote 5, entregue com esta decisão:** as três unidades do projeto 1 (capítulos 12, 13 e 14), as
+ilhas 13, 14 e 15, os marcos `nave`, `enxame` e `mira`, e os tons 13 a 15.
+
+**Os dois tons, e o que a segunda medida mudou.** Os três tons novos foram procurados varrendo todas as
+misturas de dois tokens dentro da faixa de claridade de um tom de ilha, e escolhendo o trio que fica mais
+longe dos doze antigos (≥ 45 de distância em RGB) e entre si, com matizes separados. A primeira escolha
+incluía um **verde-sálvia** (`capim + pale × 0,6`), que passava no critério cru — e reprovou depois de
+desenhado: o teste do orçamento de luz mede a distância entre os tons **como eles chegam à tela**, e o
+tom 6 (claro) é escurecido pelo orçamento na direção dele. Medido: 28,5 — abaixo do piso de 30 do
+projeto. O lugar foi ocupado por um **cáqui** (`mar claro + âmbar × 0,5`), e o par mais próximo dos
+quinze voltou a **32,1**, que é exatamente o par mais próximo dos doze originais: o lote não empilhou
+nenhum tom. Os matizes dos três (13°, 91° e 129°) caem nos buracos que os doze deixavam no círculo de
+cores — os antigos vão de 3° a 34°, passam por 120° e vão de 167° a 210°.
+
+**Os três marcos, e as medidas que os acompanham.** `nave` (um corpo que afina em três degraus com três
+aletas), `enxame` (um mastro com discos pairando e um carrossel de quatro discos girando) e `mira` (dois
+aros concêntricos de pé com uma agulha girando dentro — a única construção do arquipélago com buraco no
+meio). Duas declarações nasceram erradas e foram corrigidas por medida: o raio ocupado da nave estava em
+1,55 quando o real é **1,0132** (as aletas não passam disso), e a altura da mira estava em 2,98 quando o
+real é **2,9913** — as barras dos aros são caixas giradas, e são as **quinas** delas que passam do
+círculo, não a espessura no ponto mais alto. Declarar menos do que a peça ocupa é o lado que morde: a
+peça sairia do capim sem ninguém ver no código.
+

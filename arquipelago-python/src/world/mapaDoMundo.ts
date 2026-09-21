@@ -1,4 +1,4 @@
-import type { UnidadePlanejada } from '../content/planoDeUnidades'
+import type { IdDeTrilha, UnidadePlanejada } from '../content/planoDeUnidades'
 import type { Vetor3 } from './camera/movimento'
 import { sementeDeTexto } from './geometria/aleatorio'
 import { alturaDoTopo } from './geometria/ilha'
@@ -50,6 +50,14 @@ export type IlhaDoMundo = {
   readonly ordem: number
   readonly titulo: string
   readonly tema: string
+  /**
+   * A trilha do livro a que a ilha pertence (D-061).
+   *
+   * Vem do plano, e não de uma conta feita aqui: a ilha é uma unidade, e a
+   * unidade sabe de que parte do livro ela é. Quem quiser o nome da trilha para
+   * mostrar na tela usa `trilhaDe(ilha.trilha)`.
+   */
+  readonly trilha: IdDeTrilha
   /** Índice a partir de zero, na ordem do percurso. */
   readonly indice: number
   /** Semente da geometria: a mesma ilha tem sempre a mesma pedra. */
@@ -115,6 +123,7 @@ export function ilhasDoMundo(unidades: readonly UnidadePlanejada[]): readonly Il
       ordem: unidade.ordem,
       titulo: unidade.titulo,
       tema: unidade.tema,
+      trilha: unidade.trilha,
       indice,
       semente,
       identidade,

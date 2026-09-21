@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useMemo, useReducer, useState } from 'react'
 import { LimiteDeErro } from '../../ui/components/LimiteDeErro'
 import { PainelDaUnidade } from '../../ui/paineis/PainelDaUnidade'
-import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
+import { PLANO_DE_UNIDADES, trilhaDe, type IdDeTrilha } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
 import { PERCURSO_DO_CONTEUDO } from '../../content/percursoDoConteudo'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
@@ -40,6 +40,29 @@ import { chaoDoMundo, descricaoDoLugar, type Localizacao } from '../../world/map
  */
 
 const UNIDADES = PLANO_DE_UNIDADES
+
+/**
+ * As ilhas agrupadas por trilha, na ordem do percurso.
+ *
+ * O agrupamento é por **trilhas vizinhas**: se o percurso voltar a uma trilha
+ * depois de sair dela, ela aparece duas vezes — o que é verdade na tela, porque o
+ * caminho passa por ali duas vezes. Preservar a ordem evita o defeito de reordenar
+ * as ilhas para caber em um agrupamento bonito.
+ */
+function gruposDeTrilha(
+  ilhas: readonly IlhaVisivel[],
+): readonly { readonly trilha: IdDeTrilha; readonly ilhas: readonly IlhaVisivel[] }[] {
+  const grupos: { trilha: IdDeTrilha; ilhas: IlhaVisivel[] }[] = []
+  for (const ilha of ilhas) {
+    const ultimo = grupos[grupos.length - 1]
+    if (ultimo !== undefined && ultimo.trilha === ilha.trilha) {
+      ultimo.ilhas.push(ilha)
+    } else {
+      grupos.push({ trilha: ilha.trilha, ilhas: [ilha] })
+    }
+  }
+  return grupos
+}
 /**
  * O percurso visto pelo domínio, montado a partir do conteúdo
  * (`content/percursoDoConteudo.ts`) porque os exercícios conferidos fazem parte
@@ -372,7 +395,7 @@ export function Mundo() {
           </p>
 
           {com3d && estado.sessao.foco === 'mundo' ? (
-            <details className="hud__teclas">
+            <details className="hud__teclas ajuda-de-teclas">
               <summary>Como pilotar</summary>
               {estado.sessao.camera === 'andar' ? (
                 <ul>
@@ -499,8 +522,23 @@ function TrilhaDeIlhas({
         atual com pelo menos 80% de acertos.
       </p>
 
-      <ol className="trilha__lista">
-        {ilhas.map((ilha) => (
+      {/* Cada trilha do livro é um grupo com título, e o grupo diz o que o
+          **console** roda ali. Isso importa porque a partir da Parte II o console
+          não roda tudo o que o livro mostra — o Pygame e o Django não existem
+          nesta ilha (medido, D-061) — e quem estuda precisa saber disso antes de
+          escrever a primeira linha, não depois de o erro aparecer. */}
+      {gruposDeTrilha(ilhas).map((grupo) => (
+        <section key={grupo.trilha} className="trilha__grupo" aria-labelledby={`trilha-${grupo.trilha}`}>
+          <h3 className="trilha__grupo-titulo" id={`trilha-${grupo.trilha}`}>
+            {trilhaDe(grupo.trilha).nome}
+          </h3>
+          <p className="trilha__grupo-texto">{trilhaDe(grupo.trilha).resumo}</p>
+          <p className="trilha__grupo-console">
+            <strong>Nesta trilha, o console roda:</strong> {trilhaDe(grupo.trilha).oConsoleRoda}
+          </p>
+
+          <ol className="trilha__lista">
+        {grupo.ilhas.map((ilha) => (
           <li
             key={ilha.id}
             className={`ilha-cartao ilha-cartao--${ilha.situacao}`}
@@ -539,7 +577,9 @@ function TrilhaDeIlhas({
             </div>
           </li>
         ))}
-      </ol>
+          </ol>
+        </section>
+      ))}
 
       <div className="trilha__rodape">
         <p className="trilha__texto">

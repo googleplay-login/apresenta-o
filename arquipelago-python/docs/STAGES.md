@@ -430,6 +430,12 @@ um **orçamento de luz** nas cores que estoura, no momento de desenhar — a pal
 mesmo passo, o mar distante deixou de ser uma laje iluminada (e de se chamar `vazio`), as nuvens
 deixaram de ser lâminas e a árvore passou a ter copa verde, e não marrom.
 
+O **lote 5** (capítulos 12 a 14) é o primeiro da Parte II e o primeiro em que o console não roda o que
+o livro mostra: medido, `import pygame` falha nesta distribuição do Pyodide e não há como instalar sem
+baixar da internet (D-040). A trilha do jogo declara isso na tela, e o que ela ensina é a **lógica** do
+jogo — que roda — com o desenho apresentado como o que a biblioteca faria. O lote acrescentou as ilhas
+13 a 15, os marcos `nave`, `enxame` e `mira`, e os tons 13 a 15.
+
 **Limite explícito:** nenhum lote foi visto em navegador — nenhum navegador com WebGL existe neste
 ambiente. O que eles provam está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real), e a verificação
 de pixel depende de captura de tela de quem tem WebGL.
@@ -440,10 +446,12 @@ de pixel depende de captura de tela de quem tem WebGL.
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1, 2, 3 e 4 estão
-  acima, e a Parte I do livro está inteira. O lote seguinte entra na **Parte II** (os três projetos:
-  Pygame nos capítulos 12 a 14, visualização de dados nos 15 a 17, Django nos 18 a 20), que a Etapa 12
-  precisa tratar como trilhas, e não como ilhas de conteúdo comum.
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades. Os lotes 1 a 5 estão acima: a
+  Parte I inteira (capítulos 1 a 11, ilhas 1 a 12) e o **primeiro projeto da Parte II** (capítulos 12 a
+  14, ilhas 13 a 15). Com o lote 5, os três projetos do livro passaram a ser **trilhas declaradas**
+  (D-061): cada unidade sabe a que parte do livro pertence, e cada trilha diz o que o console roda ali.
+  O lote seguinte é o projeto 2 — visualização de dados (capítulos 15 a 17), cuja parte de dados roda e
+  cujo desenho de gráfico não (medido).
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

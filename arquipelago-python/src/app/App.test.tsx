@@ -4,7 +4,7 @@ import { App } from './App'
 import { Mundo } from './paginas/Mundo'
 import { PainelDoProjeto } from './paginas/PainelDoProjeto'
 import { VitrineDoTema } from './paginas/VitrineDoTema'
-import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
+import { PLANO_DE_UNIDADES, TRILHAS } from '../content/planoDeUnidades'
 
 /**
  * Renderiza a aplicação para HTML estático e confere o que ela afirma.
@@ -85,6 +85,27 @@ describe('página do mundo', () => {
 
     const posicoes = PLANO_DE_UNIDADES.map((unidade) => mundo.indexOf(unidade.titulo))
     expect(posicoes).toEqual([...posicoes].sort((a, b) => a - b))
+  })
+
+  it('agrupa as ilhas por trilha do livro, e diz o que o console roda em cada uma', () => {
+    // A partir da Parte II o console não roda tudo o que o livro mostra: o Pygame
+    // não existe nesta ilha (medido, D-061). Quem estuda precisa saber disso
+    // **antes** de escrever a primeira linha, e não depois de o erro aparecer —
+    // por isso a trilha e o aviso do console estão na tela, e não na documentação.
+    // Cada trilha que **tem ilha** aparece. As trilhas ainda planejadas não
+    // aparecem, e não devem: a tela mostra o percurso que existe, e a lista de
+    // trilhas do plano é que guarda o que ainda vem (cobrado em
+    // `planoDeUnidades.test.ts`).
+    const comIlha = TRILHAS.filter((trilha) =>
+      PLANO_DE_UNIDADES.some((unidade) => unidade.trilha === trilha.id),
+    )
+    expect(comIlha.length).toBeGreaterThan(1)
+    for (const trilha of comIlha) {
+      expect(mundo, `A trilha ${trilha.id} não aparece na tela`).toContain(trilha.nome)
+      expect(mundo).toContain(trilha.oConsoleRoda)
+    }
+    expect(mundo).toContain('Nesta trilha, o console roda:')
+    expect(mundo).toContain('import pygame')
   })
 
   it('começa com a primeira ilha liberada e as outras três bloqueadas', () => {
