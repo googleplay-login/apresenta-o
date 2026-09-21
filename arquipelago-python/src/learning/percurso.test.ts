@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   VERSAO_DO_PROGRESSO,
   descreverEstado,
+  exercicioFoiConferido,
+  exerciciosConferidos,
+  marcarExercicioResolvido,
   estadoDaUnidade,
   ordenarUnidades,
   progressoDaUnidade,
@@ -264,6 +267,7 @@ describe('marcador de leitura', () => {
       tentativas: 0,
       melhorNota: null,
       leituraFeita: true,
+      exerciciosResolvidos: [],
     })
   })
 
@@ -342,5 +346,94 @@ describe('marcador de leitura', () => {
       }
       expect(proximaUnidade(depois, UNIDADES)?.id).toBe(proximaUnidade(antes, UNIDADES)?.id)
     }
+  })
+})
+
+describe('exercício conferido entra no progresso — e não aprova nada', () => {
+  /** Percurso em que as unidades declaram os próprios exercícios. */
+  const COM_EXERCICIOS: readonly UnidadeDoPercurso[] = [
+    { id: 'u01', ordem: 1, exercicios: ['e1-1', 'e1-2', 'e1-3'] },
+    { id: 'u02', ordem: 2, exercicios: ['e2-1'] },
+  ]
+
+  it('guarda o exercício conferido sem tocar em nota, tentativa nem leitura', () => {
+    const comExercicio = marcarExercicioResolvido(
+      progressoInicial(),
+      COM_EXERCICIOS,
+      'u01',
+      'e1-2',
+    )
+
+    expect(exerciciosConferidos(comExercicio, 'u01')).toEqual(['e1-2'])
+    expect(exercicioFoiConferido(comExercicio, 'u01', 'e1-2')).toBe(true)
+    expect(exercicioFoiConferido(comExercicio, 'u01', 'e1-1')).toBe(false)
+    expect(progressoDaUnidade(comExercicio, 'u01')).toEqual({
+      aprovada: false,
+      tentativas: 0,
+      melhorNota: null,
+      leituraFeita: false,
+      exerciciosResolvidos: ['e1-2'],
+    })
+  })
+
+  it('não abre a unidade seguinte: quem abre é a avaliação', () => {
+    // Se exercício conferido abrisse ilha, bastaria conferir três exercícios para
+    // pular a avaliação, e a regra dos 80% viraria enfeite (D-046).
+    let progresso = progressoInicial()
+    for (const exercicio of ['e1-1', 'e1-2', 'e1-3']) {
+      progresso = marcarExercicioResolvido(progresso, COM_EXERCICIOS, 'u01', exercicio)
+    }
+
+    expect(estadoDaUnidade(progresso, COM_EXERCICIOS, 'u01')).toBe('disponivel')
+    expect(estadoDaUnidade(progresso, COM_EXERCICIOS, 'u02')).toBe('bloqueada')
+    expect(proximaUnidade(progresso, COM_EXERCICIOS)?.id).toBe('u01')
+  })
+
+  it('conferir de novo o que já estava conferido devolve o mesmo progresso', () => {
+    // A identidade importa: é ela que decide se há gravação. Regravar o mesmo
+    // conteúdo a cada clique seria escrita à toa no navegador de quem estuda.
+    const uma = marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u01', 'e1-2')
+    const duas = marcarExercicioResolvido(uma, COM_EXERCICIOS, 'u01', 'e1-2')
+
+    expect(duas).toBe(uma)
+  })
+
+  it('recusa exercício de unidade bloqueada', () => {
+    expect(() => marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u02', 'e2-1')).toThrow(
+      /bloqueada/,
+    )
+  })
+
+  it('recusa exercício que não é da unidade, quando a unidade declara os seus', () => {
+    expect(() =>
+      marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u01', 'e9-9'),
+    ).toThrow(/não é da unidade/)
+  })
+
+  it('recusa identificador vazio e unidade desconhecida', () => {
+    expect(() => marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u01', '  ')).toThrow(
+      /sem identificador/,
+    )
+    expect(() =>
+      marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u99', 'e1-1'),
+    ).toThrow(/desconhecida/)
+  })
+
+  it('registrar nota preserva os exercícios conferidos, e conferir preserva a nota', () => {
+    const comExercicio = marcarExercicioResolvido(progressoInicial(), COM_EXERCICIOS, 'u01', 'e1-1')
+    const comNota = registrarResultado(comExercicio, COM_EXERCICIOS, 'u01', REPROVADO)
+
+    expect(comNota.unidades.u01?.exerciciosResolvidos).toEqual(['e1-1'])
+    expect(comNota.unidades.u01?.tentativas).toBe(1)
+    expect(comNota.unidades.u01?.melhorNota).toEqual(REPROVADO)
+  })
+
+  it('a ordem de conferência é preservada na lista', () => {
+    let progresso = progressoInicial()
+    progresso = marcarExercicioResolvido(progresso, COM_EXERCICIOS, 'u01', 'e1-3')
+    progresso = marcarExercicioResolvido(progresso, COM_EXERCICIOS, 'u01', 'e1-1')
+
+    expect(exerciciosConferidos(progresso, 'u01')).toEqual(['e1-3', 'e1-1'])
+    expect(exerciciosConferidos(progresso, 'u02')).toEqual([])
   })
 })

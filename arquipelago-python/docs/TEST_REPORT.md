@@ -6,6 +6,86 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com os tipos novos da correção (`TipoDeValor`, `ValorEsperado`, `EstruturaEsperada`,
+`CorrecaoDoExercicio`), o módulo puro da conferência, a ação `marcarExercicio`, o formato 3 do
+progresso e o percurso montado a partir do conteúdo.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**40 arquivos, 697 testes, todos passando.** Os que interessam a esta etapa:
+
+| Arquivo | Testes | O que cobre |
+|---|---|---|
+| `src/learning/correcaoDeExercicio.test.ts` | 25 | Montagem da sonda, separação da saída, comparação por trecho e por ordem, `repr` × tipo, linhas não vazias, comentário, erro do programa, sonda ausente, os três vereditos |
+| `src/python/pyodideDeVerdade.test.ts` | 18 | **Pyodide de verdade**: a resposta de referência passa na correção do próprio exercício (os 10 exercícios que têm correção), quatro respostas erradas são reprovadas com o item certo, sonda sobrevive a `§`/aspas/quebra de linha, e cada execução começa do zero |
+| `src/content/conteudo.test.ts` + `percursoDoConteudo.test.ts` | 42 + 6 | Forma da correção (limite obrigatório, um modo de comparação por sonda, tipo existente), e o percurso do conteúdo: **os 12 exercícios reais podem ser marcados**, nenhum é recusado, e marcar todos não aprova unidade nenhuma |
+| `src/ui/paineis/ConsoleDoPython.test.tsx` | 29 | Programa + sonda enviados juntos, veredito item por item, saída sem a linha da sonda, erro ⇒ "não deu para conferir", rodar sem conferir não conclui nada |
+| `src/ui/paineis/PraticaDaUnidade.test.tsx` | 12 | Botão só para quem tem correção, motivo escrito para quem não tem, e **só `deuCerto` chama o progresso**: "ainda não confere" e "não deu para conferir" não marcam nada |
+| `src/learning/percurso.test.ts` | 39 | Exercício conferido entra no progresso sem tocar em nota, tentativa ou leitura; recusa unidade bloqueada, unidade desconhecida e exercício que não é da unidade |
+| `src/state/sessao.test.ts` | 47 | A ação `marcarExercicio` pelo redutor: sem unidade aberta não faz nada, exercício de outra unidade não muda estado, e conferir de novo não gera progresso novo (é o progresso que decide a gravação) |
+| `src/persistence/progressoSalvo.test.ts` + `useProgressoPersistido.test.tsx` | 30 + 5 | Migração da versão 2 (exercícios começam vazios), arquivo da versão atual sem o campo (recusado), lista com item que não é texto (recusada), e o exercício conferido **gravado e lido de volta** |
+| `src/app/paginas/Mundo.interacao.test.tsx` | 24 | Com o progresso guardado, o cartão do exercício conferido volta com o selo — e só ele; conferir os três exercícios da ilha 1 não aprova a ilha nem abre a 2 |
+
+### 3. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/index.html` | 0,63 kB | 0,40 kB |
+| `dist/assets/index-*.js` | 326,11 kB | 102,42 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/Cena-*.js` | 912,10 kB | 242,34 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+### 4. Servidor de desenvolvimento e arquivos do interpretador — EXECUTADO
+
+    npm run dev
+
+- `GET /` → **200**; `GET /pyodide/pyodide.mjs` → **200** (`text/javascript`, 17.931 bytes);
+- `GET /pyodide/pyodide.asm.wasm` → **200** (9.598.218 bytes);
+- pedido com `Host` e `Origin` de outro domínio (como no preview remoto) → **200**, sem
+  "Blocked request".
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **O Web Worker em um navegador.** Continua valendo o que a Etapa 9 registrou: não há navegador neste
+  ambiente. A conferência é provada em jsdom (interpretador dublado, mas **o veredito é o de verdade**:
+  `conferirExercicio` roda igual) e em Node (Pyodide real). A fiação com o navegador é roteiro manual.
+- **O download real, o cache HTTP e o `terminate()` com Worker de verdade**: só no navegador.
+- **Aparência da conferência na tela** (cores do veredito, quebra de linha do cartão): sem verificação
+  automática de layout, como nas etapas anteriores.
+
+### 6. Roteiro manual da conferência (itens 51 a 53)
+
+51. **Conferir um exercício, com o valor medido**: ilha 2 → aba **Prática** → *Escrever e conferir no
+    console* no exercício das figurinhas; ligar o Python; escrever um programa que guarde 40 em
+    `figurinhas` e imprima o valor; clicar em **Rodar e conferir**. Deve aparecer a conferência com o
+    item do texto esperado e o item do valor medido, ambos com **esperado × obtido** — e a linha da
+    sonda **não** pode aparecer na saída. Depois rodar de novo com 38: o item do valor deve mostrar
+    `esperado: 40` e `obtido: 38`, sem sumir a explicação nem o limite da conferência.
+52. **A conferência não aprova a ilha**: com o exercício conferido, tentar entrar na ilha seguinte
+    (deve continuar bloqueada) e conferir na aba **Avaliação** que a nota e as tentativas continuam
+    zeradas. O caminho para a próxima ilha é responder as perguntas e acertar 4 de 5.
+53. **O selo sobrevive ao recarregamento**: depois de conferir um exercício com tudo certo, recarregar
+    a página, abrir a mesma ilha na aba Prática e conferir que o cartão daquele exercício aparece com
+    *"Conferido — este resultado está guardado no seu progresso"* — e que os outros cartões não. Depois
+    limpar só a chave do progresso no navegador (não o armazenamento inteiro) e conferir que o selo
+    some, e que o resto do armazenamento do site continua intacto.
+
+Resultado esperado, somando as etapas 5 a 10: **53 de 53 itens conferidos**. Qualquer item que falhe
+deve ser registrado aqui.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 9 (prova de conceito do Pyodide em Web Worker)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -113,7 +193,7 @@ Nenhuma requisição a host externo: os cinco endereços acima são da própria 
     de qualquer tentativa de rodar. Rodar os dois trechos de erro proposital e conferir a mensagem
     real do Python (`TypeError`, `IndexError`).
 
-Resultado esperado: 50 de 50 conferidos. Qualquer item que falhe deve ser registrado aqui.
+Resultado esperado até esta etapa: 50 de 50 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

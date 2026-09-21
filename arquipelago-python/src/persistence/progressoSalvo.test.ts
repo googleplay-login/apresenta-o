@@ -37,7 +37,13 @@ function criarArmazenamento(inicial: Record<string, string> = {}): Armazenamento
 const PROGRESSO_VALIDO: Progresso = {
   versao: VERSAO_DO_PROGRESSO,
   unidades: {
-    u01: { aprovada: true, tentativas: 2, melhorNota: { acertos: 5, total: 5 }, leituraFeita: false },
+    u01: {
+      aprovada: true,
+      tentativas: 2,
+      melhorNota: { acertos: 5, total: 5 },
+      leituraFeita: false,
+      exerciciosResolvidos: [],
+    },
   },
 }
 
@@ -163,6 +169,83 @@ describe('falhas de leitura não quebram a aplicação', () => {
     const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(hibrido) })
 
     expect(lerProgresso(armazenamento).progresso.unidades.u01?.leituraFeita).toBe(true)
+  })
+
+  it('migra o progresso da versão 2: a leitura fica, os exercícios começam vazios', () => {
+    // Como era o arquivo antes de existir exercício conferido no progresso.
+    const antigo = {
+      versao: 2,
+      unidades: {
+        u01: {
+          aprovada: true,
+          tentativas: 2,
+          melhorNota: { acertos: 5, total: 5 },
+          leituraFeita: true,
+        },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(antigo) })
+    const resultado = lerProgresso(armazenamento)
+
+    expect(resultado.progresso.versao).toBe(VERSAO_DO_PROGRESSO)
+    expect(resultado.progresso.unidades.u01?.aprovada).toBe(true)
+    expect(resultado.progresso.unidades.u01?.leituraFeita).toBe(true)
+    // Nenhum exercício é dado como conferido por conta própria: a migração não
+    // pode inventar uma conferência que nunca aconteceu.
+    expect(resultado.progresso.unidades.u01?.exerciciosResolvidos).toEqual([])
+    expect(resultado.aviso).toContain('versão anterior')
+  })
+
+  it('preserva os exercícios conferidos quando o arquivo já é da versão atual', () => {
+    const guardado = {
+      versao: VERSAO_DO_PROGRESSO,
+      unidades: {
+        u01: {
+          aprovada: false,
+          tentativas: 0,
+          melhorNota: null,
+          leituraFeita: false,
+          exerciciosResolvidos: ['e1-2', 'e1-3'],
+        },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(guardado) })
+    const resultado = lerProgresso(armazenamento)
+
+    expect(resultado.progresso.unidades.u01?.exerciciosResolvidos).toEqual(['e1-2', 'e1-3'])
+    expect(resultado.aviso).toBeNull()
+  })
+
+  it('recusa arquivo da versão atual sem o campo dos exercícios', () => {
+    // Na versão atual o campo é obrigatório: se ele falta, o arquivo não é de
+    // uma versão que este programa saiba ler, e adivinhar seria pior.
+    const semCampo = {
+      versao: VERSAO_DO_PROGRESSO,
+      unidades: {
+        u01: { aprovada: true, tentativas: 1, melhorNota: null, leituraFeita: false },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(semCampo) })
+
+    expect(lerProgresso(armazenamento).aviso).toContain('formato inesperado')
+  })
+
+  it('recusa lista de exercícios com item que não é texto', () => {
+    const estragado = {
+      versao: VERSAO_DO_PROGRESSO,
+      unidades: {
+        u01: {
+          aprovada: false,
+          tentativas: 0,
+          melhorNota: null,
+          leituraFeita: false,
+          exerciciosResolvidos: ['e1-1', 7],
+        },
+      },
+    }
+    const armazenamento = criarArmazenamento({ [CHAVE_DO_PROGRESSO]: JSON.stringify(estragado) })
+
+    expect(lerProgresso(armazenamento).aviso).toContain('formato inesperado')
   })
 
   it('recusa registro com leituraFeita de tipo errado, em vez de adivinhar', () => {

@@ -156,3 +156,50 @@ export function linhasDaSaida(saida: string, resultado: string | null): readonly
   const linhas = saida.replace(/\n$/, '') === '' ? [] : saida.replace(/\n$/, '').split('\n')
   return resultado === null ? linhas : [...linhas, `→ ${resultado}`]
 }
+
+/**
+ * Uma execução concluída, como ela fica depois de traduzida.
+ *
+ * Morar aqui, e não no gancho do React, tem um motivo de teste: a tradução da
+ * resposta do trabalhador é exatamente a mesma coisa que a correção do exercício
+ * precisa receber. Com a tradução num módulo puro, o teste que roda o Python de
+ * verdade usa o **mesmo caminho** que a tela usa — e não uma cópia que pode
+ * envelhecer sem ninguém perceber.
+ */
+export type Execucao = {
+  readonly id: number
+  readonly codigo: string
+  /** Linhas a mostrar: saída impressa, valor da última expressão, ou erro. */
+  readonly linhas: readonly string[]
+  /** `true` quando o que está em `linhas` é mensagem de erro ou recusa. */
+  readonly foiErro: boolean
+}
+
+/**
+ * Traduz a resposta do trabalhador na execução correspondente.
+ *
+ * Devolve `null` para as respostas que não são de execução (carregamento pronto,
+ * falha de carga) — elas mudam outro estado, e não este.
+ *
+ * A saída **não** é enfeitada aqui: programa que roda sem imprimir nada devolve
+ * lista vazia. Quem conta ao estudante que nada saiu é a tela; quem confere o
+ * exercício precisa da verdade — uma linha inventada faria a conferência contar
+ * uma linha impressa que não existiu.
+ */
+export function execucaoDaResposta(resposta: Resposta, codigo: string): Execucao | null {
+  switch (resposta.tipo) {
+    case 'saida':
+      return {
+        id: resposta.id,
+        codigo,
+        linhas: linhasDaSaida(resposta.texto, resposta.resultado),
+        foiErro: false,
+      }
+    case 'erroDePython':
+      return { id: resposta.id, codigo, linhas: resposta.texto.split('\n'), foiErro: true }
+    case 'recusado':
+      return { id: resposta.id, codigo, linhas: [resposta.motivo], foiErro: true }
+    default:
+      return null
+  }
+}

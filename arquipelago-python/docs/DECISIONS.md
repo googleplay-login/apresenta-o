@@ -776,3 +776,96 @@ esconder ("este trecho termina em erro de propósito: rode e leia o `IndexError`
 `del` foi corrigido. Fica registrado o achado, porque ele vale mais que a correção: **validar a
 forma do conteúdo não é validar o conteúdo**. A lista de exceções mora no conteúdo, junto do trecho
 — e não no teste, onde envelheceria sem ninguém perceber.
+
+## D-044 — A conferência do exercício mede o resultado, e diz o que **não** julga
+**21/09/2026** — decisão de produto e de domínio, na Etapa 10.
+
+**Decisão:** o exercício de prática passa a ter conferência automática, e a conferência:
+
+* olha **três coisas e só três** — o que o programa imprimiu, o valor que ficou guardado nas
+  variáveis e a forma pedida pelo enunciado (número de linhas, comentário);
+* diz o que **não** julga, sempre, na tela, com um limite escrito no conteúdo e obrigatório no tipo;
+* **não é nota e não aprova a ilha**. Quem aprova é a avaliação, com as perguntas;
+* distingue três resultados diferentes, e não dois: `deuCerto`, `naoConfere` e
+  `naoDeuParaConferir`.
+
+**Contexto:** existem duas tentações numa correção automática, e as duas foram recusadas. A primeira
+é reprovar o que a correção não viu: se o programa termina antes de a sonda medir o valor, o certo é
+dizer "não deu para conferir", e não "não confere" — a segunda frase culpa o estudante por algo que
+ninguém olhou. A segunda tentação é reprovar estilo: `print("Idade:", idade)` mostra `Idade: 34`, e
+exigir a linha exata `34` reprovaria um programa certo. Por isso a conferência procura os textos
+esperados **por trecho, na ordem**, e o que vier a mais na saída não é erro: quem está aprendendo
+imprime no meio do caminho para ver o que acontece, e isso é bom sinal.
+
+**Consequência:** `src/learning/correcaoDeExercicio.ts` é puro e testado por 25 testes próprios; o
+veredito aparece **no console**, item por item (`esperado` × `obtido`), e um resumo dele aparece no
+cartão do exercício. O limite da correção é um campo obrigatório do tipo — correção sem limite
+declarado é reprovada pelo validador de conteúdo, porque prometer mais do que se mede é o defeito que
+esta decisão existe para evitar.
+
+## D-045 — A sonda viaja junto com o programa: uma execução, e o que é medida sai da tela
+**21/09/2026** — decisão técnica e de honestidade, na Etapa 10.
+
+**Decisão:** para conferir valores guardados, o projeto **acrescenta linhas marcadas ao fim do
+programa do estudante** e roda tudo numa execução só. Cada linha da sonda imprime o marcador
+`§conferencia§` seguido de JSON com o índice, o `type(...).__name__`, o `repr(...)` e o `str(...)` do
+valor. A sonda usa o mesmo interpretador e o mesmo estado de variáveis do programa; as linhas da
+sonda são **retiradas da saída mostrada** — o que a pessoa vê é a saída do programa dela.
+
+**Contexto:** a alternativa era rodar o programa duas vezes, uma para ver a saída e outra para medir
+variáveis. Ela mediria outra coisa: um programa que muda de valor a cada execução (ou que depende de
+estado que não se repete) daria uma leitura que não corresponde ao que a pessoa viu. Além disso, o
+`repr` é o que permite distinguir `7.0` de `7` — e essa diferença é justamente o que a unidade 2
+ensina.
+
+**Consequência — e o que isto não é:** a sonda é um instrumento declarado, não um teste secreto.
+Se o programa do estudante imprimir o marcador por conta própria, a linha é lida como sonda — e isso
+está escrito no limite da correção, na tela. O corte do bloco é feito numa linha-comentário própria
+(`LINHA_DA_SONDA`), porque sem esse corte o comentário da sonda faria um programa **sem comentário
+nenhum** passar no exercício que exige comentário. As expressões das sondas são escritas por nós e
+verificadas no interpretador de verdade (`src/python/pyodideDeVerdade.test.ts`): uma sonda quebrada
+não pode chegar à tela como se fosse culpa de quem está aprendendo.
+
+## D-046 — Exercício conferido entra no progresso — e não aprova nada
+**21/09/2026** — decisão de domínio e de persistência, na Etapa 10.
+
+**Decisão:** quando a conferência diz "tudo confere", o identificador do exercício é guardado no
+progresso da unidade (`exerciciosResolvidos`). Esse marcador:
+
+* **não aprova** a unidade, **não conta tentativa** e **não muda nota**;
+* **não aceita** exercício de unidade bloqueada, nem identificador que a unidade não declara;
+* **não desfaz**: conferir de novo o que já estava conferido devolve o mesmo progresso — mesma
+  identidade, nenhuma gravação nova no navegador;
+* só registra `deuCerto`. "Ainda não confere" é caminho, não conquista; "não deu para conferir" é
+  falta de medida.
+
+**Contexto:** sem guardar, o selo "conferido" desapareceria ao recarregar a página — e a aba promete,
+no cartão, que o resultado está guardado. Ao mesmo tempo, deixar esse marcador abrir a ilha seguinte
+transformaria a regra dos 80% em enfeite: bastaria conferir três exercícios. As duas coisas são
+verdade ao mesmo tempo, e a decisão é manter as duas explícitas, na tela e no domínio.
+
+**Consequência:** a lista de exercícios de cada unidade passou a fazer parte do percurso que a tela
+entrega ao domínio (`src/content/percursoDoConteudo.ts`, montado a partir do próprio conteúdo). Um
+teste percorre o conteúdo real e marca **todos os 12 exercícios**, conferindo que nenhum é recusado e
+que, depois de todos, nenhuma unidade fica aprovada. O selo na tela diz, na mesma frase, que o
+resultado está guardado e que isso não aprova a ilha.
+
+## D-047 — O formato do progresso passou a validar cada marcador na versão em que ele nasceu
+**21/09/2026** — decisão de persistência, na Etapa 10.
+
+**Decisão:** `VERSAO_DO_PROGRESSO = 3`. `exerciciosResolvidos` é validado **a partir da versão 3** e,
+nas versões 1 e 2, é opcional — quando falta, a migração cria a lista vazia. A validação deixou de ser
+um `if` por versão e passou a ser: *marcador que ainda não existia naquela versão pode faltar; da
+versão em que ele nasce em diante, é obrigatório; se vier com outro tipo, o registro inteiro é
+recusado.*
+
+**Contexto:** marcar conquista por conta própria na migração seria atribuir ao estudante um ato que
+ele não praticou — no caso dos exercícios, uma conferência que nunca aconteceu. E aceitar arquivo da
+versão atual **sem** o campo seria adivinhar o que faltou. Com a regra nova, acrescentar o próximo
+marcador é acrescentar uma versão e uma linha na validação, sem reescrever o histórico.
+
+**Consequência:** o aviso de migração passou a listar os marcadores que começam vazios, em vez de
+falar só da leitura. Os testes cobrem: migração da versão 1 (aprovação preservada, leitura e
+exercícios vazios), migração da 2 (leitura preservada, exercícios vazios), arquivo da versão atual
+**sem** o campo (recusado, com aviso), lista com item que não é texto (recusada) e gravação/releitura
+de um exercício conferido com o armazenamento de verdade do jsdom.

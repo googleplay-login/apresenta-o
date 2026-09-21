@@ -23,12 +23,12 @@ import {
 /**
  * Versão do formato de progresso.
  *
- * A versão 2 acrescentou `leituraFeita` a cada unidade. A migração da 1 para a 2
- * preserva o que já estava guardado e é feita na leitura
- * (`persistence/progressoSalvo.ts`): quem aprovou uma ilha antes desta mudança
- * **não perde nada** por causa de um marcador de leitura.
+ * A versão 2 acrescentou `leituraFeita` a cada unidade; a 3 acrescentou
+ * `exerciciosResolvidos`. As migrações preservam o que já estava guardado e são
+ * feitas na leitura (`persistence/progressoSalvo.ts`): quem aprovou uma ilha
+ * antes desta mudança **não perde nada** por causa de um marcador novo (D-047).
  */
-export const VERSAO_DO_PROGRESSO = 2
+export const VERSAO_DO_PROGRESSO = 3
 
 export type ProgressoDaUnidade = {
   readonly aprovada: boolean
@@ -44,10 +44,24 @@ export type ProgressoDaUnidade = {
    * exatamente o tipo de coisa que se esquece entre uma sessão e outra.
    */
   readonly leituraFeita: boolean
+  /**
+   * Identificadores dos exercícios de prática **conferidos com tudo certo**.
+   *
+   * O que entra aqui: exercício cuja conferência automática disse "tudo
+   * confere". O que **não** entra: tentativa que ainda não confere (isso é
+   * caminho, não conquista), e conferência que não conseguiu olhar.
+   *
+   * O que isto **não** é: aprovação. Exercício conferido não abre ilha, não conta
+   * tentativa e não muda nota — quem aprova é a avaliação (D-046).
+   */
+  readonly exerciciosResolvidos: readonly string[]
 }
 
-/** Registro de unidade como ele era na versão 1 do formato — sem `leituraFeita`. */
-export type ProgressoDaUnidadeAntigo = Omit<ProgressoDaUnidade, 'leituraFeita'>
+/** Registro de unidade como ele era na versão 1 — sem `leituraFeita` nem exercícios. */
+export type ProgressoDaUnidadeAntigo = Omit<
+  ProgressoDaUnidade,
+  'leituraFeita' | 'exerciciosResolvidos'
+>
 
 /**
  * Progresso do estudante. Estrutura **serializável e versionada**: apenas
@@ -62,6 +76,15 @@ export type Progresso = {
 export type UnidadeDoPercurso = {
   readonly id: string
   readonly ordem: number
+  /**
+   * Identificadores dos exercícios desta unidade, quando conhecidos.
+   *
+   * Opcional de propósito: as regras de percurso não precisam de conteúdo, e os
+   * testes de domínio montam percursos inventados. Quando a lista existe, marcar
+   * exercício confere se ele é **desta** unidade — sem isso, um identificador
+   * errado entraria no progresso e nunca apareceria na tela.
+   */
+  readonly exercicios?: readonly string[]
 }
 
 export type EstadoDaUnidade = 'bloqueada' | 'disponivel' | 'aprovada'
@@ -204,12 +227,7 @@ export function registrarResultado(
     )
   }
 
-  const anterior: ProgressoDaUnidade = progressoDaUnidade(progresso, unidadeId) ?? {
-    aprovada: false,
-    tentativas: 0,
-    melhorNota: null,
-    leituraFeita: false,
-  }
+  const anterior: ProgressoDaUnidade = progressoDaUnidade(progresso, unidadeId) ?? progressoDeUnidadeVazia()
 
   const melhorNota =
     anterior.melhorNota === null || compararNotas(resultado, anterior.melhorNota) > 0
@@ -220,8 +238,10 @@ export function registrarResultado(
     aprovada: anterior.aprovada || foiAprovado(resultado),
     tentativas: anterior.tentativas + 1,
     melhorNota,
-    // Registrar nota não mexe no marcador de leitura: são coisas diferentes.
+    // Registrar nota não mexe no marcador de leitura nem nos exercícios: são
+    // coisas diferentes, e misturá-las faria a nota decidir o que não é dela.
     leituraFeita: anterior.leituraFeita,
+    exerciciosResolvidos: anterior.exerciciosResolvidos,
   }
 
   return {
@@ -282,12 +302,7 @@ export function marcarLeituraFeita(
     )
   }
 
-  const anterior: ProgressoDaUnidade = progressoDaUnidade(progresso, unidadeId) ?? {
-    aprovada: false,
-    tentativas: 0,
-    melhorNota: null,
-    leituraFeita: false,
-  }
+  const anterior: ProgressoDaUnidade = progressoDaUnidade(progresso, unidadeId) ?? progressoDeUnidadeVazia()
 
   if (anterior.leituraFeita === feita) {
     return progresso
@@ -305,4 +320,89 @@ export function marcarLeituraFeita(
 /** Verdadeiro se o estudante já marcou a leitura desta unidade como feita. */
 export function leituraFoiFeita(progresso: Progresso, unidadeId: string): boolean {
   return progressoDaUnidade(progresso, unidadeId)?.leituraFeita ?? false
+}
+
+/** Registro inicial de uma unidade que ainda não foi tocada. */
+function progressoDeUnidadeVazia(): ProgressoDaUnidade {
+  return {
+    aprovada: false,
+    tentativas: 0,
+    melhorNota: null,
+    leituraFeita: false,
+    exerciciosResolvidos: [],
+  }
+}
+
+/**
+ * Marca um exercício de prática como conferido com tudo certo.
+ *
+ * O que esta função **não** faz, e é o ponto dela:
+ *
+ *  - não aprova a unidade, não conta tentativa e não muda nota (D-046). Se
+ *    aprovasse, bastaria conferir três exercícios para abrir a ilha seguinte, e
+ *    a regra dos 80% viraria enfeite;
+ *  - não aceita exercício de unidade bloqueada: quem não chegou à ilha não tem
+ *    exercício dela para conferir;
+ *  - não aceita identificador desconhecido, quando a unidade declara os seus —
+ *    um id errado ficaria guardado para sempre sem aparecer em lugar nenhum;
+ *  - não desfaz: conferir de novo o que já estava conferido devolve o **mesmo**
+ *    progresso (a identidade não muda, e por isso nada é regravado).
+ *
+ * Quem chama é o redutor, a partir do resultado da conferência — e só quando a
+ * conferência disse "tudo confere".
+ */
+export function marcarExercicioResolvido(
+  progresso: Progresso,
+  unidades: readonly UnidadeDoPercurso[],
+  unidadeId: string,
+  exercicioId: string,
+): Progresso {
+  if (exercicioId.trim() === '') {
+    throw new Error('Exercício sem identificador não pode ser marcado como conferido.')
+  }
+
+  const ordenadas = ordenarUnidades(unidades)
+  const unidade = exigirUnidade(ordenadas, unidadeId)
+
+  if (estadoDaUnidade(progresso, ordenadas, unidadeId) === 'bloqueada') {
+    throw new Error(
+      `A unidade ${unidadeId} está bloqueada. Não há exercício a conferir antes de aprovar a unidade anterior.`,
+    )
+  }
+
+  if (unidade.exercicios !== undefined && !unidade.exercicios.includes(exercicioId)) {
+    throw new Error(
+      `O exercício ${exercicioId} não é da unidade ${unidadeId}. O progresso não pode guardar um exercício que não existe.`,
+    )
+  }
+
+  const anterior = progressoDaUnidade(progresso, unidadeId) ?? progressoDeUnidadeVazia()
+  if (anterior.exerciciosResolvidos.includes(exercicioId)) {
+    return progresso
+  }
+
+  return {
+    versao: progresso.versao,
+    unidades: {
+      ...progresso.unidades,
+      [unidadeId]: {
+        ...anterior,
+        exerciciosResolvidos: [...anterior.exerciciosResolvidos, exercicioId],
+      },
+    },
+  }
+}
+
+/** Exercícios já conferidos de uma unidade, na ordem em que foram conferidos. */
+export function exerciciosConferidos(progresso: Progresso, unidadeId: string): readonly string[] {
+  return progressoDaUnidade(progresso, unidadeId)?.exerciciosResolvidos ?? []
+}
+
+/** Verdadeiro se o exercício já foi conferido com tudo certo. */
+export function exercicioFoiConferido(
+  progresso: Progresso,
+  unidadeId: string,
+  exercicioId: string,
+): boolean {
+  return exerciciosConferidos(progresso, unidadeId).includes(exercicioId)
 }

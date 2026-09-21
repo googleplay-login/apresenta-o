@@ -1,5 +1,6 @@
 import type { Progresso, UnidadeDoPercurso } from '../learning/percurso'
 import {
+  marcarExercicioResolvido,
   marcarLeituraFeita,
   progressoDaUnidade,
   progressoInicial,
@@ -96,6 +97,14 @@ export type Acao =
    * `enviar`, pelo domínio. O redutor só repassa o pedido a `marcarLeituraFeita`.
    */
   | { readonly tipo: 'marcarLeitura'; readonly feita: boolean }
+  /**
+   * Guarda um exercício de prática como conferido com tudo certo.
+   *
+   * Chega aqui **depois** da conferência automática, e só quando ela disse que
+   * tudo confere. Como o marcador de leitura, não aprova, não conta tentativa e
+   * não muda nota: quem aprova a ilha é `enviar`, pelo domínio (D-046).
+   */
+  | { readonly tipo: 'marcarExercicio'; readonly exercicioId: string }
   | { readonly tipo: 'fecharUnidade' }
   | { readonly tipo: 'definirFoco'; readonly foco: Foco }
   | { readonly tipo: 'definirCamera'; readonly camera: ModoDeCamera }
@@ -249,6 +258,29 @@ export function criarRedutor(unidades: readonly UnidadeDoPercurso[]) {
         } catch {
           // Unidade bloqueada ou desconhecida: o domínio recusou, e o estado
           // fica como estava. Não existe caminho alternativo que contorne isso.
+          return estado
+        }
+      }
+
+      case 'marcarExercicio': {
+        const { unidadeId } = estado.sessao
+        if (unidadeId === null) {
+          return estado
+        }
+
+        try {
+          const progresso = marcarExercicioResolvido(
+            estado.progresso,
+            unidades,
+            unidadeId,
+            acao.exercicioId,
+          )
+          // Exercício conferido não mexe no passo, nas respostas nem no
+          // resultado: é registro, e registro não conduz o ciclo.
+          return { ...estado, progresso }
+        } catch {
+          // Unidade bloqueada, unidade desconhecida ou exercício que não é desta
+          // unidade: o domínio recusou e o estado fica como estava.
           return estado
         }
       }

@@ -1489,3 +1489,126 @@ kbd {
   color: var(--texto-secundario);
   font-size: var(--fonte-chip);
 }
+
+/*
+ * A conferência do exercício (Etapa 10). Ela aparece **depois** da saída do
+ * programa, e não no lugar dela: primeiro a pessoa vê o que o programa fez,
+ * depois o que a conferência olhou.
+ */
+.console__conferir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-sm);
+  margin-top: var(--espaco-md);
+  padding: var(--espaco-sm);
+  background-color: var(--painel-fundo);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+}
+
+.console__escolha {
+  padding: var(--espaco-xs) var(--espaco-sm);
+  color: var(--texto-principal);
+  background-color: var(--painel-fundo-elevado);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-linha);
+  font: inherit;
+}
+
+.console__conferir .console__ajuda {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.conferencia {
+  margin-top: var(--espaco-lg);
+  padding: var(--espaco-md);
+  background-color: var(--painel-fundo-elevado);
+  border: 1px solid var(--painel-borda);
+  border-radius: var(--raio-painel);
+}
+
+.conferencia__titulo {
+  margin: 0 0 var(--espaco-xs);
+  font-size: var(--fonte-subtitulo);
+}
+
+.conferencia__situacao {
+  margin: 0 0 var(--espaco-xs);
+  font-weight: 700;
+}
+
+.conferencia__situacao--deuCerto {
+  color: var(--acento-verde);
+}
+
+.conferencia__situacao--naoConfere {
+  color: var(--acento-ambar);
+}
+
+.conferencia__explicacao {
+  margin: 0 0 var(--espaco-sm);
+}
+
+.conferencia__itens {
+  margin: 0 0 var(--espaco-sm);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--espaco-xs);
+}
+
+.conferencia__item {
+  padding-left: var(--espaco-sm);
+  border-left: 3px solid var(--painel-borda);
+  font-size: var(--fonte-legenda);
+}
+
+.conferencia__item--deuCerto {
+  border-left-color: var(--acento-verde);
+}
+
+.conferencia__item--naoConfere {
+  border-left-color: var(--acento-ambar);
+}
+
+.conferencia__marca {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: var(--fonte-chip);
+}
+
+.conferencia__item--naoDeuParaConferir .conferencia__marca {
+  color: var(--texto-secundario);
+}
+
+.conferencia__par code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.conferencia__limite {
+  margin: 0;
+  color: var(--texto-secundario);
+  font-size: var(--fonte-chip);
+}
+
+.exercicio__resultado {
+  margin: var(--espaco-xs) 0 0;
+  padding-left: var(--espaco-sm);
+  border-left: 3px solid var(--painel-borda);
+  font-size: var(--fonte-legenda);
+}
+
+.exercicio__resultado--deuCerto {
+  border-left-color: var(--acento-verde);
+}
+
+.exercicio__resultado--naoConfere {
+  border-left-color: var(--acento-ambar);
+}
+
+.exercicio__acoes {
+  margin: var(--espaco-sm) 0 0;
+}

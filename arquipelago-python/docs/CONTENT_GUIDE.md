@@ -47,6 +47,40 @@ E, ao final, a avaliação — que é assunto de `STATE_MACHINE.md`.
 O marcador "leitura feita" é **registro da pessoa**, e não requisito: quem escreve o conteúdo não deve
 prometer em texto que marcar a leitura libera alguma coisa, porque não libera (D-033).
 
+Do mesmo tipo é o selo de exercício conferido: ele diz **o que foi medido**, e não que a ilha está
+sendo vencida. Nenhum texto de conteúdo pode sugerir que conferir exercício aprova a unidade — quem
+aprova é a avaliação (D-046).
+
+## A correção automática de um exercício
+
+Um exercício de prática pode trazer `correcao`. Três regras, e nenhuma delas é opcional:
+
+1. **Toda correção declara o próprio limite** (`limite`, 40 caracteres ou mais). É a frase que aparece
+   na tela junto do resultado, dizendo o que aquela conferência **não** olha. Sem ela, o validador
+   recusa o conteúdo.
+2. **Correção é medida, não julgamento**: ela olha a saída, os valores que ficaram guardados e a forma
+   pedida — e mais nada. Nada de exigir a solução bonita, nada de exigir um caminho único.
+3. **O que não roda no console da ilha não tem correção**: em vez dela, o exercício traz
+   `naoRodaNoConsole` com o motivo escrito, e a tela mostra esse motivo ao lado do exercício.
+
+Os campos, com o que cada um significa:
+
+| Campo | O que faz | Cuidado que importa |
+|---|---|---|
+| `saidaEsperada` | Textos que devem aparecer **na saída**, na ordem | A procura é **por trecho** e em ordem: `print("Idade:", idade)` mostra `Idade: 34` e passa. Escreva o pedaço que precisa aparecer, não a linha inteira, se houver mais de um jeito certo de imprimir |
+| `valoresEsperados[].expressao` | Expressão Python medida **depois** do programa rodar (`nome`, `len(cores)`, `sorted(numeros)`) | É escrita por nós e conferida no interpretador de verdade por `src/python/pyodideDeVerdade.test.ts`. Uma expressão quebrada não pode chegar à tela |
+| `valoresEsperados[].igualA` | O valor exato, como o Python o mostra (`'Ana'`, `40`, `7.0`, `[1, 2]`) | É `repr`, e é isso que distingue `7.0` de `7`: use quando a diferença importa |
+| `valoresEsperados[].tipoEsperado` | Exige o **tipo**: `str`, `int`, `float`, `bool`, `list`, `tuple`, `dict` | A tela traduz ("um número com casas decimais"), então escreva o tipo, não a tradução |
+| `valoresEsperados[].apareceNaSaida` | O valor guardado precisa aparecer na saída | Use quando o enunciado pede para mostrar um valor sem exigir o formato exato |
+| `estrutura.linhasNaoVazias` | Quantas linhas o programa deve imprimir | Conta linhas **não vazias**, e conta a saída do programa (a linha da sonda não conta) |
+| `estrutura.comentario` | Exige um comentário no **código do estudante** | Vale para o exercício que pede explicação escrita junto do código |
+
+Um exercício sem `correcao` precisa de `naoRodaNoConsole`: o conteúdo diz por que ele não é conferido
+aqui, e a tela mostra o motivo. O validador cobra as duas coisas, e o teste que roda o conteúdo real no
+interpretador de verdade cobra o que o validador não alcança: que cada solução de referência **passa**
+na própria correção, e que sonda quebrada aparece como sonda quebrada, e não como erro de quem
+estudou.
+
 ## Os diagramas
 
 Um diagrama é **dado**, não imagem: título, descrição e uma lista de partes, cada uma com rótulo,
@@ -173,6 +207,9 @@ exibida exatamente como aparece, em bloco de código.
 - [ ] O exemplo é próprio e roda no Python atual.
 - [ ] Existe aviso de versão, se o assunto mudou desde o livro.
 - [ ] Os exercícios são próprios e incluem prática de escrever código.
+- [ ] Cada exercício com `correcao` declara o `limite` do que a conferência olha, e a solução de
+      referência passa na própria correção (cobrado rodando Python de verdade).
+- [ ] Cada exercício sem `correcao` diz, em `naoRodaNoConsole`, por que ele não é conferido aqui.
 - [ ] A avaliação tem 5 perguntas e aprova com 4 acertos.
 - [ ] As posições das alternativas corretas usam as quatro posições, conferidas **nesta unidade**.
 - [ ] O enunciado da avaliação diz que não há antifraude.

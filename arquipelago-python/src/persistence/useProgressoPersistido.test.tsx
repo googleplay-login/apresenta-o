@@ -3,9 +3,10 @@
 import { useMemo, useReducer } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useProgressoPersistido } from './useProgressoPersistido'
-import { CHAVE_DO_PROGRESSO } from './progressoSalvo'
-import { VERSAO_DO_PROGRESSO } from '../learning/percurso'
+import { CHAVE_DO_PROGRESSO, lerProgresso } from './progressoSalvo'
+import { VERSAO_DO_PROGRESSO, exercicioFoiConferido } from '../learning/percurso'
 import { criarRedutor, estadoInicial } from '../state/sessao'
 
 /**
@@ -26,8 +27,8 @@ import { criarRedutor, estadoInicial } from '../state/sessao'
  */
 
 const PERCURSO = [
-  { id: 'u01', ordem: 1 },
-  { id: 'u02', ordem: 2 },
+  { id: 'u01', ordem: 1, exercicios: ['e1-1', 'e1-2'] },
+  { id: 'u02', ordem: 2, exercicios: ['e2-1'] },
 ]
 
 const PROGRESSO_GUARDADO = {
@@ -38,6 +39,7 @@ const PROGRESSO_GUARDADO = {
       tentativas: 2,
       melhorNota: { acertos: 4, total: 5 },
       leituraFeita: true,
+      exerciciosResolvidos: [],
     },
   },
 }
@@ -151,5 +153,95 @@ describe('aviso de gravação', () => {
     const aviso = await screen.findByRole('status')
     expect(aviso.textContent).toMatch(/não foi possível salvar/i)
     expect(aviso.textContent).toMatch(/recarregar/i)
+  })
+})
+
+describe('exercício conferido chega ao armazenamento, e volta dele', () => {
+  /**
+   * Cobaia com o mínimo do ciclo: abrir a unidade e conferir o exercício.
+   *
+   * Os dois despachos acontecem no mesmo clique, e o redutor — que é o de
+   * verdade — recebe os dois em ordem. Nada aqui simula a tela: o que se prova é
+   * o caminho ação → domínio → progresso → gravação.
+   */
+  function CobaiaComExercicio() {
+    const redutor = useMemo(() => criarRedutor(PERCURSO), [])
+    const [estado, despachar] = useReducer(redutor, undefined, () => estadoInicial())
+
+    useProgressoPersistido({
+      progresso: estado.progresso,
+      avisoAtual: estado.avisoDeGravacao,
+      despachar,
+    })
+
+    return (
+      <>
+        <p>{estado.progresso.unidades['u01']?.aprovada ? 'aprovada' : 'zerada'}</p>
+        <button
+          type="button"
+          onClick={() => {
+            despachar({ tipo: 'abrirUnidade', unidadeId: 'u01', totalDePerguntas: 5 })
+            despachar({ tipo: 'marcarExercicio', exercicioId: 'e1-1' })
+          }}
+        >
+          abrir e conferir
+        </button>
+      </>
+    )
+  }
+
+  /** O que está gravado, como objeto, com os campos que este teste confere. */
+  type Gravado = {
+    readonly versao: number
+    readonly unidades: Record<
+      string,
+      {
+        readonly aprovada: boolean
+        readonly tentativas: number
+        readonly leituraFeita: boolean
+        readonly exerciciosResolvidos: readonly string[]
+      }
+    >
+  }
+
+  function guardado(): Gravado {
+    return JSON.parse(window.localStorage.getItem(CHAVE_DO_PROGRESSO) ?? '{}') as Gravado
+  }
+
+  it('grava o exercício conferido junto do resto do progresso', async () => {
+    render(<CobaiaComExercicio />)
+    await waitFor(() => expect(screen.getByText('zerada')).toBeTruthy())
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'abrir e conferir' }))
+
+    await waitFor(() => {
+      expect(guardado().unidades['u01']?.exerciciosResolvidos).toEqual(['e1-1'])
+    })
+
+    // Guardar exercício não é aprovar: a nota, as tentativas e a leitura
+    // continuam exatamente como estavam.
+    const unidade = guardado().unidades['u01']
+    expect(unidade?.aprovada).toBe(false)
+    expect(unidade?.tentativas).toBe(0)
+    expect(unidade?.leituraFeita).toBe(false)
+  })
+
+  it('o exercício conferido sobrevive à releitura do arquivo', async () => {
+    // O que este teste protege: recarregar a página não pode apagar o que a
+    // pessoa conquistou. Grava, desmonta, relê o mesmo armazenamento e confere
+    // que o domínio reconhece o exercício como conferido.
+    render(<CobaiaComExercicio />)
+    await waitFor(() => expect(screen.getByText('zerada')).toBeTruthy())
+    await userEvent.setup().click(screen.getByRole('button', { name: 'abrir e conferir' }))
+    await waitFor(() => {
+      expect(guardado().unidades['u01']?.exerciciosResolvidos).toEqual(['e1-1'])
+    })
+
+    cleanup()
+    const lido = lerProgresso(window.localStorage)
+    expect(lido.aviso).toBeNull()
+    expect(exercicioFoiConferido(lido.progresso, 'u01', 'e1-1')).toBe(true)
+    expect(exercicioFoiConferido(lido.progresso, 'u01', 'e1-2')).toBe(false)
+    expect(exercicioFoiConferido(lido.progresso, 'u02', 'e2-1')).toBe(false)
   })
 })

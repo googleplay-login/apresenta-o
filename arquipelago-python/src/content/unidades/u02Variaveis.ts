@@ -172,28 +172,63 @@ export const u02Variaveis: ConteudoDaUnidade = {
     {
       id: 'e2-1',
       enunciado:
-        'Crie três variáveis: seu nome, sua idade e sua altura em metros. Mostre cada uma em uma linha, com um rótulo antes do valor.',
+        'Crie três variáveis — `nome`, `idade` e `altura` (em metros) — e mostre cada uma em uma linha, com um rótulo antes do valor.',
       dica: 'Para juntar o rótulo com o número, use `str()` em volta do número.',
       conferencia:
         'As três linhas aparecem, e a altura é mostrada com a parte decimal (algo como 1.72).',
       solucao:
         'nome = "Ana"\nidade = 34\naltura = 1.72\nprint("Nome: " + nome)\nprint("Idade: " + str(idade))\nprint("Altura: " + str(altura))',
+      correcao: {
+        valoresEsperados: [
+          { rotulo: '`nome` guarda um texto', expressao: 'nome', tipoEsperado: 'str' },
+          {
+            rotulo: '`idade` guarda um número inteiro',
+            expressao: 'idade',
+            tipoEsperado: 'int',
+          },
+          {
+            rotulo: '`altura` guarda um número com casas decimais',
+            expressao: 'altura',
+            tipoEsperado: 'float',
+          },
+        ],
+        estrutura: { linhasNaoVazias: 3 },
+        limite:
+          'A conferência olha o tipo das três variáveis e conta três linhas impressas. Ela não sabe o seu nome, a sua idade nem a sua altura, e não julga os rótulos que você escolher.',
+      },
     },
     {
       id: 'e2-2',
       enunciado:
-        'Guardou 47 figurinhas e ganhou mais 8. Usando uma variável, mostre quantas ficaram depois de dar 15 para um amigo. O resultado deve ser 40.',
+        'Você guardou 47 figurinhas e ganhou mais 8. Usando uma variável chamada `figurinhas`, mostre quantas ficaram depois de dar 15 para um amigo. O resultado deve ser 40.',
       dica: 'Você pode reutilizar a mesma variável mais de uma vez, guardando o novo valor por cima do antigo.',
       conferencia: 'O número mostrado na tela é 40.',
       solucao: 'figurinhas = 47\nfigurinhas = figurinhas + 8\nfigurinhas = figurinhas - 15\nprint(figurinhas)',
+      correcao: {
+        saidaEsperada: ['40'],
+        valoresEsperados: [
+          { rotulo: '`figurinhas` termina valendo 40', expressao: 'figurinhas', igualA: '40' },
+        ],
+        limite:
+          'A conferência procura o 40 na saída e mede a variável `figurinhas` quando o programa termina — é isso que pega o caso de imprimir 40 sem guardar nada. Ela não olha como você fez a conta.',
+      },
     },
     {
       id: 'e2-3',
       enunciado:
-        'Escreva um programa que mostre a média de três notas (7, 9 e 5) e que tenha um comentário explicando o cálculo. A média deve dar 7.0.',
+        'Guarde numa variável chamada `media` a média de três notas (7, 9 e 5), mostre a média na tela e deixe um comentário explicando o cálculo. A média deve dar 7.0.',
       dica: 'A soma das notas dividida por 3 usa `/`, que devolve decimal.',
       conferencia: 'A tela mostra 7.0.',
       solucao: '# A média é a soma das três notas dividida pela quantidade de notas\nmedia = (7 + 9 + 5) / 3\nprint(media)',
+      correcao: {
+        saidaEsperada: ['7.0'],
+        valoresEsperados: [
+          { rotulo: '`media` termina valendo 7.0', expressao: 'media', igualA: '7.0' },
+        ],
+        estrutura: { comentario: true },
+        limite:
+          'A conferência procura o 7.0 na saída, mede a variável `media` e confere que existe uma linha de comentário. Ela não lê o comentário: se ele explica o cálculo é você quem julga.',
+      },
     },
   ],
 

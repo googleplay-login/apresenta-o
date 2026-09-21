@@ -28,10 +28,10 @@ Consequências práticas, e o motivo de cada uma:
 |---|---|---|
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
 | `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. **Sem regra de aprovação** | Existe e testado |
-| `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação | Existe e testado |
-| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios e perguntas | Existe para 4 unidades |
+| `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação e a conferência do exercício (sonda, comparação, veredito) | Existe e testado |
+| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios (com correção declarada) e perguntas. Também o percurso que o domínio enxerga (`percursoDoConteudo.ts`) | Existe para 4 unidades |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
-| `src/persistence/` | Gravação e leitura do progresso, versionado (formato **2**, com migração da versão 1) e com aviso honesto de falha | Existe e testado |
+| `src/persistence/` | Gravação e leitura do progresso, versionado (formato **3**, com migração da 1 e da 2) e com aviso honesto de falha | Existe e testado |
 | `src/python/` | Pyodide em Web Worker, sob demanda: protocolo puro, núcleo, trabalhador, gancho do React e o endereço dos arquivos do interpretador | Existe e testado (D-040 a D-043) |
 | `src/ui/` | Componentes, painéis do ciclo (missão, estudo com leitura, prática, avaliação, resultado), tema, tokens visuais e mostruário de cores | Existe |
 | `src/types/` | Apenas tipos transversais | Vazio |
@@ -174,6 +174,32 @@ para texto **antes** de sair, e o proxy é destruído (`descreverResultado`).
 **Recomeçar é descartar.** Não há como interromper um laço infinito por dentro do Python: o botão
 *Recomeçar do zero* chama `terminate()` no Worker e começa outro. O aviso de 15 s **não** interrompe
 nada; ele só faz a tela dizer que algo demora, em vez de ficar parada parecendo travada (D-041).
+
+## A conferência do exercício: o que roda, e o que se compara
+
+A prática deixou de ser só enunciado e solução: cada exercício que **pode** ser conferido traz a
+correção declarada no conteúdo, e a conferência acontece no domínio, não no componente.
+
+| Passo | Onde vive | O que acontece |
+|---|---|---|
+| 1. O conteúdo declara o que espera | `src/content/unidades/u0*.ts` | `saidaEsperada`, `valoresEsperados` (rótulo, expressão Python, o que deve dar), `estrutura` e o **limite** — obrigatório |
+| 2. A sonda é montada | `src/learning/correcaoDeExercicio.ts` (`programaDaConferencia`) | O programa do estudante ganha uma linha-comentário e um `print` marcado por valor a medir (D-045) |
+| 3. Roda uma vez só | Worker, o mesmo do console | O programa roda como o estudante escreveu, com a sonda no fim |
+| 4. A sonda sai da saída | `separarSondagem` | As linhas `§conferencia§…` viram medidas; o que fica para a tela é a saída do programa |
+| 5. O veredito é calculado | `conferirExercicio` | Compara saída (por trecho, na ordem), valores (`repr`/tipo) e forma; devolve item por item |
+| 6. O veredito aparece | `src/ui/paineis/ConsoleDoPython.tsx` e `PraticaDaUnidade.tsx` | No console, item por item; no cartão, um resumo e o selo de conferido |
+| 7. O que deu certo é guardado | `src/state/sessao.ts` → `learning/percurso.ts` | `marcarExercicio` registra o identificador; **não** aprova, não conta tentativa, não muda nota (D-046) |
+
+**Por que a regra não mora no componente:** o mesmo motivo das pontes e da avaliação. O componente
+mostra o que o domínio decidiu; quem decide é `correcaoDeExercicio.ts`, que é puro e testado sem
+tela. As três situações do veredito existem justamente para não mentir: `deuCerto`, `naoConfere` e
+`naoDeuParaConferir` — a última diz que a conferência **não olhou**, e não que o exercício está
+errado (D-044).
+
+**O que a conferência não faz, e está escrito na tela:** ela não julga estilo, não exige uma solução
+única e não impede quem quiser enganar. Imprimir o número certo sem calcular nada passa na conferência
+da saída — é para isso que existem as sondas de valor, e é por isso que o limite de cada correção
+aparece junto do resultado.
 
 ## A cena em duas partes, e por quê
 

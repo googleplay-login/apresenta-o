@@ -56,6 +56,10 @@
 | Aprovação anterior à tentativa atual | `sessao.aprovadaAntes`, fotografada **ao abrir** a ilha |
 | Leitura feita (registro, não permissão) | `ProgressoDaUnidade.leituraFeita`, via `marcarLeituraFeita()`; ver D-033 |
 | Tentativas e melhor nota da unidade | `ProgressoDaUnidade.tentativas` e `.melhorNota`, lidas pelo painel — nunca contadas na tela (D-037) |
+| Exercício conferido (registro, não permissão) | `ProgressoDaUnidade.exerciciosResolvidos`, via `marcarExercicioResolvido()`; ver D-046 |
+| Estado do console de Python | `src/python/usePython.ts`: `parado`, `carregando`, `pronto`, `falhou`, mais `demorando` (aviso de 15 s) e falha de recusa |
+| Veredito da conferência | `src/learning/correcaoDeExercicio.ts`: `deuCerto`, `naoConfere`, `naoDeuParaConferir` — os três são diferentes de propósito (D-044) |
+| Veredito por exercício, na visita atual | `PraticaDaUnidade`, em estado de componente: não vai para disco; o que vai é o identificador do exercício que deu certo |
 
 Os estados de tela ficam em `src/state/`, e não em `src/learning/`: eles descrevem **onde o
 estudante está na interface**, e não mudam nenhuma regra de aprovação. Nenhum deles desbloqueia
@@ -93,7 +97,11 @@ resposta que não mude quando a aprovação acontece (D-023).
 14. **A alternativa correta não se destaca pelo tamanho**, e a unidade não pode ter mais da metade
     das perguntas com a correta sendo a mais longa. O que se mede é entendimento, não a extensão da
     frase (D-038).
-15. **A leitura recomendada é passo visível, e o marcador de leitura não é permissão.** Marcar a
+15. **A conferência do exercício mede, não aprova.** `deuCerto` não é nota: não aprova a unidade, não
+    conta tentativa, não muda a melhor nota e não abre ponte. Quem aprova continua sendo `enviar`, pela
+    avaliação. E a conferência distingue **não confere** de **não deu para conferir**: a segunda diz
+    que ela não olhou, e não que o exercício está errado (D-044, D-046).
+16. **A leitura recomendada é passo visível, e o marcador de leitura não é permissão.** Marcar a
     leitura como feita é **registro**: não aprova a unidade, não abre ponte, não muda nota, não conta
     tentativa e não move o passo. Unidade bloqueada recusa o marcador, como recusa resultado (D-033).
 

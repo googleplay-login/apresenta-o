@@ -3,8 +3,10 @@ import { LimiteDeErro } from '../../ui/components/LimiteDeErro'
 import { PainelDaUnidade } from '../../ui/paineis/PainelDaUnidade'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
 import { conteudoDaUnidade } from '../../content/unidades'
+import { PERCURSO_DO_CONTEUDO } from '../../content/percursoDoConteudo'
 import { gabaritoDaUnidade } from '../../content/validadorDeConteudo'
 import {
+  exerciciosConferidos,
   leituraFoiFeita,
   progressoDaUnidade,
   progressoInicial,
@@ -38,7 +40,13 @@ import { chaoDoMundo, descricaoDoLugar, type Localizacao } from '../../world/map
  */
 
 const UNIDADES = PLANO_DE_UNIDADES
-const PERCURSO = UNIDADES.map((unidade) => ({ id: unidade.id, ordem: unidade.ordem }))
+/**
+ * O percurso visto pelo domínio, montado a partir do conteúdo
+ * (`content/percursoDoConteudo.ts`) porque os exercícios conferidos fazem parte
+ * dele agora. A tela não monta a própria lista: lista paralela é lista que
+ * envelhece sem ninguém perceber.
+ */
+const PERCURSO = PERCURSO_DO_CONTEUDO
 
 /**
  * A cena 3D entra por importação sob demanda.
@@ -100,6 +108,8 @@ export function Mundo() {
       ? null
       : UNIDADES.find((unidade) => unidade.id === unidadeAbertaId)?.referencia ?? null
   const leituraFeita = unidadeAbertaId === null ? false : leituraFoiFeita(estado.progresso, unidadeAbertaId)
+  const exerciciosJaConferidos =
+    unidadeAbertaId === null ? [] : exerciciosConferidos(estado.progresso, unidadeAbertaId)
   // Placar: quantas tentativas esta ilha já teve e qual foi a melhor nota. Vem
   // do progresso, e não de um contador da tela — o número precisa ser o mesmo
   // depois de recarregar a página (D-037).
@@ -439,6 +449,8 @@ export function Mundo() {
             referencia={referencia}
             leituraFeita={leituraFeita}
             aoMarcarLeitura={(feita) => despachar({ tipo: 'marcarLeitura', feita })}
+            exerciciosConferidos={exerciciosJaConferidos}
+            aoMarcarExercicio={(exercicioId) => despachar({ tipo: 'marcarExercicio', exercicioId })}
             passo={estado.sessao.passo}
             respostas={estado.sessao.respostas}
             resultado={estado.sessao.resultado}

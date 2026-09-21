@@ -17,7 +17,7 @@ Pyodide em Web Worker, carregado **sob demanda**, para o estudante rodar código
 | Arquivo | Responsabilidade |
 |---|---|
 | `protocolo.ts` | O contrato entre a aplicação e o Worker: tipos das mensagens, validação do que chega, recusas explicadas e junção da saída. **Puro** — não conhece Pyodide nem React. |
-| `interpretadorPyodide.ts` | Carrega o Pyodide e executa código. É o único arquivo que fala com a biblioteca; roda **dentro** do Worker. |
+| `interpretadorPyodide.ts` | Carrega o Pyodide e executa código. É o único arquivo que fala com a biblioteca; roda **dentro** do Worker. Cada execução recebe um **espaço de nomes novo**, destruído no fim: sem isso, a variável de uma execução sobrevivia e a conferência do exercício media o programa anterior. |
 | `nucleoDoPython.ts` | O que acontece a cada pedido de execução: tenta rodar, captura o que o Python escreveu, e transforma falha em resposta — nunca lança. |
 | `trabalhadorDoPython.ts` | A fiação: escuta o Worker e chama o núcleo. Sem regra de negócio (o teste proíbe). |
 | `usePython.ts` | O gancho do React: cria o Worker no clique, carrega uma vez, executa, avisa quando algo demora e sabe reiniciar. |
@@ -34,14 +34,18 @@ binário não pertencem a um repositório público — e é reconstruída a part
 
 ## Estado
 
-**Prova de conceito implementada** (Etapa 9). Funciona ponta a ponta em teste: `protocolo.test.ts` e
+**Implementado** (Etapas 9 e 10). Funciona ponta a ponta em teste: `protocolo.test.ts` e
 `nucleoDoPython.test.ts` (puros), `pyodideDeVerdade.test.ts` (o Pyodide **de verdade**, rodando em
-Node, executando o conteúdo real das quatro unidades) e `src/ui/paineis/ConsoleDoPython.test.tsx`
-(a tela, com o Worker dublado).
+Node, executando o conteúdo real das quatro unidades **e a correção de cada exercício**) e
+`src/ui/paineis/ConsoleDoPython.test.tsx` (a tela, com o Worker dublado).
+
+A conferência do exercício não mora aqui: ela é regra pura, em `src/learning/correcaoDeExercicio.ts`.
+Este diretório só executa o programa que o domínio montou — o do estudante com a sonda no fim — e
+devolve o que o Python produziu.
 
 **Limite honesto:** o Web Worker em si **nunca foi executado num navegador** — não há navegador nem
 WebGL neste ambiente. O que está provado é o contrato, o núcleo, a tela e o interpretador real; a
-fiação do Worker com o navegador é roteiro manual (itens 46 a 50 do `docs/TEST_REPORT.md`).
+fiação do Worker com o navegador é roteiro manual (itens 46 a 53 do `docs/TEST_REPORT.md`).
 
-O que **não** está aqui, de propósito: correção automática de exercício (Etapa 10) e qualquer forma
-de dizer que rodar código de terceiros é seguro.
+O que **não** está aqui, de propósito: qualquer forma de dizer que rodar código de terceiros é
+seguro.

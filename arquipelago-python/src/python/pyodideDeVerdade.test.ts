@@ -2,7 +2,14 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { criarInterpretadorPyodide, type Interpretador } from './interpretadorPyodide'
 import { atenderExecucao } from './nucleoDoPython'
-import { linhasDaSaida, motivoDaRecusa } from './protocolo'
+import { execucaoDaResposta, linhasDaSaida, motivoDaRecusa } from './protocolo'
+import {
+  conferirExercicio,
+  programaDaConferencia,
+  separarSondagem,
+  type ExecucaoParaConferir,
+} from '../learning/correcaoDeExercicio'
+import type { CorrecaoDoExercicio } from '../content/tiposDeConteudo'
 import { CONTEUDO_DAS_UNIDADES } from '../content/unidades'
 
 /**
@@ -149,6 +156,24 @@ describe('o interpretador carregado de verdade', () => {
     }
   })
 
+  it('cada execução começa do zero: variável de antes não sobrevive', async () => {
+    // Este teste nasceu de um defeito de verdade, encontrado pelo teste da
+    // correção: sem espaço de nomes novo, `figurinhas = 40` de uma execução
+    // continuava valendo na seguinte — e a conferência de um exercício chegava a
+    // aprovar `print(40)` sozinho, medindo a variável deixada pelo programa
+    // anterior. Quem roda um `.py` no computador não tem esse comportamento, e
+    // aqui também não tem.
+    const primeira = await atenderExecucao(interpretador, 50, 'figurinhas = 40\nprint(figurinhas)')
+    expect(primeira.tipo).toBe('saida')
+
+    const segunda = await atenderExecucao(interpretador, 51, 'print(figurinhas)')
+
+    expect(segunda.tipo).toBe('erroDePython')
+    if (segunda.tipo === 'erroDePython') {
+      expect(segunda.texto).toContain("name 'figurinhas' is not defined")
+    }
+  })
+
   it('recusa programa vazio antes de executar', async () => {
     const resposta = await atenderExecucao(interpretador, 9, '   ')
 
@@ -232,5 +257,194 @@ describe('o código que as ilhas ensinam roda de verdade', () => {
         `${trecho.onde} está marcado como "não roda", mas rodou: ${JSON.stringify(resposta).slice(0, 200)}`,
       ).toBe('erroDePython')
     }
+  }, 180_000)
+})
+
+/** Roda um programa e devolve o que a correção precisa ver — pelo mesmo caminho da tela. */
+async function executar(id: number, programa: string): Promise<ExecucaoParaConferir> {
+  const resposta = await atenderExecucao(interpretador, id, programa)
+  const execucao = execucaoDaResposta(resposta, programa)
+  if (execucao === null) {
+    throw new Error(`resposta inesperada do núcleo: ${JSON.stringify(resposta)}`)
+  }
+  return execucao
+}
+
+/** Explica, em uma linha, por que uma conferência não deu certo. */
+function pendencias(resultado: ReturnType<typeof conferirExercicio>): string {
+  return resultado.itens
+    .filter((item) => item.situacao !== 'deuCerto')
+    .map((item) => `${item.rotulo}: esperava ${item.esperado}, veio ${item.obtido}`)
+    .join(' | ')
+}
+
+describe('a correção automática, contra o Python de verdade', () => {
+  it('a resposta de referência passa na correção do próprio exercício', async () => {
+    // É este teste que impede a correção de mentir. Uma correção que reprovasse
+    // a resposta certa seria pior do que não existir: ensinaria o errado a quem
+    // acertou. Aqui a solução de cada exercício roda **no interpretador real**,
+    // com a sonda da própria correção, e precisa ser aprovada por ela.
+    const problemas: string[] = []
+    let conferidos = 0
+
+    for (const unidade of CONTEUDO_DAS_UNIDADES) {
+      for (const exercicio of unidade.pratica) {
+        if (exercicio.correcao === undefined) {
+          continue
+        }
+        conferidos += 1
+        const referencia = exercicio.solucaoQueRodaNoConsole ?? exercicio.solucao
+        const execucao = await executar(
+          1000 + conferidos,
+          programaDaConferencia(referencia, exercicio.correcao),
+        )
+        const resultado = conferirExercicio(exercicio.correcao, execucao)
+        if (resultado.situacao !== 'deuCerto') {
+          problemas.push(`${unidade.id}/${exercicio.id}: ${resultado.situacao} — ${pendencias(resultado)}`)
+        }
+      }
+    }
+
+    expect(conferidos, 'nenhum exercício com correção no conteúdo').toBeGreaterThanOrEqual(10)
+    expect(problemas, `A correção reprovou a resposta certa:\n${problemas.join('\n')}`).toEqual([])
+  }, 180_000)
+
+  it('a correção reprova respostas erradas de verdade, e cada uma por seu motivo', async () => {
+    // Sem esta prova, uma correção que sempre aprovasse passaria no teste acima.
+    const casos: readonly {
+      readonly exercicio: string
+      readonly rotulo: string
+      readonly codigo: string
+    }[] = [
+      {
+        exercicio: 'e2-2',
+        rotulo: 'imprimir o resultado sem guardar em variável',
+        codigo: 'print(40)',
+      },
+      {
+        exercicio: 'e2-3',
+        rotulo: 'dividir com // e perder as casas decimais',
+        codigo: 'media = (7 + 9 + 5) // 3\nprint(media)',
+      },
+      {
+        exercicio: 'e2-1',
+        rotulo: 'guardar a idade como texto',
+        codigo:
+          'nome = "Ana"\nidade = "34"\naltura = 1.72\nprint("Nome: " + nome)\nprint("Idade: " + idade)\nprint("Altura: " + str(altura))',
+      },
+      {
+        exercicio: 'e4-3',
+        rotulo: 'usar .sort() e alterar a lista original',
+        codigo:
+          'numeros = [42, 7, 19, 3, 28]\nnumeros.sort()\nprint(sum(numeros))\nprint(max(numeros))\nprint(min(numeros))\nprint(numeros)\nprint(numeros)',
+      },
+    ]
+
+    const problemas: string[] = []
+
+    for (const [indice, caso] of casos.entries()) {
+      const exercicio = CONTEUDO_DAS_UNIDADES.flatMap((unidade) => unidade.pratica).find(
+        (candidato) => candidato.id === caso.exercicio,
+      )
+      if (exercicio?.correcao === undefined) {
+        problemas.push(`${caso.exercicio}: exercício sem correção no conteúdo`)
+        continue
+      }
+
+      const execucao = await executar(
+        2000 + indice,
+        programaDaConferencia(caso.codigo, exercicio.correcao),
+      )
+      const resultado = conferirExercicio(exercicio.correcao, execucao)
+      if (resultado.situacao === 'deuCerto') {
+        problemas.push(`${caso.exercicio} (${caso.rotulo}) foi aprovado, e não devia`)
+      }
+    }
+
+    expect(problemas, `Respostas erradas que a correção aprovou:\n${problemas.join('\n')}`).toEqual(
+      [],
+    )
+  }, 180_000)
+
+  it('a correção não reprova outra resposta certa, com outros dados', async () => {
+    const casos: readonly {
+      readonly exercicio: string
+      readonly codigo: string
+    }[] = [
+      {
+        exercicio: 'e3-1',
+        codigo: 'nome = "  ana  "\nprint(nome.strip().upper())',
+      },
+      {
+        exercicio: 'e4-1',
+        codigo:
+          'cores = ["rosa", "preto", "branco", "cinza"]\nprint("Primeira:", cores[0])\nprint("Última:", cores[-1])\nprint("Quantas:", len(cores))',
+      },
+      {
+        exercicio: 'e4-2',
+        codigo:
+          'frutas = ["pera", "uva", "manga"]\nprint(frutas)\nfrutas.append("abacate")\nprint(frutas)\nfrutas.insert(0, "kiwi")\nprint(frutas)\nfrutas.remove("uva")\nprint(frutas)',
+      },
+    ]
+
+    const problemas: string[] = []
+
+    for (const [indice, caso] of casos.entries()) {
+      const exercicio = CONTEUDO_DAS_UNIDADES.flatMap((unidade) => unidade.pratica).find(
+        (candidato) => candidato.id === caso.exercicio,
+      )
+      if (exercicio?.correcao === undefined) {
+        problemas.push(`${caso.exercicio}: exercício sem correção no conteúdo`)
+        continue
+      }
+
+      const execucao = await executar(
+        3000 + indice,
+        programaDaConferencia(caso.codigo, exercicio.correcao),
+      )
+      const resultado = conferirExercicio(exercicio.correcao, execucao)
+      if (resultado.situacao !== 'deuCerto') {
+        problemas.push(`${caso.exercicio}: ${resultado.situacao} — ${pendencias(resultado)}`)
+      }
+    }
+
+    expect(
+      problemas,
+      `A correção reprovou uma resposta certa, com outros dados:\n${problemas.join('\n')}`,
+    ).toEqual([])
+  }, 180_000)
+
+  it('sonda que não existe não vira aprovação silenciosa', async () => {
+    // Correção nossa, com uma expressão que não existe no programa: a medida não
+    // chega, e a conferência tem de dizer isso — e nunca "tudo confere".
+    const correcao: CorrecaoDoExercicio = {
+      valoresEsperados: [{ rotulo: 'O valor de naoexiste', expressao: 'naoexiste', tipoEsperado: 'int' }],
+      limite: 'Correção de teste, montada aqui dentro.',
+    }
+
+    const execucao = await executar(
+      4000,
+      programaDaConferencia('print("oi")', correcao),
+    )
+    const resultado = conferirExercicio(correcao, execucao)
+
+    expect(resultado.situacao).not.toBe('deuCerto')
+    expect(execucao.foiErro || resultado.situacao === 'naoDeuParaConferir').toBe(true)
+  }, 180_000)
+
+  it('a sonda sobrevive a aspas, acento, quebra de linha e ao sinal do marcador', async () => {
+    const codigo = 'texto = "a§b \\"c\\" \\n d"\nprint("ok")'
+    const correcao: CorrecaoDoExercicio = {
+      valoresEsperados: [{ rotulo: 'O texto', expressao: 'texto', tipoEsperado: 'str' }],
+      limite: 'Correção de teste, montada aqui dentro.',
+    }
+
+    const execucao = await executar(4001, programaDaConferencia(codigo, correcao))
+    const { doPrograma, sondas } = separarSondagem(execucao.linhas)
+
+    expect(conferirExercicio(correcao, execucao).situacao).toBe('deuCerto')
+    expect(doPrograma).toEqual(['ok'])
+    expect(sondas).toHaveLength(1)
+    expect(sondas[0]?.texto).toBe('a§b "c" \n d')
   }, 180_000)
 })

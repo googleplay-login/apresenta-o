@@ -1,11 +1,19 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { usePython, type Python } from '../../python/usePython'
 import { LIMITE_DE_CARACTERES } from '../../python/protocolo'
+import {
+  conferirExercicio,
+  programaDaConferencia,
+  resumoDaConferencia,
+  type ResultadoDaConferencia,
+  type SituacaoDaConferencia,
+} from '../../learning/correcaoDeExercicio'
+import type { Exercicio } from '../../content/tiposDeConteudo'
 
 /**
  * O console de Python da ilha: escrever, rodar, ver o que aconteceu.
  *
- * Três decisões que não são estética:
+ * Quatro decisões que não são estética:
  *
  *  - **nada é carregado antes de a pessoa pedir.** O interpretador é grande; a
  *    tela abre com um botão que diz o que vai acontecer, e informa o tamanho
@@ -18,7 +26,10 @@ import { LIMITE_DE_CARACTERES } from '../../python/protocolo'
  *  - **diz o que isto não é.** O console avisa que o código roda neste navegador,
  *    que não é uma caixa à prova de fuga e que o ambiente não é o mesmo do
  *    computador da pessoa — quem aprender `input()` aqui vai precisar do
- *    interpretador instalado para usar de verdade (D-041).
+ *    interpretador instalado para usar de verdade (D-041);
+ *  - **a conferência do exercício é uma medida, e não uma nota.** Ela diz o que
+ *    olhou, o que veio e **o que não julga**; o veredito é sobre o programa que
+ *    rodou, e o campo de código continua sendo da pessoa (D-044).
  *
  * O botão de recomeçar existe porque um laço infinito não tem como ser
  * interrompido de dentro: descartar o trabalhador descarta o programa travado.
@@ -33,20 +44,97 @@ type Props = {
    * com Web Worker. Em produção, quem manda é `usePython()`.
    */
   readonly python?: Python
+  /**
+   * Os exercícios da unidade. Com eles, o console passa a oferecer a conferência:
+   * o código digitado pode ser rodado **como resposta** de um deles, com a sonda
+   * da correção junto (D-045).
+   */
+  readonly exercicios?: readonly Exercicio[]
+  /** Qual exercício está escolhido para conferir. `null` = nenhum, só rodar. */
+  readonly exercicioEscolhido?: string | null
+  readonly aoEscolherExercicio?: (exercicioId: string | null) => void
+  /** Avisa a aba Prática do resultado de cada conferência, para o cartão de lá. */
+  readonly aoConferir?: (exercicioId: string, resultado: ResultadoDaConferencia) => void
 }
 
-export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
+/** Onde o console fica, para quem quiser pular direto para cá. */
+export const ID_DO_CONSOLE = 'console-de-python'
+
+const ROTULO_DA_SITUACAO: Record<SituacaoDaConferencia, string> = {
+  deuCerto: 'confere',
+  naoConfere: 'não confere',
+  naoDeuParaConferir: 'não conferido',
+}
+
+export function ConsoleDoPython({
+  sugestoes = [],
+  python: injetado,
+  exercicios = [],
+  exercicioEscolhido = null,
+  aoEscolherExercicio,
+  aoConferir,
+}: Props) {
   const doGancho = usePython()
   const python = injetado ?? doGancho
   const [codigo, setCodigo] = useState('')
   const [recusa, setRecusa] = useState<string | null>(null)
+  const [pendente, setPendente] = useState<{ readonly exercicioId: string; readonly programa: string } | null>(
+    null,
+  )
+  const [conferencia, setConferencia] = useState<{
+    readonly exercicioId: string
+    readonly resultado: ResultadoDaConferencia
+  } | null>(null)
   const idDoCampo = useId()
   const idDaSaida = useId()
+  const idDaEscolha = useId()
   const campo = useRef<HTMLTextAreaElement>(null)
 
+  const exercicioParaConferir =
+    exercicios.find((candidato) => candidato.id === exercicioEscolhido) ?? null
+  const podeConferir = exercicioParaConferir?.correcao !== undefined
+
+  // Quando a execução que estava pendente chega, ela vira veredito. O programa é
+  // reconhecido pelo próprio texto enviado: se outra execução passou na frente,
+  // nada é concluído a partir dela.
+  useEffect(() => {
+    if (pendente === null || python.ultima === null) {
+      return
+    }
+    if (python.ultima.codigo !== pendente.programa) {
+      return
+    }
+
+    const dono = exercicios.find((candidato) => candidato.id === pendente.exercicioId)
+    if (dono?.correcao === undefined) {
+      return
+    }
+
+    const resultado = conferirExercicio(dono.correcao, python.ultima)
+    setPendente(null)
+    setConferencia({ exercicioId: dono.id, resultado })
+    aoConferir?.(dono.id, resultado)
+  }, [aoConferir, exercicios, pendente, python.ultima])
+
   const rodar = () => {
+    setConferencia(null)
     const motivo = python.executar(codigo)
     setRecusa(motivo)
+  }
+
+  const conferir = () => {
+    if (exercicioParaConferir?.correcao === undefined) {
+      return
+    }
+
+    // A sonda vai junto com o programa: uma execução só, com o mesmo estado das
+    // variáveis — que é o único jeito de medir o que o programa deixou guardado.
+    const programa = programaDaConferencia(codigo, exercicioParaConferir.correcao)
+    setConferencia(null)
+
+    const motivo = python.executar(programa)
+    setRecusa(motivo)
+    setPendente(motivo === null ? { exercicioId: exercicioParaConferir.id, programa } : null)
   }
 
   const carregarInterpretador = () => {
@@ -54,8 +142,12 @@ export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
     python.carregar()
   }
 
+  const quantosExercicios = exercicios.length
+  const numeroDoExercicio = (id: string) => exercicios.findIndex((item) => item.id === id) + 1
+  const comConferencia = exercicios.filter((item) => item.correcao !== undefined)
+
   return (
-    <section className="console" aria-label="Console de Python">
+    <section className="console" aria-label="Console de Python" id={ID_DO_CONSOLE}>
       <h4 className="console__titulo">Console de Python</h4>
       <p className="console__texto">
         Escreva o código aqui e rode para ver o resultado na hora. O Python de verdade é
@@ -117,6 +209,33 @@ export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
         )}
       </div>
 
+      {quantosExercicios === 0 || comConferencia.length === 0 ? null : (
+        <div className="console__conferir">
+          <label className="console__rotulo" htmlFor={idDaEscolha}>
+            Conferir o programa como resposta de
+          </label>
+          <select
+            id={idDaEscolha}
+            className="console__escolha"
+            value={exercicioEscolhido ?? ''}
+            onChange={(evento) =>
+              aoEscolherExercicio?.(evento.target.value === '' ? null : evento.target.value)
+            }
+          >
+            <option value="">Nenhum exercício: só rodar</option>
+            {comConferencia.map((item) => (
+              <option key={item.id} value={item.id}>
+                Exercício {numeroDoExercicio(item.id)}
+              </option>
+            ))}
+          </select>
+          <p className="console__ajuda">
+            Escolhendo um exercício, o botão <strong>Rodar e conferir</strong> roda o seu código
+            com uma sonda no fim e compara o resultado com o que o enunciado pede.
+          </p>
+        </div>
+      )}
+
       <div className="console__campo">
         <label className="console__rotulo" htmlFor={idDoCampo}>
           Seu programa
@@ -162,6 +281,16 @@ export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
         >
           Rodar
         </button>
+        {podeConferir ? (
+          <button
+            type="button"
+            className="botao botao--principal"
+            onClick={conferir}
+            disabled={python.estado === 'carregando'}
+          >
+            Rodar e conferir
+          </button>
+        ) : null}
         <button type="button" className="botao" onClick={() => setCodigo('')}>
           Limpar o campo
         </button>
@@ -194,7 +323,11 @@ export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
                 python.ultima.foiErro ? 'console__resultado console__resultado--erro' : 'console__resultado'
               }
             >
-              <code>{python.ultima.linhas.join('\n')}</code>
+              <code>
+                {python.ultima.linhas.length === 0
+                  ? '(o programa rodou sem imprimir nada)'
+                  : python.ultima.linhas.join('\n')}
+              </code>
             </pre>
             {python.ultima.foiErro ? (
               <p className="console__ajuda">
@@ -205,6 +338,46 @@ export function ConsoleDoPython({ sugestoes = [], python: injetado }: Props) {
           </>
         )}
       </div>
+
+      {conferencia === null ? null : (
+        <section
+          className="conferencia"
+          aria-label={`Conferência do exercício ${numeroDoExercicio(conferencia.exercicioId)}`}
+        >
+          <h5 className="conferencia__titulo">
+            Conferência do exercício {numeroDoExercicio(conferencia.exercicioId)}
+          </h5>
+          <p
+            className={`conferencia__situacao conferencia__situacao--${conferencia.resultado.situacao}`}
+            role="status"
+          >
+            {resumoDaConferencia(conferencia.resultado)}
+          </p>
+          <p className="conferencia__explicacao">{conferencia.resultado.explicacao}</p>
+
+          <ul className="conferencia__itens">
+            {conferencia.resultado.itens.map((item, indice) => (
+              <li
+                key={`${item.rotulo}-${indice}`}
+                className={`conferencia__item conferencia__item--${item.situacao}`}
+              >
+                <span className="conferencia__marca">{ROTULO_DA_SITUACAO[item.situacao]}</span>{' '}
+                <strong className="conferencia__rotulo">{item.rotulo}</strong>{' '}
+                <span className="conferencia__par">
+                  esperado: <code>{item.esperado}</code>
+                </span>{' '}
+                <span className="conferencia__par">
+                  veio: <code>{item.obtido}</code>
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="conferencia__limite">
+            <strong>O que esta conferência não julga:</strong> {conferencia.resultado.limite}
+          </p>
+        </section>
+      )}
     </section>
   )
 }

@@ -393,6 +393,196 @@ describe('os diagramas', () => {
   })
 })
 
+describe('a correção automática do exercício', () => {
+  const comCorrecao = CONTEUDO_DAS_UNIDADES.flatMap((unidade) =>
+    unidade.pratica.map((exercicio) => ({ unidade, exercicio })),
+  )
+
+  it('todo exercício com correção tem o que conferir, e todo limite está escrito', () => {
+    const problemas: string[] = []
+
+    for (const { unidade, exercicio } of comCorrecao) {
+      if (exercicio.correcao === undefined) {
+        continue
+      }
+      const fonte =
+        (exercicio.correcao.saidaEsperada?.length ?? 0) +
+        (exercicio.correcao.valoresEsperados?.length ?? 0) +
+        (exercicio.correcao.estrutura === undefined ? 0 : 1)
+      if (fonte === 0) {
+        problemas.push(`${unidade.id}/${exercicio.id}: correção sem nada para conferir`)
+      }
+      if (exercicio.correcao.limite.trim().length < 40) {
+        problemas.push(`${unidade.id}/${exercicio.id}: limite curto demais`)
+      }
+    }
+
+    expect(problemas, `Correções incompletas:\n${problemas.join('\n')}`).toEqual([])
+  })
+
+  it('todo exercício ou tem correção automática, ou explica por que não tem', () => {
+    // Sem isto, um exercício novo pode nascer sem conferência e sem motivo — e o
+    // estudante fica sem saber se o botão sumiu por engano ou porque aqui não dá.
+    const semNada = comCorrecao
+      .filter(
+        ({ exercicio }) => exercicio.correcao === undefined && exercicio.naoRodaNoConsole === undefined,
+      )
+      .map(({ unidade, exercicio }) => `${unidade.id}/${exercicio.id}`)
+
+    expect(semNada, 'Exercícios sem conferência e sem motivo escrito').toEqual([])
+  })
+
+  it('a correção cobre os exercícios que rodam aqui — e não os que não rodam', () => {
+    // Cobra a coerência entre a marcação de "não roda no console" e a existência
+    // de correção: exercício marcado como não executável não pode ter correção
+    // (ela nunca seria satisfeita); exercício que roda e não é marcado precisa ter.
+    const incoerentes: string[] = []
+
+    for (const { unidade, exercicio } of comCorrecao) {
+      const recusa = motivoDaRecusa(exercicio.solucao)
+      const rodaAqui = recusa === null && exercicio.naoRodaNoConsole === undefined
+
+      if (rodaAqui && exercicio.correcao === undefined) {
+        incoerentes.push(`${unidade.id}/${exercicio.id}: roda aqui e não tem correção`)
+      }
+      if (exercicio.correcao !== undefined && recusa !== null && exercicio.solucaoQueRodaNoConsole === undefined) {
+        incoerentes.push(`${unidade.id}/${exercicio.id}: tem correção, mas a solução é recusada aqui`)
+      }
+    }
+
+    expect(incoerentes, `Correções fora de lugar:\n${incoerentes.join('\n')}`).toEqual([])
+  })
+
+  it('toda solução adaptada existe porque a de referência usa o teclado', () => {
+    const adaptadas = comCorrecao.filter(
+      ({ exercicio }) => exercicio.solucaoQueRodaNoConsole !== undefined,
+    )
+
+    expect(adaptadas.length, 'nenhuma solução adaptada no conteúdo — a regra virou enfeite').toBeGreaterThan(0)
+
+    for (const { unidade, exercicio } of adaptadas) {
+      expect(
+        exercicio.solucaoQueRodaNoConsole,
+        `Em ${unidade.id}/${exercicio.id}, a versão adaptada é a própria solução de referência`,
+      ).not.toBe(exercicio.solucao)
+      expect(
+        motivoDaRecusa(exercicio.solucao),
+        `Em ${unidade.id}/${exercicio.id}, existe versão adaptada mas a solução de referência roda aqui`,
+      ).not.toBeNull()
+      expect(
+        motivoDaRecusa(exercicio.solucaoQueRodaNoConsole ?? ''),
+        `Em ${unidade.id}/${exercicio.id}, a versão adaptada também é recusada pelo console`,
+      ).toBeNull()
+    }
+  })
+
+  it('acusa exercício sem correção e sem motivo escrito', () => {
+    const base = CONTEUDO_DAS_UNIDADES[0]!
+    const comDefeito = {
+      ...base,
+      pratica: base.pratica.map((exercicio, indice) =>
+        indice === 0 ? { ...exercicio, correcao: undefined, naoRodaNoConsole: undefined } : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('sem correção automática e sem motivo')
+  })
+
+  it('acusa correção sem limite declarado', () => {
+    // O defeito vai no primeiro exercício **com** correção de cada unidade: nem
+    // todo exercício tem uma, e injetar num que não tem não testaria nada.
+    const comDefeito = CONTEUDO_DAS_UNIDADES.map((unidade) => ({
+      ...unidade,
+      pratica: unidade.pratica.map((exercicio) =>
+        exercicio.correcao === undefined
+          ? exercicio
+          : { ...exercicio, correcao: { ...exercicio.correcao, limite: 'confere' } },
+      ),
+    }))
+
+    expect(comDefeito.flatMap(problemasNoConteudo).join(' ')).toContain(
+      'limite da correção curto demais',
+    )
+  })
+
+  it('acusa correção que não confere nada', () => {
+    const base = CONTEUDO_DAS_UNIDADES[0]!
+    const comDefeito = {
+      ...base,
+      pratica: base.pratica.map((exercicio, indice) =>
+        indice === 0
+          ? {
+              ...exercicio,
+              correcao: {
+                limite:
+                  'Este limite é longo o bastante para passar na validação, mas a correção não confere nada.',
+              },
+            }
+          : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('correção não confere nada')
+  })
+
+  it('acusa sonda com dois modos de comparação ao mesmo tempo', () => {
+    const base = CONTEUDO_DAS_UNIDADES[1]!
+    const comDefeito = {
+      ...base,
+      pratica: base.pratica.map((exercicio, indice) =>
+        indice === 0
+          ? {
+              ...exercicio,
+              correcao: {
+                limite:
+                  'Este limite é longo o bastante para passar, mas a sonda abaixo tem dois modos de comparação.',
+                valoresEsperados: [
+                  { rotulo: 'ambiguidade', expressao: 'figurinhas', igualA: '40', tipoEsperado: 'int' as const },
+                ],
+              },
+            }
+          : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('2 modos de comparação')
+  })
+
+  it('acusa tipo de valor que não existe em Python', () => {
+    const base = CONTEUDO_DAS_UNIDADES[1]!
+    const comDefeito = {
+      ...base,
+      pratica: base.pratica.map((exercicio, indice) =>
+        indice === 0
+          ? {
+              ...exercicio,
+              correcao: {
+                limite:
+                  'Este limite é longo o bastante para passar, mas o tipo pedido abaixo não existe em Python.',
+                valoresEsperados: [
+                  { rotulo: 'tipo inventado', expressao: 'idade', tipoEsperado: 'inteiro' as never },
+                ],
+              },
+            }
+          : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain('tipo que não existe')
+  })
+
+  it('acusa solução adaptada sem dizer por que a de referência não roda', () => {
+    const base = CONTEUDO_DAS_UNIDADES[2]!
+    const comDefeito = {
+      ...base,
+      pratica: base.pratica.map((exercicio, indice) =>
+        indice === 0
+          ? { ...exercicio, solucaoQueRodaNoConsole: 'nome = "Ana"\nprint(nome)', naoRodaNoConsole: undefined }
+          : exercicio,
+      ),
+    }
+    expect(problemasNoConteudo(comDefeito).join(' ')).toContain(
+      'não diz por que a solução de referência não roda',
+    )
+  })
+})
+
 describe('o que o console da ilha não roda está marcado como tal', () => {
   it('todo trecho recusado pelo console explica o motivo', () => {
     // Este teste amarra conteúdo e console: a mesma função que recusa o programa

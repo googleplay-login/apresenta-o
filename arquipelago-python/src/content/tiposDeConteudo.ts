@@ -92,6 +92,84 @@ export type Exercicio = {
   readonly solucao: string
   /** Motivo pelo qual a solução não roda no console da ilha. Opcional. */
   readonly naoRodaNoConsole?: string
+  /**
+   * A mesma solução, sem o que o console não tem — `input()`, por exemplo.
+   *
+   * Existe porque alguns exercícios **pedem** dados pelo teclado, e o console da
+   * ilha não tem teclado: a solução de referência não pode ser rodada aqui, e a
+   * conferência automática precisa de um programa que rode. Quando existe, ela é
+   * mostrada junto da solução, e é ela que o teste roda para provar que a
+   * correção não reprova a própria resposta certa.
+   */
+  readonly solucaoQueRodaNoConsole?: string
+  /**
+   * Como conferir automaticamente o que o estudante escreveu.
+   *
+   * Ausente quando o exercício não tem como ser conferido aqui — comando de
+   * terminal, ou demonstração de erro de propósito. Nesse caso o exercício
+   * **precisa** de `naoRodaNoConsole` dizendo por quê, e a tela mostra a
+   * conferência manual, sem oferecer um botão que não conferiria nada.
+   */
+  readonly correcao?: CorrecaoDoExercicio
+}
+
+/** Tipo de um valor em Python, como o conteúdo pode exigi-lo. */
+export type TipoDeValor = 'str' | 'int' | 'float' | 'bool' | 'list' | 'tuple' | 'dict'
+
+/**
+ * O que a sonda mede depois que o programa roda, e com o que comparar.
+ *
+ * São três modos, e **exatamente um** deles por sonda:
+ *
+ *  - `igualA` — o valor tem de ser este, exatamente;
+ *  - `tipoEsperado` — o valor só precisa ser do tipo certo. É o modo dos dados
+ *    **pessoais**: o exercício pede o seu nome e a sua altura, e a correção não
+ *    tem como saber os números certos. Ela sabe, isso sim, que a altura precisa
+ *    ser um número com casas decimais — e `"1.72"` no lugar de `1.72` é um erro
+ *    que vale pegar;
+ *  - `apareceNaSaida` — o valor medido tem de aparecer no que o programa
+ *    imprimiu. É o modo de quem manda mostrar algo: prova que a soma foi
+ *    impressa sem precisar saber quais números a pessoa escolheu.
+ */
+export type ValorEsperado = {
+  /** O que está sendo conferido, em português, para a tela. */
+  readonly rotulo: string
+  /** Expressão Python medida depois do programa, como `figurinhas` ou `len(cores)`. */
+  readonly expressao: string
+} & (
+  | { readonly igualA: string }
+  | { readonly tipoEsperado: TipoDeValor }
+  | { readonly apareceNaSaida: true }
+)
+
+/** O que o enunciado exige da forma do programa. */
+export type EstruturaEsperada = {
+  /** Quantas linhas não vazias o programa deve imprimir. */
+  readonly linhasNaoVazias?: number
+  /** Verdadeiro quando o enunciado pede um comentário no código. */
+  readonly comentario?: boolean
+}
+
+/**
+ * A correção de um exercício. Tudo aqui é dado, e nada é código executado por
+ * conta própria: quem roda é o console, e quem decide é
+ * `src/learning/correcaoDeExercicio.ts`.
+ */
+export type CorrecaoDoExercicio = {
+  /**
+   * Textos que devem aparecer na saída, **na ordem** — procurados dentro do que
+   * o programa imprimiu, e não como linha exata: `print("Média:", media)` mostra
+   * `Média: 7.0`, e um programa certo não pode ser reprovado por ter rótulo.
+   */
+  readonly saidaEsperada?: readonly string[]
+  /** Valores que devem estar guardados quando o programa termina. */
+  readonly valoresEsperados?: readonly ValorEsperado[]
+  readonly estrutura?: EstruturaEsperada
+  /**
+   * O que esta correção **não** julga. Obrigatório, mostrado na tela e conferido
+   * pelo validador: uma correção sem limite declarado promete mais do que faz.
+   */
+  readonly limite: string
 }
 
 /** Pergunta de avaliação: quatro alternativas, uma correta. */

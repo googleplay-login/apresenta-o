@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConsoleDoPython } from './ConsoleDoPython'
 import { usePython, type Execucao, type Python } from '../../python/usePython'
 import { LIMITE_DE_CARACTERES, motivoDaRecusa } from '../../python/protocolo'
+import { LINHA_DA_SONDA, MARCADOR_DA_SONDA } from '../../learning/correcaoDeExercicio'
+import type { Exercicio } from '../../content/tiposDeConteudo'
 
 /**
  * O console de Python na tela.
@@ -196,12 +198,12 @@ describe('rodar um programa', () => {
     const ultima: Execucao = {
       id: 4,
       codigo: 'x = 1',
-      linhas: ['(o programa rodou sem produzir saída)'],
+      linhas: [],
       foiErro: false,
     }
     render(<ConsoleDoPython python={falso({ estado: 'pronto', versao: '3.14.0', ultima })} />)
 
-    expect(screen.getByText(/o programa rodou sem produzir saída/)).toBeTruthy()
+    expect(screen.getByText(/o programa rodou sem imprimir nada/)).toBeTruthy()
   })
 })
 
@@ -285,5 +287,213 @@ describe('o gancho de verdade, num ambiente sem Web Worker', () => {
 
     expect(screen.getByText('falhou')).toBeTruthy()
     expect(screen.getByText(/não oferece Web Worker/)).toBeTruthy()
+  })
+})
+
+/** Um exercício de mentira, com a correção que o teste quiser. */
+function exercicioDeTeste(parcial: Partial<Exercicio> = {}): Exercicio {
+  return {
+    id: 'e0-1',
+    enunciado: 'Guarde 40 numa variável e mostre o valor.',
+    conferencia: 'O número 40 aparece na tela.',
+    solucao: 'figurinhas = 40\nprint(figurinhas)',
+    correcao: {
+      saidaEsperada: ['40'],
+      valoresEsperados: [{ rotulo: '`figurinhas` termina valendo 40', expressao: 'figurinhas', igualA: '40' }],
+      limite: 'A conferência olha o que foi impresso e o valor guardado; ela não julga o estilo.',
+    },
+    ...parcial,
+  }
+}
+
+/**
+ * Um interpretador de mentira que **responde**, para o teste ver a conferência
+ * acontecer. `usePython` num ambiente sem Web Worker nunca devolve execução, e
+ * sem execução não há veredito para conferir.
+ */
+function Cobaia({ exercicios, resposta }: { readonly exercicios: readonly Exercicio[]; readonly resposta: (codigo: string) => readonly string[] }) {
+  const [ultima, setUltima] = useState<Execucao | null>(null)
+  const [escolhido, setEscolhido] = useState<string | null>(null)
+
+  const executar = (codigo: string): string | null => {
+    setUltima({ id: 1, codigo, linhas: resposta(codigo), foiErro: false })
+    return null
+  }
+
+  return (
+    <ConsoleDoPython
+      exercicios={exercicios}
+      exercicioEscolhido={escolhido}
+      aoEscolherExercicio={setEscolhido}
+      python={falso({ estado: 'pronto', versao: '3.14.0', executar, ultima })}
+    />
+  )
+}
+
+/** A linha que o Python imprimiria, com o tipo e o valor medidos. */
+function sonda(medida: { readonly indice: number; readonly tipo: string; readonly repr: string; readonly str?: string }): string {
+  return (
+    MARCADOR_DA_SONDA +
+    JSON.stringify({
+      indice: medida.indice,
+      tipo: medida.tipo,
+      repr: medida.repr,
+      str: medida.str ?? medida.repr,
+    })
+  )
+}
+
+describe('a conferência do exercício, dentro do console', () => {
+  it('sem exercício escolhido não existe botão de conferir', () => {
+    render(<ConsoleDoPython python={falso()} exercicios={[exercicioDeTeste()]} />)
+
+    expect(screen.getByLabelText('Conferir o programa como resposta de')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Rodar e conferir' })).toBeNull()
+  })
+
+  it('exercício sem correção automática não aparece na lista de conferir', () => {
+    const semCorrecao = exercicioDeTeste({ id: 'e0-2', correcao: undefined, naoRodaNoConsole: 'Comando de terminal, que só existe no seu computador.' })
+    render(<ConsoleDoPython python={falso()} exercicios={[semCorrecao]} />)
+
+    // Nada para escolher, nada para conferir: o projeto não mostra controle sem efeito.
+    expect(screen.queryByLabelText('Conferir o programa como resposta de')).toBeNull()
+  })
+
+  it('escolhendo o exercício, o botão de conferir aparece', () => {
+    render(
+      <ConsoleDoPython
+        python={falso()}
+        exercicios={[exercicioDeTeste()]}
+        exercicioEscolhido="e0-1"
+        aoEscolherExercicio={() => {}}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Rodar e conferir' })).toBeTruthy()
+  })
+
+  it('a conferência roda o programa COM a sonda e mostra o veredito item por item', async () => {
+    const enviados: string[] = []
+    const usuario = userEvent.setup()
+
+    render(
+      <Cobaia
+        exercicios={[exercicioDeTeste()]}
+        resposta={(codigo) => {
+          enviados.push(codigo)
+          // Como se o Python tivesse rodado: imprime 40 e a sonda mede a variável.
+          return ['40', sonda({ indice: 0, tipo: 'int', repr: '40' })]
+        }}
+      />,
+    )
+
+    await usuario.type(screen.getByLabelText('Seu programa'), 'figurinhas = 40')
+    await usuario.selectOptions(screen.getByLabelText('Conferir o programa como resposta de'), 'e0-1')
+    await usuario.click(screen.getByRole('button', { name: 'Rodar e conferir' }))
+
+    expect(enviados).toHaveLength(1)
+    expect(enviados[0]).toContain('figurinhas = 40')
+    expect(enviados[0]).toContain(LINHA_DA_SONDA)
+    expect(enviados[0]).toContain(MARCADOR_DA_SONDA)
+
+    // A tela tem dois avisos de estado (o Python pronto e a conferência): as
+    // consultas daqui para baixo ficam dentro da região da conferência.
+    const conferencia = screen.getByRole('region', { name: /Conferência do exercício 1/ })
+    expect(within(conferencia).getByText(/Conferido: tudo confere/)).toBeTruthy()
+    expect(within(conferencia).getByText(/`figurinhas` termina valendo 40/)).toBeTruthy()
+    expect(within(conferencia).getByText(/O que esta conferência não julga:/)).toBeTruthy()
+    // A saída mostrada é a do programa: a linha da sonda é instrumento de medida.
+    expect(screen.queryByText(MARCADOR_DA_SONDA)).toBeNull()
+  })
+
+  it('quando algo não confere, o item mostra o esperado e o que veio', async () => {
+    const usuario = userEvent.setup()
+
+    render(
+      <Cobaia
+        exercicios={[exercicioDeTeste()]}
+        resposta={() => ['38', sonda({ indice: 0, tipo: 'int', repr: '38' })]}
+      />,
+    )
+
+    await usuario.selectOptions(screen.getByLabelText('Conferir o programa como resposta de'), 'e0-1')
+    await usuario.type(screen.getByLabelText('Seu programa'), 'figurinhas = 38')
+    await usuario.click(screen.getByRole('button', { name: 'Rodar e conferir' }))
+
+    const conferencia = screen.getByRole('region', { name: /Conferência do exercício 1/ })
+    expect(within(conferencia).getByText(/Conferido: ainda não confere/)).toBeTruthy()
+    const item = within(conferencia).getByText(/`figurinhas` termina valendo 40/).closest('li')
+    expect(item?.textContent).toMatch(/esperado: 40/)
+    expect(item?.textContent).toMatch(/veio: 38/)
+    expect(item?.textContent).toMatch(/não confere/)
+  })
+
+  it('quando o programa nem rodou, a conferência diz que não deu para conferir', async () => {
+    const usuario = userEvent.setup()
+
+    function CobaiaComErro() {
+      const [ultima, setUltima] = useState<Execucao | null>(null)
+      const executar = (codigo: string): string | null => {
+        setUltima({ id: 1, codigo, linhas: ["NameError: name 'figurinhas' is not defined"], foiErro: true })
+        return null
+      }
+      return (
+        <ConsoleDoPython
+          exercicios={[exercicioDeTeste()]}
+          exercicioEscolhido="e0-1"
+          aoEscolherExercicio={() => {}}
+          python={falso({ estado: 'pronto', versao: '3.14.0', executar, ultima })}
+        />
+      )
+    }
+
+    render(<CobaiaComErro />)
+    await usuario.click(screen.getByRole('button', { name: 'Rodar e conferir' }))
+
+    const conferencia = screen.getByRole('region', { name: /Conferência do exercício 1/ })
+    expect(within(conferencia).getByText(/Conferência não concluída/)).toBeTruthy()
+    expect(within(conferencia).getByText(/O programa não chegou ao fim/)).toBeTruthy()
+  })
+
+  it('rodar sem conferir não conclui nada a partir da execução', async () => {
+    const usuario = userEvent.setup()
+
+    render(
+      <Cobaia exercicios={[exercicioDeTeste()]} resposta={() => ['40', sonda({ indice: 0, tipo: 'int', repr: '40' })]} />,
+    )
+
+    await usuario.type(screen.getByLabelText('Seu programa'), 'print(40)')
+    await usuario.click(screen.getByRole('button', { name: 'Rodar' }))
+
+    expect(screen.queryByText(/Conferido/)).toBeNull()
+  })
+
+  it('a aba da prática fica sabendo do resultado de cada conferência', async () => {
+    const usuario = userEvent.setup()
+    const aoConferir = vi.fn()
+
+    function CobaiaAvisada() {
+      const [ultima, setUltima] = useState<Execucao | null>(null)
+      const executar = (codigo: string): string | null => {
+        setUltima({ id: 1, codigo, linhas: ['40', sonda({ indice: 0, tipo: 'int', repr: '40' })], foiErro: false })
+        return null
+      }
+      return (
+        <ConsoleDoPython
+          exercicios={[exercicioDeTeste()]}
+          exercicioEscolhido="e0-1"
+          aoEscolherExercicio={() => {}}
+          aoConferir={aoConferir}
+          python={falso({ estado: 'pronto', versao: '3.14.0', executar, ultima })}
+        />
+      )
+    }
+
+    render(<CobaiaAvisada />)
+    await usuario.click(screen.getByRole('button', { name: 'Rodar e conferir' }))
+
+    expect(aoConferir).toHaveBeenCalledTimes(1)
+    expect(aoConferir.mock.calls[0]?.[0]).toBe('e0-1')
+    expect(aoConferir.mock.calls[0]?.[1]?.situacao).toBe('deuCerto')
   })
 })

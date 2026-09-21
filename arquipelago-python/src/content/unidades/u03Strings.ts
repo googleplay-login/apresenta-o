@@ -141,16 +141,35 @@ export const u03Strings: ConteudoDaUnidade = {
       solucao: 'nome = input("Seu nome: ")\nprint(nome.strip().upper())',
       naoRodaNoConsole:
         'O console da ilha não tem teclado para o programa ler, e o `input()` ficaria esperando para sempre. Troque a primeira linha por `nome = "  Ana  "` e rode o resto igual.',
+      solucaoQueRodaNoConsole: 'nome = "  Ana  "\nprint(nome.strip().upper())',
+      correcao: {
+        saidaEsperada: ['ANA'],
+        limite:
+          'A conferência procura o ANA na saída. Ela não confere de onde veio o nome: aqui não há teclado, e a primeira linha precisa ser escrita direto no código, como o aviso ao lado diz.',
+      },
     },
     {
       id: 'e3-2',
       enunciado:
-        'Escreva um programa que junte nome e idade numa frase usando f-string, e depois mostre a quantidade de letras do nome.',
+        'Escreva um programa que guarde um `nome` e uma `idade` e junte os dois numa frase usando f-string; depois mostre a quantidade de letras do nome.',
       dica: '`len()` devolve o número de caracteres de um texto.',
       conferencia:
         'A frase aparece com os valores no lugar das chaves, e o número de letras é mostrado corretamente.',
       solucao:
         'nome = "Ana"\nidade = 34\nprint(f"{nome} tem {idade} anos.")\nprint(f"O nome tem {len(nome)} letras.")',
+      correcao: {
+        valoresEsperados: [
+          { rotulo: '`nome` guarda um texto', expressao: 'nome', tipoEsperado: 'str' },
+          {
+            rotulo: '`idade` guarda um número inteiro',
+            expressao: 'idade',
+            tipoEsperado: 'int',
+          },
+        ],
+        estrutura: { linhasNaoVazias: 2 },
+        limite:
+          'A conferência olha o tipo de `nome` e de `idade` e conta duas linhas impressas. Ela não sabe o seu nome nem a sua idade, e não confere se a contagem de letras foi feita com `len()`.',
+      },
     },
     {
       id: 'e3-3',
@@ -163,6 +182,13 @@ export const u03Strings: ConteudoDaUnidade = {
         'digitado = input("Digite: ")\nprint("[" + digitado + "]")\nprint(digitado == "ilha")\nprint(digitado.strip() == "ilha")\n# sem poder digitar: troque a primeira linha por\n# digitado = " ilha  " e rode o resto',
       naoRodaNoConsole:
         'O `input()` não funciona no console da ilha. Troque a primeira linha por `digitado = " ilha  "` (com os espaços) e rode o resto: o resultado é o mesmo que você veria digitando.',
+      solucaoQueRodaNoConsole:
+        'digitado = " ilha  "\nprint("[" + digitado + "]")\nprint(digitado == "ilha")\nprint(digitado.strip() == "ilha")',
+      correcao: {
+        saidaEsperada: ['[ ilha  ]', 'False', 'True'],
+        limite:
+          'A conferência procura os três resultados na saída, com o texto que o exercício indica (com os espaços). Ela não julga como você montou a frase, nem o que aconteceria se você digitasse outra coisa no seu computador.',
+      },
     },
   ],
 

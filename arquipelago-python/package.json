@@ -1,7 +1,7 @@
 {
   "name": "arquipelago-python",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "module",
   "description": "Arquipélago Python — mundo 3D navegável para estudar Python acompanhando o livro Curso Intensivo de Python (Eric Matthes, Novatec).",
   "scripts": {

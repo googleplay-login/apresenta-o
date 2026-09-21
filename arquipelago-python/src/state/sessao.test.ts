@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   VERSAO_DO_PROGRESSO,
   estadoDaUnidade,
+  exerciciosConferidos,
   progressoInicial,
   type Progresso,
   type UnidadeDoPercurso,
@@ -113,6 +114,7 @@ describe('abrir e fechar unidade', () => {
           tentativas: 1,
           melhorNota: { acertos: 5, total: 5 },
           leituraFeita: false,
+          exerciciosResolvidos: [],
         },
       },
     }
@@ -307,6 +309,7 @@ describe('preferências da sessão', () => {
           tentativas: 2,
           melhorNota: { acertos: 5, total: 5 },
           leituraFeita: false,
+          exerciciosResolvidos: [],
         },
       },
     }
@@ -391,5 +394,76 @@ describe('marcar a leitura como feita', () => {
 
     expect(depois).toBe(comU02Aberta)
     expect(depois.progresso.unidades.u02).toBeUndefined()
+  })
+})
+
+describe('exercício conferido entra no progresso pelo redutor', () => {
+  /** Percurso em que a unidade declara os próprios exercícios. */
+  const COM_EXERCICIOS: readonly UnidadeDoPercurso[] = [
+    { id: 'u01', ordem: 1, exercicios: ['e1-1', 'e1-2'] },
+    { id: 'u02', ordem: 2, exercicios: ['e2-1'] },
+  ]
+  const redutorComExercicios = criarRedutor(COM_EXERCICIOS)
+
+  it('guarda o exercício da unidade aberta sem mexer no passo nem nas respostas', () => {
+    const antes = redutorComExercicios(estadoInicial(), abrir('u01'))
+    const depois = redutorComExercicios(antes, { tipo: 'marcarExercicio', exercicioId: 'e1-2' })
+
+    expect(exerciciosConferidos(depois.progresso, 'u01')).toEqual(['e1-2'])
+    expect(depois.sessao.passo).toBe('missao')
+    expect(depois.sessao.respostas).toEqual(antes.sessao.respostas)
+    expect(depois.sessao.resultado).toBeNull()
+    expect(depois.progresso.unidades.u01?.aprovada).toBe(false)
+    expect(depois.progresso.unidades.u01?.tentativas).toBe(0)
+  })
+
+  it('conferir todos os exercícios não aprova a ilha nem abre a seguinte', () => {
+    let estado = redutorComExercicios(estadoInicial(), abrir('u01'))
+    for (const exercicioId of ['e1-1', 'e1-2']) {
+      estado = redutorComExercicios(estado, { tipo: 'marcarExercicio', exercicioId })
+    }
+
+    expect(estado.progresso.unidades.u01?.aprovada).toBe(false)
+    expect(estadoDaUnidade(estado.progresso, COM_EXERCICIOS, 'u02')).toBe('bloqueada')
+  })
+
+  it('sem unidade aberta, o pedido não faz nada', () => {
+    const estado = estadoInicial()
+    expect(redutorComExercicios(estado, { tipo: 'marcarExercicio', exercicioId: 'e1-1' })).toBe(estado)
+  })
+
+  it('exercício de outra unidade não entra no progresso, e o estado não muda', () => {
+    const antes = redutorComExercicios(estadoInicial(), abrir('u01'))
+    const depois = redutorComExercicios(antes, { tipo: 'marcarExercicio', exercicioId: 'e2-1' })
+
+    expect(depois).toBe(antes)
+    expect(depois.progresso.unidades.u01?.exerciciosResolvidos ?? []).toEqual([])
+  })
+
+  it('exercício de unidade bloqueada não entra no progresso', () => {
+    // A unidade 2 aberta à força: o domínio recusa, e o redutor não é caminho
+    // alternativo para contornar a regra.
+    const comU02Aberta: Estado = {
+      ...estadoInicial(),
+      sessao: { ...sessaoInicial(), unidadeId: 'u02', foco: 'painel' },
+    }
+    const depois = redutorComExercicios(comU02Aberta, { tipo: 'marcarExercicio', exercicioId: 'e2-1' })
+
+    expect(depois).toBe(comU02Aberta)
+    expect(depois.progresso.unidades.u02).toBeUndefined()
+  })
+
+  it('conferir de novo não gera progresso novo — e é o progresso que decide a gravação', () => {
+    // O estado em volta é recriado a cada ação (como nas outras ações), mas o
+    // **progresso** tem de manter a identidade: é ele que o gancho de persistência
+    // observa, e progresso novo a cada clique seria escrita à toa no navegador.
+    const uma = redutorComExercicios(redutorComExercicios(estadoInicial(), abrir('u01')), {
+      tipo: 'marcarExercicio',
+      exercicioId: 'e1-1',
+    })
+    const duas = redutorComExercicios(uma, { tipo: 'marcarExercicio', exercicioId: 'e1-1' })
+
+    expect(duas.progresso).toBe(uma.progresso)
+    expect(exerciciosConferidos(duas.progresso, 'u01')).toEqual(['e1-1'])
   })
 })

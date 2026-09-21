@@ -12,18 +12,25 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 > **O que existe hoje:** mundo 3D navegável com quatro ilhas suspensas e pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
 > ciclo de estudo completo das quatro primeiras unidades (missão, estudo, prática, avaliação e
-> resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador e um
+> resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador, um
 > **console de Python de verdade** em cada ilha — interpretador servido pela própria aplicação,
-> carregado só quando a pessoa pede.
+> carregado só quando a pessoa pede — e a **conferência automática do exercício**, com o limite dela
+> escrito na tela.
 >
-> **O que ainda não existe:** correção automática de exercício (Etapa 10), animação de caminhada do
-> avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
+> **O que ainda não existe:** expansão para as unidades seguintes (Etapa 11), animação de caminhada
+> do avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
 > nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
 > linha reproduzida e sem número de página, porque o PDF não está em mãos.
 >
+> **O que a conferência não é, e a tela diz isso:** ela mede o que o programa imprimiu, o valor que
+> ficou guardado nas variáveis e a forma pedida pelo enunciado. Não julga estilo, não exige solução
+> única, **não é nota e não aprova a ilha** — quem aprova é a avaliação. E ela distingue "não
+> confere" de "não deu para conferir": a segunda frase quer dizer que a conferência não olhou, e não
+> que o exercício está errado.
+>
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 50 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 53 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -41,7 +48,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 610 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface
+    npm test         # 699 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
@@ -64,7 +71,14 @@ Na aba **Avaliação**, o enunciado diz que a correção roda no navegador e que
 envio exige todas as respostas (com a lista das que faltam), e a revisão, depois do envio, explica
 todas as perguntas — certas e erradas — junto do placar de tentativas.
 
-Na aba **Prática** de cada ilha está o **console de Python**. Ele não baixa nada ao abrir a página: o
+Na aba **Prática** de cada ilha está o **console de Python** — e, em cada exercício que pode ser
+conferido, o botão *Escrever e conferir no console*. Escolhido o exercício, o botão *Rodar e conferir*
+roda o programa do estudante **com a sonda da conferência no fim** (uma execução só, para medir as
+variáveis que o programa deixou) e mostra item por item o que se esperava e o que veio, além do que
+aquela conferência **não** julga. Quando tudo confere, o exercício ganha um selo no cartão e o
+resultado é guardado no progresso — guardar não aprova a ilha, e o selo diz isso (D-044 a D-047).
+
+O console, em detalhe: Ele não baixa nada ao abrir a página: o
 interpretador vem no clique em *Ligar o Python (baixa cerca de 14 MB uma vez)*, roda dentro de um Web
 Worker (a página não trava enquanto o programa roda) e devolve o que o programa imprimiu, o valor da
 última expressão e — quando falha — a mensagem do Python **inteira**, com traceback, porque ler erro é

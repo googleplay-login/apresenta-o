@@ -44,23 +44,26 @@ export type ResultadoDaEscrita = {
 /**
  * Versões de formato que esta versão do programa **entende**.
  *
- * A 1 é a versão sem `leituraFeita`. Aceitá-la na leitura não é generosidade: é
- * a diferença entre migrar e apagar. Quem aprovou a primeira ilha antes do
- * marcador de leitura existir continua com a aprovação no lugar.
+ * A 1 é a versão sem `leituraFeita`; a 2, a versão sem os exercícios conferidos.
+ * Aceitá-las na leitura não é generosidade: é a diferença entre migrar e apagar.
+ * Quem aprovou a primeira ilha antes de qualquer marcador existir continua com a
+ * aprovação no lugar (D-035, D-047).
  */
-export const VERSOES_ACEITAS: readonly number[] = [1, VERSAO_DO_PROGRESSO]
+export const VERSOES_ACEITAS: readonly number[] = [1, 2, VERSAO_DO_PROGRESSO]
 
 /**
  * O que pode sair do armazenamento: um progresso de alguma versão aceita.
  *
- * `leituraFeita` é opcional **de propósito**: é assim que um progresso da versão
- * 1 passa pela conferência e chega à migração, em vez de ser jogado fora.
+ * Os marcadores criados depois são **opcionais de propósito**: é assim que um
+ * progresso de versão anterior passa pela conferência e chega à migração, em vez
+ * de ser jogado fora.
  */
 export type UnidadeGuardada = {
   readonly aprovada: boolean
   readonly tentativas: number
   readonly melhorNota: { readonly acertos: number; readonly total: number } | null
   readonly leituraFeita?: boolean
+  readonly exerciciosResolvidos?: readonly string[]
 }
 
 export type ProgressoGuardado = {
@@ -115,17 +118,24 @@ export function ehProgressoValido(valor: unknown): valor is ProgressoGuardado {
       }
     }
 
-    // Na versão 2, `leituraFeita` é obrigatório e booleano. Na 1 ele nem existe,
-    // e a migração o cria — mas se vier um valor de outro tipo, o registro é
-    // recusado: adivinhar o que aquele campo queria dizer seria pior.
-    if (candidato.versao === VERSAO_DO_PROGRESSO) {
-      const leitura = (unidade as { leituraFeita?: unknown }).leituraFeita
+    // Cada marcador é conferido **segundo a versão em que ele nasceu**: até a
+    // versão em que apareceu, ele pode faltar (a migração o cria); da versão em
+    // que aparece em diante, ele é obrigatório. E se vier com outro tipo, o
+    // registro inteiro é recusado — adivinhar o que aquele campo queria dizer
+    // seria pior do que reconhecer que o arquivo não é confiável.
+    const leitura = (unidade as { leituraFeita?: unknown }).leituraFeita
+    if (candidato.versao >= 2 || leitura !== undefined) {
       if (typeof leitura !== 'boolean') {
         return false
       }
-    } else if ('leituraFeita' in unidade) {
-      const leitura = (unidade as { leituraFeita?: unknown }).leituraFeita
-      if (typeof leitura !== 'boolean') {
+    }
+
+    const exercicios = (unidade as { exerciciosResolvidos?: unknown }).exerciciosResolvidos
+    if (candidato.versao >= 3 || exercicios !== undefined) {
+      if (!Array.isArray(exercicios)) {
+        return false
+      }
+      if (exercicios.some((item) => typeof item !== 'string')) {
         return false
       }
     }
@@ -137,10 +147,11 @@ export function ehProgressoValido(valor: unknown): valor is ProgressoGuardado {
 /**
  * Traz um progresso de formato antigo para o formato atual.
  *
- * Hoje só existe uma migração: da versão 1 para a 2, que acrescenta
- * `leituraFeita: false` a cada unidade. Ela não inventa leitura feita — quem não
- * tinha o campo não marcou nada, e marcar por conta própria seria atribuir um
- * ato ao estudante que ele não praticou.
+ * As migrações, em ordem: a 1 → 2 acrescenta `leituraFeita: false`; a 2 → 3
+ * acrescenta `exerciciosResolvidos: []`. Nenhuma delas **inventa** conquista:
+ * quem não tinha o marcador não tinha marcado nada, e marcar por conta própria
+ * seria atribuir ao estudante um ato que ele não praticou — e, no caso dos
+ * exercícios, uma conferência que nunca aconteceu (D-047).
  *
  * Recebe um valor já aprovado por `ehProgressoValido`, e devolve sempre um
  * progresso na versão atual.
@@ -150,7 +161,10 @@ export function migrarProgresso(valor: unknown): Progresso {
     readonly versao: number
     readonly unidades: Record<
       string,
-      Omit<ProgressoDaUnidade, 'leituraFeita'> & { readonly leituraFeita?: boolean }
+      Omit<ProgressoDaUnidade, 'leituraFeita' | 'exerciciosResolvidos'> & {
+        readonly leituraFeita?: boolean
+        readonly exerciciosResolvidos?: readonly string[]
+      }
     >
   }
 
@@ -161,6 +175,7 @@ export function migrarProgresso(valor: unknown): Progresso {
       tentativas: registro.tentativas,
       melhorNota: registro.melhorNota,
       leituraFeita: registro.leituraFeita ?? false,
+      exerciciosResolvidos: [...(registro.exerciciosResolvidos ?? [])],
     }
   }
 
@@ -232,7 +247,11 @@ export function lerProgresso(armazenamento: Armazenamento | null): ResultadoDaLe
   if (analisado.versao !== VERSAO_DO_PROGRESSO) {
     return {
       progresso: migrarProgresso(analisado),
-      aviso: `O progresso guardado era de uma versão anterior do Arquipélago (versão ${analisado.versao}). Ele foi aproveitado: nada foi perdido, e o marcador de leitura começa desmarcado.`,
+      aviso:
+        `O progresso guardado era de uma versão anterior do Arquipélago (versão ` +
+        `${analisado.versao}). Ele foi aproveitado: nada foi perdido. Os marcadores que ` +
+        'não existiam naquela versão — a leitura feita e os exercícios conferidos — começam ' +
+        'vazios, porque não há registro de que tenham acontecido.',
     }
   }
 

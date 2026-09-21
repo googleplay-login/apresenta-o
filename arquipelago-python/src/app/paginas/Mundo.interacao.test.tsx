@@ -58,6 +58,11 @@ async function abrirIlha(usuario: ReturnType<typeof userEvent.setup>, titulo: st
   await usuario.click(within(cartao).getByRole('button', { name: 'Entrar' }))
 }
 
+/** Vai direto para o passo da prática pelas abas do painel. */
+async function irParaPratica(usuario: ReturnType<typeof userEvent.setup>) {
+  await usuario.click(screen.getByRole('button', { name: 'Prática' }))
+}
+
 /** Vai direto para o passo da avaliação pelas abas do painel. */
 async function irParaAvaliacao(usuario: ReturnType<typeof userEvent.setup>) {
   await usuario.click(screen.getByRole('button', { name: 'Avaliação' }))
@@ -617,5 +622,77 @@ describe('o protótipo jogável, de ponta a ponta', () => {
     for (const unidade of PLANO_DE_UNIDADES) {
       expect(guardado.unidades?.[unidade.id]?.aprovada, `unidade ${unidade.id}`).toBe(true)
     }
+  })
+})
+
+describe('o exercício conferido, depois de recarregar', () => {
+  it('o cartão do exercício conferido volta marcado, e só ele', async () => {
+    // O que este teste protege: a aba Prática promete, no cartão, que o
+    // resultado conferido está guardado. Se a leitura do progresso não chegasse
+    // até o cartão, o selo apareceria e sumiria a cada recarregamento.
+    window.localStorage.setItem(
+      CHAVE_DO_PROGRESSO,
+      JSON.stringify({
+        versao: VERSAO_DO_PROGRESSO,
+        unidades: {
+          [primeira?.id ?? '']: {
+            aprovada: false,
+            tentativas: 0,
+            melhorNota: null,
+            leituraFeita: false,
+            exerciciosResolvidos: ['e1-2'],
+          },
+        },
+      }),
+    )
+
+    const usuario = userEvent.setup()
+    render(<Mundo />)
+
+    await abrirIlha(usuario, primeira?.titulo ?? '')
+    await irParaPratica(usuario)
+
+    const selos = screen.getAllByText(/este resultado está guardado no seu progresso/)
+    expect(selos).toHaveLength(1)
+
+    // O texto do selo diz as duas coisas ao mesmo tempo, e as duas importam:
+    // está guardado, e guardar não aprova a ilha.
+    const selo = selos[0]?.closest('p')
+    expect(selo?.textContent).toMatch(/não aprova a ilha/)
+    expect(selo?.textContent).toMatch(/quem aprova é a avaliação/)
+
+    // O selo é do exercício conferido, e não do primeiro da lista: o cartão que
+    // o contém começa com o enunciado daquele exercício.
+    const exercicio = conteudoDaUnidade(primeira?.id ?? '')?.pratica.find(
+      (cada) => cada.id === 'e1-2',
+    )
+    expect(selo?.closest('li')?.textContent).toContain(exercicio?.enunciado ?? '')
+  })
+
+  it('exercício conferido não aprova a ilha nem abre a próxima', async () => {
+    window.localStorage.setItem(
+      CHAVE_DO_PROGRESSO,
+      JSON.stringify({
+        versao: VERSAO_DO_PROGRESSO,
+        unidades: {
+          [primeira?.id ?? '']: {
+            aprovada: false,
+            tentativas: 0,
+            melhorNota: null,
+            leituraFeita: false,
+            exerciciosResolvidos: ['e1-1', 'e1-2', 'e1-3'],
+          },
+        },
+      }),
+    )
+
+    render(<Mundo />)
+
+    await waitFor(() => {
+      expect(screen.getByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+    })
+    // A segunda ilha continua bloqueada: o caminho é a avaliação, não a prática.
+    const cartao = screen.getByRole('heading', { level: 3, name: segunda?.titulo ?? '' }).closest('li')
+    expect(cartao?.textContent).toMatch(/bloqueada/i)
   })
 })

@@ -20,13 +20,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ehResposta,
-  linhasDaSaida,
+  execucaoDaResposta,
   motivoDaRecusa,
   pedidoDeCarregar,
   pedidoDeExecucao,
   textoDoErro,
+  type Execucao,
   type Resposta,
 } from './protocolo'
+
+/**
+ * A execução traduzida é o que a tela e a correção do exercício precisam ver:
+ * mesma forma para as duas, e definida em `protocolo.ts`, junto do contrato.
+ */
+export type { Execucao }
 
 /**
  * Depois de quanto tempo um programa em execução passa a ser tratado como
@@ -41,16 +48,6 @@ export const PRAZO_SEM_RESPOSTA_MS = 15_000
 
 /** Em que ponto o interpretador está. */
 export type EstadoDoPython = 'parado' | 'carregando' | 'pronto' | 'falhou'
-
-/** Uma execução já concluída, como ela aparece na tela. */
-export type Execucao = {
-  readonly id: number
-  readonly codigo: string
-  /** Linhas a mostrar: saída impressa, valor da última expressão, ou erro. */
-  readonly linhas: readonly string[]
-  /** `true` quando o que está em `linhas` é mensagem de erro do Python. */
-  readonly foiErro: boolean
-}
 
 export type Python = {
   readonly estado: EstadoDoPython
@@ -124,46 +121,25 @@ export function usePython({ ativo = true }: { readonly ativo?: boolean } = {}): 
         setDemorando(false)
       }
       switch (resposta.tipo) {
-      case 'pronto':
-        setVersao(resposta.versao)
-        setEstado('pronto')
-        break
+        case 'pronto':
+          setVersao(resposta.versao)
+          setEstado('pronto')
+          break
 
-      case 'saida': {
-        const linhas = linhasDaSaida(resposta.texto, resposta.resultado)
-        setUltima({
-          id: resposta.id,
-          codigo: codigoPorId.current.get(resposta.id) ?? '',
-          // Programa que roda sem imprimir nada e sem valor final precisa dizer
-          // alguma coisa: silêncio na tela parece defeito do programa.
-          linhas: linhas.length === 0 ? ['(o programa rodou sem produzir saída)'] : linhas,
-          foiErro: false,
-        })
-        break
-      }
+        case 'erroDeCarga':
+          setFalha(resposta.texto)
+          setEstado('falhou')
+          break
 
-      case 'erroDePython':
-        setUltima({
-          id: resposta.id,
-          codigo: codigoPorId.current.get(resposta.id) ?? '',
-          linhas: resposta.texto.split('\n'),
-          foiErro: true,
-        })
-        break
-
-      case 'recusado':
-        setUltima({
-          id: resposta.id,
-          codigo: codigoPorId.current.get(resposta.id) ?? '',
-          linhas: [resposta.motivo],
-          foiErro: true,
-        })
-        break
-
-      case 'erroDeCarga':
-        setFalha(resposta.texto)
-        setEstado('falhou')
-        break
+        default: {
+          // Execução: a tradução vive em `protocolo.ts`, e é a mesma que a
+          // correção do exercício recebe. Programa sem saída devolve lista
+          // vazia; quem diz "nada foi impresso" para quem está lendo é a tela.
+          const execucao = execucaoDaResposta(resposta, codigoPorId.current.get(resposta.id) ?? '')
+          if (execucao !== null) {
+            setUltima(execucao)
+          }
+        }
       }
     },
     [fecharPrazo],

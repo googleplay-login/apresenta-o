@@ -17,8 +17,8 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 6 | Estudo e leitura do livro na tela | **concluída** |
 | 7 | Avaliação | **concluída** |
 | 8 | Persistência local e protótipo jogável | **concluída** |
-| 9 | Prova de conceito de Pyodide | não iniciada |
-| 10 | Exercícios com correção automática | não iniciada |
+| 9 | Prova de conceito de Pyodide | **concluída** |
+| 10 | Exercícios com correção automática | **concluída** |
 | 11 | Expansão curricular, em lotes de 2 a 3 unidades | não iniciada |
 | 12 | Recursos complementares | não iniciada |
 | 13 | Polimento, acessibilidade e desempenho | não iniciada |
@@ -318,11 +318,43 @@ Worker com a página é roteiro manual (itens 46 a 50 de `docs/TEST_REPORT.md`).
 
 ---
 
+## Etapa 10 — Exercícios com correção automática (concluída em 21/09/2026)
+
+O que a etapa precisava resolver: o exercício de prática pedia código e depois não dizia nada sobre o
+que a pessoa escreveu. A solução é uma conferência **honesta e limitada** — e o limite aparece na
+tela, junto do resultado.
+
+- **A conferência olha três coisas e só três**: o que o programa imprimiu, o valor que ficou guardado
+  nas variáveis e a forma pedida pelo enunciado (número de linhas, comentário). Ela **não** julga
+  estilo, não exige solução única e não impede quem quiser enganar — e diz isso (D-044).
+- **Três resultados, não dois**: `deuCerto`, `naoConfere` e `naoDeuParaConferir`. A última existe para
+  não culpar o estudante por algo que a conferência não olhou — programa que parou com erro, sonda que
+  não chegou a rodar (D-044).
+- **A sonda viaja com o programa**: uma execução só, com as mesmas variáveis, e as linhas de medida
+  saem da saída mostrada. Comparar `repr` é o que distingue `7.0` de `7` (D-045).
+- **Dez dos doze exercícios têm correção**, com o limite escrito; os dois que não têm (comando de
+  terminal, que só existe no computador de quem estuda) trazem o motivo no conteúdo, e a tela mostra
+  esse motivo ao lado do exercício.
+- **Todo limite é obrigatório**: correção sem `limite` declarado, ou com limite curto demais, é recusada
+  pelo validador de conteúdo — e um teste roda, no interpretador de verdade, cada solução de referência
+  contra a própria correção, exigindo que ela **passe**.
+- **O exercício conferido é guardado, e não aprova nada**: `exerciciosResolvidos` entrou no progresso
+  (formato 3, com migração da 1 e da 2), sem aprovar unidade, sem contar tentativa e sem mudar nota
+  (D-046, D-047). O selo na tela diz as duas coisas na mesma frase.
+- **O defeito que a etapa achou era da etapa anterior**: o Pyodide reaproveitava o espaço de nomes
+  entre execuções, e uma resposta errada (`print(40)`) passava porque a variável de uma execução
+  anterior sobrevivia. Cada execução passou a ganhar espaço de nomes novo, com `destroy()` no fim.
+
+**Limite explícito:** o Web Worker continua **não executado em navegador nenhum** — a conferência é
+provada em jsdom (com o interpretador dublado) e em Node (com o Pyodide real). O que depende de
+navegador está no roteiro manual de `docs/TEST_REPORT.md`.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **10** — exercícios com correção automática.
 - **11** — expansão curricular em lotes de 2 a 3 unidades, uma autorização por lote.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.

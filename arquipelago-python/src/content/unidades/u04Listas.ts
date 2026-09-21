@@ -141,31 +141,101 @@ export const u04Listas: ConteudoDaUnidade = {
     {
       id: 'e4-1',
       enunciado:
-        'Crie uma lista com quatro cores. Mostre a primeira, a última (usando índice negativo) e quantas cores existem.',
+        'Crie uma lista chamada `cores`, com quatro cores. Mostre a primeira, a última (usando índice negativo) e quantas cores existem.',
       dica: 'A última é `[-1]`. A quantidade vem de `len()`.',
       conferencia: 'Aparecem a primeira cor, a última cor e o número 4.',
       solucao:
         'cores = ["azul", "verde", "amarelo", "vermelho"]\nprint(cores[0])\nprint(cores[-1])\nprint(len(cores))',
+      correcao: {
+        valoresEsperados: [
+          { rotulo: '`cores` guarda uma lista', expressao: 'cores', tipoEsperado: 'list' },
+          { rotulo: 'A lista tem quatro cores', expressao: 'len(cores)', igualA: '4' },
+          {
+            rotulo: 'A primeira cor aparece na saída',
+            expressao: 'cores[0]',
+            apareceNaSaida: true,
+          },
+          {
+            rotulo: 'A última cor aparece na saída',
+            expressao: 'cores[-1]',
+            apareceNaSaida: true,
+          },
+          {
+            rotulo: 'A quantidade aparece na saída',
+            expressao: 'len(cores)',
+            apareceNaSaida: true,
+          },
+        ],
+        limite:
+          'A conferência olha o tipo e o tamanho da lista e procura na saída a primeira cor, a última e a quantidade. Ela não sabe quais cores você escolheu e não confere a ordem das linhas.',
+      },
     },
     {
       id: 'e4-2',
       enunciado:
-        'Comece com uma lista de três frutas. Acrescente uma no fim, insira outra no começo e remova a do meio. Mostre a lista a cada passo.',
+        'Comece com uma lista chamada `frutas`, com três frutas. Acrescente uma no fim, insira outra no começo e remova a do meio. Mostre a lista a cada passo.',
       dica: 'Para inserir no começo, `insert(0, ...)`. Para remover pelo valor, `.remove()`.',
       conferencia:
         'Cada etapa mostra a lista com um item a mais ou a menos, sempre na ordem certa.',
       solucao:
         'frutas = ["banana", "manga", "uva"]\nprint(frutas)\nfrutas.append("abacaxi")\nprint(frutas)\nfrutas.insert(0, "kiwi")\nprint(frutas)\nfrutas.remove("manga")\nprint(frutas)',
+      correcao: {
+        valoresEsperados: [
+          { rotulo: '`frutas` guarda uma lista', expressao: 'frutas', tipoEsperado: 'list' },
+          { rotulo: 'No fim, a lista tem quatro frutas', expressao: 'len(frutas)', igualA: '4' },
+          {
+            rotulo: 'A lista aparece na saída',
+            expressao: 'frutas',
+            apareceNaSaida: true,
+          },
+        ],
+        estrutura: { linhasNaoVazias: 4 },
+        limite:
+          'A conferência olha a lista quando o programa termina (tipo e tamanho) e conta quatro linhas impressas. Ela não sabe quais frutas você escolheu e não confere a ordem exata dos passos — quem confere isso é você, lendo as quatro linhas.',
+      },
     },
     {
       id: 'e4-3',
       enunciado:
-        'Crie uma lista de cinco números fora de ordem. Mostre a soma, o maior e o menor, depois mostre a lista ordenada — sem alterar a lista original. Confirme que a original continua fora de ordem.',
+        'Crie uma lista chamada `numeros`, com cinco números fora de ordem. Mostre a soma, o maior e o menor, depois mostre a lista ordenada — sem alterar a lista original. Confirme que a original continua fora de ordem.',
       dica: 'Use `sorted()` e não `.sort()`, e imprima a original depois para conferir.',
       conferencia:
         'Depois de mostrar a versão ordenada, imprimir a lista original mostra os números na ordem em que você os escreveu.',
       solucao:
         'numeros = [42, 7, 19, 3, 28]\nprint(sum(numeros))\nprint(max(numeros))\nprint(min(numeros))\nprint(sorted(numeros))\nprint(numeros)   # continua fora de ordem',
+      correcao: {
+        valoresEsperados: [
+          { rotulo: '`numeros` guarda uma lista', expressao: 'numeros', tipoEsperado: 'list' },
+          { rotulo: 'A lista tem cinco números', expressao: 'len(numeros)', igualA: '5' },
+          {
+            rotulo: 'A lista original continua fora de ordem',
+            expressao: 'sorted(numeros) == numeros',
+            igualA: 'False',
+          },
+          {
+            rotulo: 'A soma aparece na saída',
+            expressao: 'sum(numeros)',
+            apareceNaSaida: true,
+          },
+          {
+            rotulo: 'O maior aparece na saída',
+            expressao: 'max(numeros)',
+            apareceNaSaida: true,
+          },
+          {
+            rotulo: 'O menor aparece na saída',
+            expressao: 'min(numeros)',
+            apareceNaSaida: true,
+          },
+          {
+            rotulo: 'A lista original aparece na saída, ainda fora de ordem',
+            expressao: 'numeros',
+            apareceNaSaida: true,
+          },
+        ],
+        limite:
+          'A conferência olha a lista quando o programa termina — tipo, tamanho e se continua fora de ordem, que é o que denuncia o uso de `.sort()` no lugar de `sorted()` — e confere que a soma, o maior, o menor e a lista original aparecem na saída. Ela não confere a ordem das linhas.',
+      },
     },
   ],
 

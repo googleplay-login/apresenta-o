@@ -26,11 +26,17 @@ export type Interpretador = {
   executar(codigo: string): Promise<{ readonly texto: string; readonly resultado: string | null }>
 }
 
+/** Um espaço de nomes do Python visto do lado do JavaScript. */
+type EspacoDeNomes = {
+  set(nome: string, valor: unknown): void
+  destroy(): void
+}
+
 /** O mínimo que usamos do objeto devolvido pelo Pyodide. */
 type PyodideCarregado = {
   readonly version: string
-  runPython(codigo: string): unknown
-  runPythonAsync(codigo: string): Promise<unknown>
+  runPython(codigo: string, opcoes?: { globals?: unknown }): unknown
+  runPythonAsync(codigo: string, opcoes?: { globals?: unknown }): Promise<unknown>
   setStdout(opcoes: { batched: (texto: string) => void }): void
   setStderr(opcoes: { batched: (texto: string) => void }): void
 }
@@ -64,16 +70,42 @@ export async function criarInterpretadorPyodide(urlDoPyodide: string): Promise<I
     ),
   )
 
+  /**
+   * Um espaço de nomes novo, para o programa que vai rodar agora.
+   *
+   * Isto não é detalhe de implementação: é o que faz cada execução começar do
+   * zero, como um arquivo `.py` rodado no terminal. Sem espaço novo, o Pyodide
+   * reaproveita o mesmo dicionário global, e a variável criada na execução
+   * anterior **sobrevive** para a seguinte — o que produz duas coisas ruins ao
+   * mesmo tempo: o estudante vê sobras do programa de antes, e a conferência de
+   * um exercício mede um valor que veio de outro. O teste do interpretador de
+   * verdade cobra o isolamento, e a conferência do exercício depende dele.
+   */
+  function espacoDeNomesNovo(): EspacoDeNomes {
+    const espaco = pyodide.runPython('{}') as EspacoDeNomes
+    // `__name__` é o que faz o programa se comportar como programa principal,
+    // e não como módulo importado — inclusive na hora de ler mensagem de erro.
+    espaco.set('__name__', '__main__')
+    return espaco
+  }
+
   return {
     versao: versaoDoPython,
 
     async executar(codigo: string) {
       acumulado = ''
+      const espaco = espacoDeNomesNovo()
 
-      const bruto = await pyodide.runPythonAsync(codigo)
-      const resultado = descreverResultado(bruto)
+      try {
+        const bruto = await pyodide.runPythonAsync(codigo, { globals: espaco })
+        const resultado = descreverResultado(bruto)
 
-      return { texto: acumulado, resultado }
+        return { texto: acumulado, resultado }
+      } finally {
+        // O espaço de nomes é um PyProxy: deixá-lo vivo vaza memória dentro do
+        // WebAssembly, e cada execução cria um.
+        espaco.destroy()
+      }
     },
   }
 }

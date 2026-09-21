@@ -31,6 +31,16 @@ export type PropsDoPainel = {
   /** `true` quando o estudante já marcou a leitura recomendada como feita. */
   readonly leituraFeita: boolean
   readonly aoMarcarLeitura: (feita: boolean) => void
+  /** Identificadores dos exercícios desta unidade já conferidos com tudo certo. */
+  readonly exerciciosConferidos: readonly string[]
+  /**
+   * Guarda o exercício conferido no progresso.
+   *
+   * Quem chama isto é a prática, **depois** de a conferência automática dizer que
+   * tudo confere. O painel não decide nada: repassa ao redutor, que passa pelo
+   * domínio (D-046).
+   */
+  readonly aoMarcarExercicio: (exercicioId: string) => void
   readonly passo: Passo
   readonly respostas: readonly Resposta[]
   readonly resultado: ResultadoDeAvaliacao | null
@@ -121,7 +131,13 @@ export function PainelDaUnidade(props: PropsDoPainel) {
           />
         ) : null}
 
-        {passo === 'pratica' ? <PraticaDaUnidade exercicios={conteudo.pratica} /> : null}
+        {passo === 'pratica' ? (
+          <PraticaDaUnidade
+            exercicios={conteudo.pratica}
+            conferidos={props.exerciciosConferidos}
+            aoMarcarExercicio={props.aoMarcarExercicio}
+          />
+        ) : null}
 
         {passo === 'avaliacao' ? (
           <AvaliacaoDaUnidade

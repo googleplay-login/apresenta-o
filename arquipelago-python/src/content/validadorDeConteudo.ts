@@ -1,5 +1,7 @@
 import { PERGUNTAS_POR_UNIDADE } from '../learning/avaliacao'
-import type { ConteudoDaUnidade, Pergunta } from './tiposDeConteudo'
+import { TIPOS_DE_VALOR } from '../learning/correcaoDeExercicio'
+import { motivoDaRecusa } from '../python/protocolo'
+import type { ConteudoDaUnidade, CorrecaoDoExercicio, Pergunta } from './tiposDeConteudo'
 
 /**
  * Validação do conteúdo pedagógico.
@@ -38,6 +40,131 @@ const EXPRESSOES_PROIBIDAS = [
   'todas estão corretas',
   'nenhuma está correta',
 ] as const
+
+/**
+ * Problemas da correção automática de um exercício.
+ *
+ * A correção é a parte do conteúdo que **afirma** coisas sobre o programa do
+ * estudante. Se ela estiver mal escrita, a afirmação sai errada na cara de quem
+ * acertou — pior do que não existir. Por isso, aqui, forma é conteúdo:
+ *
+ *  - correção sem **limite** declarado promete mais do que faz;
+ *  - sonda sem rótulo, sem expressão ou com dois modos de comparação ao mesmo
+ *    tempo é ambígua para quem for ler o conteúdo depois;
+ *  - tipo de valor escrito errado (`'inteiro'`) nunca casa, e reprovaria para
+ *    sempre sem ninguém entender por quê;
+ *  - exercício sem correção precisa dizer por que — o motivo é o que a tela
+ *    mostra no lugar do botão que não existiria.
+ */
+function problemasNaCorrecao(
+  exercicio: {
+    readonly id: string
+    readonly solucao: string
+    readonly correcao?: CorrecaoDoExercicio
+    readonly naoRodaNoConsole?: string
+    readonly solucaoQueRodaNoConsole?: string
+  },
+  onde: string,
+): readonly string[] {
+  const problemas: string[] = []
+  const qual = `${onde}: exercício ${exercicio.id}`
+
+  if (exercicio.correcao === undefined) {
+    if (exercicio.naoRodaNoConsole === undefined) {
+      problemas.push(`${qual} sem correção automática e sem motivo escrito para não ter`)
+    }
+    return problemas
+  }
+
+  const correcao = exercicio.correcao
+
+  if (correcao.limite.trim().length < 40) {
+    problemas.push(`${qual}: limite da correção curto demais — correção precisa dizer o que não julga`)
+  }
+
+  const conferemAlgumaCoisa =
+    (correcao.saidaEsperada?.length ?? 0) > 0 ||
+    (correcao.valoresEsperados?.length ?? 0) > 0 ||
+    correcao.estrutura !== undefined
+  if (!conferemAlgumaCoisa) {
+    problemas.push(`${qual}: correção não confere nada`)
+  }
+
+  for (const texto of correcao.saidaEsperada ?? []) {
+    if (texto.trim() === '') {
+      problemas.push(`${qual}: texto esperado na saída está vazio`)
+    }
+  }
+
+  const rotulos = new Set<string>()
+  for (const valor of correcao.valoresEsperados ?? []) {
+    if (valor.rotulo.trim() === '') {
+      problemas.push(`${qual}: sonda sem rótulo`)
+    }
+    if (rotulos.has(valor.rotulo)) {
+      problemas.push(`${qual}: duas sondas com o mesmo rótulo (${valor.rotulo})`)
+    }
+    rotulos.add(valor.rotulo)
+
+    if (valor.expressao.trim() === '') {
+      problemas.push(`${qual}: sonda sem expressão para medir`)
+    }
+
+    const modos = ['igualA', 'tipoEsperado', 'apareceNaSaida'].filter(
+      (modo) => modo in (valor as Record<string, unknown>),
+    )
+    if (modos.length !== 1) {
+      problemas.push(
+        `${qual}: a sonda "${valor.rotulo}" tem ${modos.length} modos de comparação, e o certo é exatamente um`,
+      )
+    }
+    if ('tipoEsperado' in valor && !TIPOS_DE_VALOR.includes(valor.tipoEsperado)) {
+      problemas.push(`${qual}: a sonda "${valor.rotulo}" exige um tipo que não existe (${valor.tipoEsperado})`)
+    }
+  }
+
+  if (correcao.estrutura?.linhasNaoVazias !== undefined && correcao.estrutura.linhasNaoVazias < 1) {
+    problemas.push(`${qual}: exige menos de uma linha impressa`)
+  }
+
+  if (exercicio.solucaoQueRodaNoConsole !== undefined && exercicio.naoRodaNoConsole === undefined) {
+    problemas.push(
+      `${qual}: tem solução adaptada para o console, mas não diz por que a solução de referência não roda aqui`,
+    )
+  }
+
+  // A correção roda no console da ilha, e o console recusa o que travaria a tela
+  // (teclado, tamanho). Um exercício cuja solução de referência é recusada
+  // precisa, então, de uma versão que rode — senão a correção nasce sem como ser
+  // satisfeita, e o estudante fica sem saber que caminho seguir.
+  const recusa = recusaDaSolucaoDeReferencia(exercicio)
+  if (recusa !== null) {
+    problemas.push(
+      `${qual}: a solução de referência é recusada pelo console (${recusa}) e o exercício não traz a versão que roda aqui`,
+    )
+  }
+
+  return problemas
+}
+
+/**
+ * Motivo pelo qual o console recusaria a solução de referência, ou `null`.
+ *
+ * A pergunta só faz sentido para exercício **com** correção automática: sem
+ * correção, o exercício já explica por que não roda aqui. Com correção e sem
+ * versão adaptada, a conta não fecha — a conferência cobraria um programa que o
+ * console se recusa a rodar.
+ */
+function recusaDaSolucaoDeReferencia(exercicio: {
+  readonly correcao?: CorrecaoDoExercicio
+  readonly solucao: string
+  readonly solucaoQueRodaNoConsole?: string
+}): string | null {
+  if (exercicio.correcao === undefined || exercicio.solucaoQueRodaNoConsole !== undefined) {
+    return null
+  }
+  return motivoDaRecusa(exercicio.solucao)
+}
 
 /**
  * Problemas de um diagrama.
@@ -96,6 +223,9 @@ function problemasNoMotivoDeNaoRodar(
 }
 
 /** Reclamações encontradas. Vazio significa conteúdo consistente. */
+/** Forma do identificador de exercício: `e` + unidade + `-` + número. */
+const FORMATO_DE_ID_DE_EXERCICIO = /^e[0-9]+-[0-9]+$/
+
 export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string[] {
   const problemas: string[] = []
   const onde = `unidade ${unidade.id}`
@@ -153,6 +283,15 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
 
   const idsDeExercicio = new Set<string>()
   for (const exercicio of unidade.pratica) {
+    if (exercicio.id.trim() === '') {
+      problemas.push(`${onde}: exercício sem identificador`)
+    } else if (!FORMATO_DE_ID_DE_EXERCICIO.test(exercicio.id)) {
+      // O identificador vai para o progresso guardado. Formato livre ali viraria
+      // migração inventada depois; a forma é decidida agora, com o conteúdo na mão.
+      problemas.push(
+        `${onde}: exercício com identificador fora do formato e<unidade>-<número> (${exercicio.id})`,
+      )
+    }
     if (idsDeExercicio.has(exercicio.id)) {
       problemas.push(`${onde}: exercício repetido (${exercicio.id})`)
     }
@@ -173,6 +312,7 @@ export function problemasNoConteudo(unidade: ConteudoDaUnidade): readonly string
         `${onde}: exercício ${exercicio.id}`,
       ),
     )
+    problemas.push(...problemasNaCorrecao(exercicio, onde))
   }
 
   problemas.push(...problemasNasPerguntas(unidade))

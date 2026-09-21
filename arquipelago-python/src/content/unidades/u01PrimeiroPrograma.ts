@@ -159,6 +159,11 @@ export const u01PrimeiroPrograma: ConteudoDaUnidade = {
       conferencia:
         'Ao rodar `python3 sobre_mim.py`, as duas linhas aparecem, na ordem em que você escreveu.',
       solucao: 'print("Meu nome é Ana")\nprint("Quero aprender a programar para automatizar tarefas")',
+      correcao: {
+        estrutura: { linhasNaoVazias: 2 },
+        limite:
+          'A conferência conta as linhas que o programa imprimiu. Ela não sabe o seu nome nem julga o que você escreveu nas duas linhas: quem confere o conteúdo é você, lendo a tela. E aqui o código roda solto, sem arquivo — criar o `sobre_mim.py` de verdade é no seu computador.',
+      },
     },
     {
       id: 'e1-3',

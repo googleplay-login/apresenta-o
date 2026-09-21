@@ -1,17 +1,18 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 9 (prova de conceito do Pyodide em Web Worker)**.
+Atualizado em **21/09/2026**, ao final da **Etapa 10 (exercícios com correção automática)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 9 concluída; 10 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 10 concluída; 11 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
-| Persistência | **existe**: `localStorage`, versão **2**, com migração da versão anterior, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
+| Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
+| Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir`, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
 | Execução de código (Pyodide) | **existe como prova de conceito**: console por ilha, interpretador servido pela própria aplicação, carregado sob demanda (Etapa 9). A ligação do Worker com o navegador é roteiro manual |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
@@ -26,7 +27,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 610 testes, em 37 arquivos
+    npm test             # 699 testes, em 40 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -54,9 +55,13 @@ o que procurar e o botão que marca a leitura como feita — e *2. Entender do n
 explicação original, com os diagramas desenhados em texto. O marcador de leitura é registro, não
 permissão: ele **não** aprova, não abre ponte e não muda nota (D-033).
 
-Na aba **Prática**, cada exercício tem o console de Python da ilha: ele **não** baixa nada ao abrir a
-página — o interpretador só vem no clique em *Ligar o Python (baixa cerca de 14 MB uma vez)*. A
-mensagem de erro aparece inteira, com traceback; `input()` é recusado com a alternativa escrita; e um
+Na aba **Prática**, cada exercício traz o enunciado, uma dica, **como saber que deu certo**, a solução
+possível (fechada até você abrir) e, quando o exercício pode ser conferido, o botão *Escrever e
+conferir no console*. O console roda Python de verdade, e **não** baixa nada ao abrir a página — o
+interpretador só vem no clique em *Ligar o Python (baixa cerca de 14 MB uma vez)*. Escolhendo o
+exercício no console e clicando em *Rodar e conferir*, a conferência mostra item por item o que
+esperava e o que veio, e diz **o que ela não julga**. Ela não é nota: quem aprova a ilha é a avaliação.
+A mensagem de erro aparece inteira, com traceback; `input()` é recusado com a alternativa escrita; e um
 programa que passa de 15 segundos sem responder faz a tela avisar, com o botão *Recomeçar do zero*,
 que descarta o Worker — a única forma de interromper um laço infinito (D-041).
 
@@ -228,6 +233,29 @@ Verificação:
 - a trava de acentuação reprovou a etapa uma vez por causa de um **nome de classe** lido como prosa
   (`"exercicio__nota exercicio__nao-roda"`); a classe virou um token só, e a trava ficou como estava.
 
+### Etapa 10 — exercícios com correção automática, e o limite escrito na tela
+
+- `src/learning/correcaoDeExercicio.ts`: a conferência inteira, pura — monta a sonda
+  (`programaDaConferencia`), separa a medida da saída (`separarSondagem`), compara o que o programa
+  imprimiu (por trecho, **na ordem**), o que ficou guardado (com `repr`, para distinguir `7.0` de `7`)
+  e a forma pedida (linhas não vazias, comentário no **código do estudante**), e devolve o veredito item
+  por item, com o limite (D-044, D-045);
+- `src/content/tiposDeConteudo.ts`: `correcao` no exercício, com `limite` **obrigatório** — correção sem
+  limite declarado é recusada pelo validador;
+- **dez dos doze exercícios passaram a ter correção**, e os dois que não têm trazem o motivo escrito
+  (`naoRodaNoConsole`), visível ao lado do exercício: são comandos de terminal, que só existem no
+  computador de quem estuda;
+- `src/ui/paineis/ConsoleDoPython.tsx` e `PraticaDaUnidade.tsx`: escolha do exercício no console, botão
+  *Rodar e conferir*, veredito com **esperado × obtido**, limite declarado, selo por exercício e o texto
+  que diz, na mesma frase, que o resultado está guardado **e** que isso não aprova a ilha;
+- o exercício conferido entrou no progresso (`exerciciosResolvidos`, formato 3, com migração da 1 e da 2),
+  sem aprovar unidade, sem contar tentativa e sem mudar nota (D-046, D-047);
+- **defeito real encontrado e corrigido**: o Pyodide reaproveitava o espaço de nomes entre execuções, e
+  uma resposta errada (`print(40)`) passava porque `figurinhas` de uma execução anterior sobrevivia.
+  Cada execução passou a rodar num espaço de nomes novo, destruído no fim;
+- o teste que roda Python de verdade cobra que **cada solução de referência passe na própria correção**
+  e que quatro respostas erradas sejam reprovadas, cada uma pelo item certo.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -262,7 +290,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 50 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 53 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |
@@ -276,11 +304,10 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 10 — exercícios com correção automática.** A prova de conceito da Etapa 9 mostrou que dá para
-rodar Python de verdade no navegador de quem estuda; a Etapa 10 usa isso para corrigir exercício:
-comparar a saída esperada com a saída obtida, dizer o que faltou **sem entregar a resposta**, e não
-premiar coincidência. O que **não** entra: julgar estilo, exigir uma solução única, nem prometer que a
-correção não pode ser enganada — ela roda no cliente, e a tela continua dizendo isso.
+**Etapa 11 — expansão curricular em lotes de 2 a 3 unidades.** O ciclo completo já existe para as
+quatro primeiras ilhas, com correção automática de exercício; a Etapa 11 acrescenta ilhas novas
+escrevendo conteúdo, e não construindo maquinário — cada lote passa pelo mesmo validador, pelos
+mesmos testes e pelo mesmo padrão de correção declarada com limite.
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
 leitura recomendada fala em capítulo e seção, não em página.
