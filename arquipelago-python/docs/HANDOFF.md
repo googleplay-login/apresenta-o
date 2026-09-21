@@ -28,7 +28,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 744 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
+    npm test             # 746 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -255,6 +255,22 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Conserto depois do lote 3: a ilha azul-petróleo e o farol solto (D-056)
+
+- **a ilha parecia uma barbatana azul.** A causa não era a paleta: era a luz. O chão da meia-esfera era
+  a cor do **mar** (`#3E8E96`), e é justamente a face virada para baixo que forma a parede de uma ilha
+  suspensa. A ponta da pedra saía em `#081112` (preto esverdeado) e a luz que chegava lá era `#72b1bd`.
+  O chão da luz passou a ser a rocha clara da paleta (`#8A8580`): mesma luminância (0,237 contra 0,226),
+  croma 0,04 contra 0,26. A parede saiu de `#646b6d` (azulada) para `#6c696a` (neutra), e o capim não
+  mudou;
+- **os pontinhos escuros do céu não eram as nuvens** — a varredura da árvore 3D mostrou que os objetos
+  mais altos da cena são os **faróis de estado**, a 21,8–29,0 de altura nas ilhas 7 a 10. As nuvens já
+  estavam claras e chapadas desde D-055;
+- o farol de estado **ganhou mastro**: um poste fino da paleta desce do farol até o capim, com a base
+  enterrada 0,3. O farol continua na mesma altura e continua girando; o que muda é que agora se vê que
+  ele está em cima de um poste. **A função não foi tocada** — continua um farol por ilha, com a cor do
+  estado dela.
+
 ### Conserto depois do lote 3: a pedra fora do capim e as nuvens escuras (D-055)
 
 - **a pedra da ilha e o capim sorteavam a própria borda de forma independente** (`semente` e
@@ -428,7 +444,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054) e a pedra fora do capim (D-055) | Registrado em `TEST_REPORT.md`, com roteiro manual de 57 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — foi assim que apareceram "as ilhas estão todas iguais" (D-053), o mundo quase preto (D-054), a pedra fora do capim (D-055) e a ilha azul-petróleo (D-056) | Registrado em `TEST_REPORT.md`, com roteiro manual de 59 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |

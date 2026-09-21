@@ -47,8 +47,19 @@ export function Ceu() {
       <color attach="background" args={[CORES_DO_MUNDO.ceu]} />
       <fog attach="fog" args={[CORES_DO_MUNDO.nevoa, 90, 420]} />
 
-      {/* Luz: meia-luz do céu mais um sol baixo, para a pedra ter dois lados. */}
-      <hemisphereLight args={[CORES_DO_MUNDO.ceuDoAlto, CORES_DO_MUNDO.marFundo, 1.35]} />
+      {/*
+        Luz: meia-luz do céu mais um sol baixo, para a pedra ter dois lados.
+
+        O chão da meia-luz **não** é a cor do mar, e isso é uma decisão (D-056).
+        Era, e o mar é um verde-azulado saturado (`#3E8E96`): toda face virada
+        para baixo — que é justamente a parede da pedra, na ilha suspensa — era
+        iluminada por ele, e a rocha cinza da paleta saía **azul-petróleo**
+        escuro. Na tela, o arquipélago virava uma fileira de barbatanas.
+        O chão da meia-luz é a luz que volta de baixo, difusa e sem cor própria;
+        e a rocha clara da paleta tem quase a mesma luminância do mar (0,24 contra
+        0,23), então a penumbra embaixo das ilhas continua igual.
+      */}
+      <hemisphereLight args={[CORES_DO_MUNDO.ceuDoAlto, CORES_DO_MUNDO.rochaClara, 1.35]} />
       <directionalLight
         color={CORES_DO_MUNDO.pale}
         intensity={1.15}

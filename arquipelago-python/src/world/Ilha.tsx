@@ -8,6 +8,7 @@ import { LUGARES_NA_ILHA, posicaoNoCapim } from './geometria/identidade'
 import {
   gerarArvore,
   gerarBiblioteca,
+  gerarCaixa,
   gerarMesa,
   gerarPedra,
   gerarPlaca,
@@ -64,6 +65,22 @@ const CORPO_DO_MUNDO = 'corpo'
  * A 22% a diferença entre as ilhas se vê, e o chão continua verde em todas.
  */
 const TOM_NO_CAPIM = 0.22
+
+/**
+ * Altura do farol de estado acima do capim, e a largura do mastro dele.
+ *
+ * O farol é o sinal de estado que se vê de longe, e ele **flutuava solto** acima
+ * da ilha: um losango escuro pequeno no céu claro, que na tela lia como entulho.
+ * O mastro resolve sem tirar o sinal de longe — o farol continua onde estava, mas
+ * agora se vê que está em cima de um poste, e não solto no ar.
+ */
+const ALTURA_DO_FAROL = 7.4
+
+/** Largura do mastro do farol. Fino o bastante para parecer um poste. */
+const LARGURA_DO_MASTRO = 0.09
+
+/** Quanto do mastro fica enterrado no capim, para não haver fresta na base. */
+const FUNDO_DO_MASTRO = 0.3
 
 
 
@@ -201,6 +218,11 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
       biblioteca: gerarBiblioteca({ largura: 2.1 * escala, altura: 1.7 * escala, profundidade: 1.6 * escala }),
       mesa: gerarMesa({ largura: 2.2 * escala, altura: 1.0 * escala }),
       placa: gerarPlaca({ altura: 2.2 * escala, largura: 1.5 * escala }),
+      mastro: gerarCaixa({
+        largura: LARGURA_DO_MASTRO,
+        altura: ALTURA_DO_FAROL + FUNDO_DO_MASTRO,
+        profundidade: LARGURA_DO_MASTRO,
+      }),
       arvores: enfeites.map((enfeite) => gerarArvore({ altura: enfeite.altura, raio: enfeite.raio })),
       pedras: pedrasSoltas.map((pedra) => ({ ...pedra, malha: gerarPedra({ raio: pedra.raio }) })),
       enfeites,
@@ -315,9 +337,16 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
         ))}
       </group>
 
-      {/* Farol de estado: gira devagar acima da ilha. Cor diz o estado; a forma
-          não muda, porque quem lê a cor também lê o painel e a lista em texto. */}
-      <group name="farol" ref={farol} position={[0, 7.4, 0]}>
+      {/* Farol de estado: gira devagar acima da ilha, no alto do mastro. Cor diz o
+          estado; a forma não muda, porque quem lê a cor também lê o painel e a
+          lista em texto. */}
+      <group name="farol" ref={farol} position={[0, ALTURA_DO_FAROL, 0]}>
+        {/* O mastro desce do farol até o capim. A caixa nasce com a base em y = 0,
+            então ela é deslocada para baixo o comprimento inteiro: assim a base
+            fica enterrada no capim e o topo encosta no farol. */}
+        <group position={[0, -(ALTURA_DO_FAROL + FUNDO_DO_MASTRO), 0]}>
+          <Malha3D malha={pecas.mastro} cor={CORES_DERIVADAS.poste} />
+        </group>
         <mesh>
           <octahedronGeometry args={[ilha.acessivel ? 0.62 : 0.42, 0]} />
           <meshLambertMaterial color={corDaEstrutura} flatShading />

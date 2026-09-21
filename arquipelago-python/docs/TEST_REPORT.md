@@ -6,6 +6,61 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — a ilha azul-petróleo e o farol solto no céu (capturas de tela)
+
+### 1. Os dois defeitos, medidos
+
+As capturas seguintes mostraram o arquipélago como uma fileira de **barbatanas escuras** (topo verde,
+corpo azul-afiado) e **pontinhos escuros** no céu. Medidos com os tokens e as duas luzes do mundo
+(modelo de meia-esfera mais sol direcional, por canal):
+
+| Face | Antes (chão da luz = mar) | Depois (chão da luz = rocha clara) |
+|---|---|---|
+| Parede da pedra (topo) | `#646b6d` azulado | **`#6c696a`** neutro |
+| Parede da pedra (meio) | `#3f4444` | **`#454442`** |
+| Ponta da pedra (para baixo) | **`#081112`** | **`#12100f`** |
+| Luz que chega na face de baixo | `#72b1bd` verde-azulada | **`#aba9ab`** neutra |
+| Capim (topo) | `#60ac63` | `#60ac63` (não muda) |
+
+Os pontinhos do céu **não eram as nuvens**: a varredura da árvore 3D mostrou que os objetos mais altos
+da cena são os **faróis de estado** (losangos de 24 vértices), a 21,8–29,0 de altura nas ilhas 7 a 10 —
+e que as nuvens, essas sim, já estavam claras e chapadas desde D-055. A correção está em **D-056**.
+
+### 2. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro.
+
+### 3. Testes automáticos — EXECUTADO
+
+    npm test
+
+**42 arquivos, 746 testes, todos passando** (eram 42 e 744).
+
+| Arquivo | Testes | O que o conserto acrescentou |
+|---|---|---|
+| `src/world/ConteudoDaCena.test.tsx` | 30 | Dois casos novos: o chão da meia-luz é **neutro** (croma abaixo de 0,1) e com a luminância do mar preservada (razão entre 0,75 e 1,25); e cada ilha tem **mastro**, com a base no plano do topo e o topo entre 6 e 8 (era 28) |
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/assets/index-*.js` | 420,34 kB | 128,54 kB |
+| `dist/assets/Cena-*.js` | 919,57 kB | 244,89 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Os pixels.** As cores acima são **conta** (tokens × luz, por canal), não leitura de tela: não há
+  GPU neste ambiente. Se a pedra ainda parecer azulada, ou o farol ainda parecer solto, quem diz é
+  quem olha — itens **58** e **59** do roteiro manual.
+- **A forma do arquipélago não foi julgada**, só medida. O perfil afunilado da ilha continua o mesmo
+  desde a Etapa 4.
+
 ## Execução de 21/09/2026 — a pedra fora do capim e as nuvens escuras (capturas de tela)
 
 ### 1. Os dois defeitos, medidos
@@ -404,7 +459,14 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
     pode parecer cascalho ou entulho escuro flutuando (era a face de baixo de cada nuvem, iluminada
     pela cor do mar).
 
-Resultado esperado, somando as etapas 5 a 11: **57 de 57 itens conferidos**. Qualquer item que falhe
+58. **A pedra das ilhas é cinza, não azul.** Olhar uma ilha de lado, com o céu atrás: a parede tem de
+    ser cinza claro em cima e cinza escuro embaixo, do mesmo cinza quente da paleta. Nenhuma parede
+    pode parecer azul-petróleo, verde-azulada ou "barbatana". O capim do topo continua verde.
+59. **O farol de estado fica no alto de um mastro.** Em cada ilha deve haver um losango no alto de um
+    poste fino, saindo do capim — e não um losango solto no céu. Conferir também que o losango gira
+    devagar e que a cor diz o estado: âmbar na ilha disponível, cinza nas bloqueadas.
+
+Resultado esperado, somando as etapas 5 a 11: **59 de 59 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.
 
 ## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)

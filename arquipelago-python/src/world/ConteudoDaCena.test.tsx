@@ -42,7 +42,8 @@ import type { ArrastoPendente } from './CameraLivre'
 import { SEM_TECLAS, type TeclasDeMovimento } from './camera/movimento'
 import { chaoDoMundo, type ChaoDoMundo, type Localizacao } from './mapaCaminhavel'
 import { caminhanteInicial, type Caminhante } from './avatar/passos'
-import { CORES_DERIVADAS } from '../ui/theme/paleta3d'
+import { CORES_DERIVADAS, CORES_DO_MUNDO } from '../ui/theme/paleta3d'
+import { canalLinear, canais } from './geometria/pintura'
 import { PLANO_DE_UNIDADES } from '../content/planoDeUnidades'
 import { progressoInicial, registrarResultado } from '../learning/percurso'
 
@@ -146,6 +147,57 @@ function alturaDoTopoDaMalha(malha: No): number {
     maior = Math.max(maior, posicoes[indice] ?? 0)
   }
   return maior
+}
+
+/** Uma cor `0xRRGGBB` na escala linear, com o canal de cada componente. */
+function corLinear(hex: number): readonly number[] {
+  return canais(hex).map(canalLinear)
+}
+
+/** A posição do próprio objeto, sem contar os pais. */
+function posicaoLocal(no: No): { readonly x: number; readonly y: number; readonly z: number } {
+  const position = (no.instance as unknown as { position?: { x: number; y: number; z: number } })
+    .position
+  return { x: position?.x ?? 0, y: position?.y ?? 0, z: position?.z ?? 0 }
+}
+
+/**
+ * As medidas de uma malha: altura, largura, profundidade e os extremos em y.
+ *
+ * É assim que o teste reconhece um mastro sem depender de nome nem de ordem na
+ * árvore: um mastro é alto (mais de cinco) e fino (menos de meia unidade de lado).
+ */
+function medidaDaMalha(malha: No): {
+  readonly altura: number
+  readonly largura: number
+  readonly profundidade: number
+  readonly minimoY: number
+  readonly maximoY: number
+} {
+  const posicoes = posicoesDaMalha(malha)
+  let minimoX = Number.POSITIVE_INFINITY
+  let maximoX = Number.NEGATIVE_INFINITY
+  let minimoY = Number.POSITIVE_INFINITY
+  let maximoY = Number.NEGATIVE_INFINITY
+  let minimoZ = Number.POSITIVE_INFINITY
+  let maximoZ = Number.NEGATIVE_INFINITY
+
+  for (let indice = 0; indice < posicoes.length; indice += 3) {
+    minimoX = Math.min(minimoX, posicoes[indice] ?? 0)
+    maximoX = Math.max(maximoX, posicoes[indice] ?? 0)
+    minimoY = Math.min(minimoY, posicoes[indice + 1] ?? 0)
+    maximoY = Math.max(maximoY, posicoes[indice + 1] ?? 0)
+    minimoZ = Math.min(minimoZ, posicoes[indice + 2] ?? 0)
+    maximoZ = Math.max(maximoZ, posicoes[indice + 2] ?? 0)
+  }
+
+  return {
+    altura: maximoY - minimoY,
+    largura: maximoX - minimoX,
+    profundidade: maximoZ - minimoZ,
+    minimoY,
+    maximoY,
+  }
 }
 
 /** As posições de uma malha, já em lista de números. */
@@ -585,6 +637,82 @@ describe('a ilha é o capim em cima da pedra, e não o contrário (D-055)', () =
           `Em «${unidade.titulo}», direção ${indice}: capim ${raioDoCapim.toFixed(2)} < pedra ${raioDaPedra.toFixed(2)}`,
         ).toBeGreaterThanOrEqual(raioDaPedra - 0.01)
       })
+    }
+
+    await cena.unmount()
+  })
+})
+
+describe('a luz do mundo não tinge a pedra de mar (D-056)', () => {
+  it('a meia-luz do chão é neutra — a cor do mar deixava a rocha azul', async () => {
+    // A rocha da paleta é um cinza quente. Enquanto o chão da meia-luz foi a cor
+    // do mar (`#3E8E96`), toda face virada para baixo — que é a parede da ilha
+    // suspensa — era iluminada por um verde-azulado saturado, e a rocha saía
+    // azul-petróleo: na tela, o arquipélago virou uma fileira de barbatanas.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const meiaLuz = cena.scene.findAll(
+      (no) => (no.instance as unknown as { type?: string }).type === 'HemisphereLight',
+    )
+    expect(meiaLuz).toHaveLength(1)
+
+    const cores = meiaLuz[0]?.props.args as [number, number, number]
+    const chao = corLinear(cores[1] ?? 0)
+    const mar = corLinear(CORES_DO_MUNDO.marFundo)
+
+    const croma = Math.max(...chao) - Math.min(...chao)
+    expect(croma, `O chão da luz está saturado demais: croma ${croma.toFixed(3)}`).toBeLessThan(0.1)
+
+    const luminancia = (v: readonly number[]): number =>
+      0.2126 * (v[0] ?? 0) + 0.7152 * (v[1] ?? 0) + 0.0722 * (v[2] ?? 0)
+    const razao = luminancia(chao) / luminancia(mar)
+    // A penumbra embaixo das ilhas tem de continuar: o chão da luz não pode ficar
+    // nem claro demais (achata o relevo) nem escuro demais (volta o preto).
+    expect(razao).toBeGreaterThan(0.75)
+    expect(razao).toBeLessThan(1.25)
+
+    await cena.unmount()
+  })
+})
+
+describe('o farol de estado fica no alto de um mastro (D-056)', () => {
+  it('cada ilha tem um mastro que sai do capim e sustenta o farol', async () => {
+    // O farol é o sinal de estado que se vê de longe. Ele flutuava solto acima da
+    // ilha: um losango escuro pequeno no céu claro, que na tela lia como entulho.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    for (const unidade of UNIDADES) {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      const farol = ilha.findAll((no) => comNome(no) === 'farol')[0]
+      if (farol === undefined) {
+        throw new Error(`A ilha «${unidade.titulo}» deveria ter farol`)
+      }
+
+      const malhas = farol.findAll(
+        (no) => (no.instance as unknown as { type?: string }).type === 'Mesh',
+      )
+      expect(malhas.length, `«${unidade.titulo}»: farol sem mastro`).toBeGreaterThanOrEqual(2)
+
+      const mastro = malhas.find((malha) => {
+        const medida = medidaDaMalha(malha)
+        return medida.altura >= 5 && medida.largura <= 0.3 && medida.profundidade <= 0.3
+      })
+      if (mastro === undefined) {
+        throw new Error(`A ilha «${unidade.titulo}» tem farol, mas nenhuma malha parece mastro`)
+      }
+
+      // O mastro desce até o capim: a base fica no plano do topo, e o topo do
+      // mastro chega no farol.
+      const base = posicaoLocal(mastro).y + medidaDaMalha(mastro).minimoY
+      const topoDoMastro = posicaoLocal(mastro).y + medidaDaMalha(mastro).maximoY
+      expect(base, `O mastro de «${unidade.titulo}» flutua`).toBeLessThan(0.5)
+      expect(base).toBeGreaterThan(-1)
+      expect(topoDoMastro).toBeGreaterThan(6)
+      expect(topoDoMastro).toBeLessThan(8)
     }
 
     await cena.unmount()

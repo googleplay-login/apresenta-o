@@ -1141,3 +1141,50 @@ face iluminada e face escura.
 **O que continua sem prova:** os **pixels**. Não há navegador com WebGL neste ambiente; o que se prova
 aqui é a geometria e a árvore 3D. A confirmação é de quem olha — itens **56** e **57** do roteiro
 manual.
+
+## D-056 — A luz que vem de baixo, e o farol que flutuava
+**21/09/2026** — correção de dois defeitos **vistos nas capturas de tela** de quem usa, na Etapa 11.
+
+### Defeito 1 — a ilha virou uma barbatana azul-petróleo
+
+Na terceira e na quarta capturas, o arquipélago aparecia como uma fileira de **barbatanas escuras**:
+topo verde, corpo azul-escuro e afiado. A pedra da paleta é um **cinza quente** (`#3A3632` no fundo,
+`#8A8580` no alto), então a cor na tela não vinha da paleta — vinha da luz.
+
+A luz do mundo é uma meia-esfera: metade céu, metade **chão**. O chão dela era a cor do **mar**
+(`#3E8E96`), e é justamente a face virada para baixo que forma a parede de uma ilha suspensa.
+Medido com os tokens e as duas luzes do mundo:
+
+| Face | Antes (chão = mar) | Agora (chão = rocha clara) |
+|---|---|---|
+| Parede da pedra (topo) | `#646b6d` azulado | **`#6c696a`** cinza neutro |
+| Parede da pedra (meio) | `#3f4444` | **`#454442`** |
+| Ponta da pedra (para baixo) | **`#081112`** — preto esverdeado | **`#12100f`** |
+| Capim (topo) | `#60ac63` | `#60ac63` (não muda) |
+| Luz que chega na face de baixo | `#72b1bd` — verde-azulada | **`#aba9ab`** — neutra |
+
+**A decisão:** o chão da meia-luz passa a ser a **rocha clara da paleta** (`#8A8580`), que tem quase a
+mesma luminância do mar (linear 0,237 contra 0,226) e **croma 0,04 contra 0,26**. A penumbra embaixo
+das ilhas continua exatamente como estava — o que sai é a cor. É a mesma regra de D-005 valendo para a
+luz: a cor da tela tem de poder ser rastreada até um token, e um mar saturado não é cor de luz.
+
+### Defeito 2 — o farol de estado flutuava solto no céu
+
+O farol de estado é o losango que diz, de longe, se a unidade está disponível, aprovada ou bloqueada.
+Ele fica 7,4 acima do capim **sem nada embaixo**: nas capturas, os nove faróis das unidades bloqueadas
+apareceram como **pontinhos escuros** no céu claro, que ninguém lê como "farol" — e foi o que a
+primeira leitura destas capturas chamou de caco de entulho.
+
+Isso **não** é o mesmo defeito das nuvens (D-055): aquelas eram claras de cor e escuras na tela. Estas
+são escuras de cor, porque a cor de estado de uma unidade bloqueada é o cinza da marca
+(`coresDeEstado.planejada`), e o objeto estava **isolado** — sem nada que o ligasse à ilha.
+
+**A decisão:** o farol ganhou **mastro**. Um poste fino (0,09 de lado, cor de poste da paleta) desce do
+farol até o capim, com a base enterrada 0,3 para não deixar fresta. O farol continua onde estava e
+continua girando: o que muda é que agora se vê que ele está em cima de um poste. **A função não foi
+tocada** — uma ilha continua tendo um farol por ilha, com a cor do estado dela (item conferido no
+roteiro manual desde a Etapa 4).
+
+**O que continua sem prova:** os **pixels**. As duas correções foram medidas com os tokens e as duas
+luzes do mundo (modelo de meia-esfera mais sol direcional, por canal — é conta, não pixel) e travadas
+por teste. A confirmação é de quem olha: itens **58** e **59** do roteiro manual.

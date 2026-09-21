@@ -152,6 +152,17 @@ Do token até o pixel, a cor percorre três passos, e cada um tem um lugar:
 O que o desenho **não** faz: multiplicar cor por cor. Era o que deixava as paredes das ilhas em
 `#1a1714`, praticamente pretas, e o defeito só apareceu quando alguém viu o mundo na tela.
 
+### A luz do mundo (D-056)
+
+A luz são duas: uma **meia-esfera** (metade cor do céu, metade cor que volta de baixo) e um **sol
+baixo** direcional. Duas regras nasceram de defeitos vistos na tela:
+
+- **o chão da meia-esfera não é a cor do mar.** Era, e a parede de toda ilha suspensa — que é a face
+  virada para baixo — saía azul-petróleo, transformando o arquipélago numa fileira de barbatanas. Hoje
+  é a rocha clara da paleta: quase a mesma luminância do mar, croma quase zero;
+- **a cor do estado pode ser escura, mas não pode ficar solta no céu.** O farol de estado fica no alto
+  de um mastro; um losango escuro sozinho no céu claro não se lê como sinal, se lê como entulho.
+
 ### Quem é o teto da ilha (D-055)
 
 A ilha é a **pedra** (malha aberta em cima, afunilada para baixo) com o **capim** (disco) fechando o
