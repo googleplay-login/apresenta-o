@@ -6,6 +6,72 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 8 (persistência e protótipo jogável)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com o gancho de persistência corrigido e o teste novo em `.tsx`.
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**Resultado: 553 testes, 33 arquivos, todos aprovados** (eram 548/32 antes desta etapa).
+
+| O que foi acrescentado | Onde |
+|---|---|
+| Nenhuma escrita na chave do progresso antes de o valor guardado entrar no estado | `src/persistence/useProgressoPersistido.test.tsx` |
+| Armazenamento cheio depois da leitura não deixa o progresso apagado | `src/persistence/useProgressoPersistido.test.tsx` |
+| A falha de gravação aparece na tela, dizendo o que continua valendo | `src/persistence/useProgressoPersistido.test.tsx` |
+| O protótipo inteiro: quatro ilhas aprovadas em sequência, com recarga no meio | `src/app/paginas/Mundo.interacao.test.tsx` |
+| O percurso terminado: placar em 4 de 4, HUD de fim e o arquivo guardado com as quatro unidades | `src/app/paginas/Mundo.interacao.test.tsx` |
+| Navegador que recusa gravar: aviso na tela **e** trilha inteira jogável | `src/app/paginas/Mundo.interacao.test.tsx` |
+
+**Defeito real encontrado nesta etapa — e o mais grave do projeto até agora.** O efeito de leitura e
+o de gravação do progresso rodam na **mesma** passada, e a gravação ainda enxergava o progresso do
+primeiro render, que é vazio. Como gravar um progresso sem unidades significa "não há nada guardado",
+a primeira gravação **removia a chave** que a leitura acabara de ler. A gravação seguinte regravava
+tudo, e por isso ninguém notava — mas com o armazenamento cheio (ou a aba fechando nesse intervalo) o
+progresso era perdido. A prova está no relatório do próprio teste: a sequência observada na chave era
+
+    removeItem:arquipelago-python.progresso → setItem:arquipelago-python.progresso
+
+e, com a escrita recusada, o valor guardado terminava em `null`. Os 548 testes anteriores não pegaram
+isso porque todos conferiam o **estado final** da tela, que ficava certo. Corrigido em
+`useProgressoPersistido`, com a guarda da primeira gravação (D-039).
+
+**Prova de mutação da correção:** desligar a guarda faz os dois testes novos falharem; religá-la, os
+dois passam. A prova foi executada, e não presumida.
+
+### 3. Build de produção — EXECUTADO, passou
+
+    dist/index.html                0.63 kB │ gzip:   0.40 kB
+    dist/assets/index-*.css       20.77 kB │ gzip:   3.57 kB
+    dist/assets/index-*.js       300.92 kB │ gzip:  95.28 kB
+    dist/assets/Cena-*.js        912.10 kB │ gzip: 242.34 kB
+
+### 4. Servidor de desenvolvimento — EXECUTADO
+
+`/`, `src/persistence/useProgressoPersistido.ts`, `src/persistence/progressoSalvo.ts` e
+`src/app/paginas/Mundo.tsx` → **200**, sem erro de transformação.
+
+### 5. O protótipo jogável, e o caminho percorrido
+
+O teste de ponta a ponta percorre o protótipo **sem 3D** — que é o caminho de quem está numa máquina
+sem placa de vídeo, e o único possível neste ambiente. Ele abre as quatro ilhas na ordem, responde as
+vinte perguntas, envia as quatro avaliações, recarrega a página no meio, confere o placar a cada
+aprovação, confere que a ilha seguinte destravou, e termina com o HUD anunciando o fim do percurso.
+O que **não** está coberto: o mesmo percurso com o mundo 3D desenhado — isso é roteiro manual.
+
+### 6. O que continua NÃO executado
+
+Recarga de página num navegador de verdade, modo privado, cota estourada de verdade, fechar a aba no
+meio de uma gravação, e o mundo 3D. O roteiro manual abaixo ganhou os itens 42 a 45.
+
+---
+
 ## Execução de 21/09/2026 — Etapa 7 (a avaliação revisada)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -598,7 +664,22 @@ item, sem presumir sucesso.
     deve ir para o anúncio do resultado ("Aprovado nesta ilha" ou "Ainda não foi desta vez"), e não
     ficar perdido no fim do formulário.
 
-Resultado esperado: 41 de 41 conferidos. Qualquer item que falhe deve ser registrado aqui.
+### Roteiro manual — persistência e protótipo (Etapa 8)
+
+42. **O progresso sobrevive à recarga**: aprovar a primeira ilha, recarregar com `F5` e conferir que o
+    placar volta em "1 de 4 ilhas aprovadas", que a segunda ilha aceita entrada e que o marcador de
+    leitura continua como estava. Fazer o mesmo depois de aprovar a terceira.
+43. **Abas abertas ao mesmo tempo**: abrir a aplicação em duas abas, aprovar uma ilha numa e recarregar
+    a outra. A segunda deve mostrar o progresso mais recente gravado (a última gravação vence) — e
+    nenhuma das duas pode apagar a chave do progresso em nenhum momento.
+44. **Navegador que não guarda**: abrir numa janela privada. A trilha inteira deve funcionar, e o
+    aviso dizendo que o progresso não será guardado precisa aparecer sem que seja preciso procurar por
+    ele. Estudar, aprovar uma ilha e conferir que o aviso permanece.
+45. **Apagar só o nosso**: guardar um dado qualquer de outro site na mesma origem (por exemplo, criar
+    uma chave no console do navegador), clicar em **Apagar meu progresso**, confirmar, e conferir que
+    o dado do outro site continua lá e que o Arquipélago voltou ao começo.
+
+Resultado esperado: 45 de 45 conferidos. Qualquer item que falhe deve ser registrado aqui.
 
 ---
 

@@ -21,7 +21,7 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 >
 > **O que ainda ninguém viu:** o desenho 3D em si. Não há navegador com WebGL no ambiente de
 > desenvolvimento — a árvore 3D de verdade é montada em teste (ilhas, estruturas e pontes, sem
-> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 41 itens está
+> placa de vídeo), mas os pixels continuam **não verificados**. O roteiro manual de 45 itens está
 > em `docs/TEST_REPORT.md`.
 
 Os números exatos e o que comprova cada afirmação estão em `docs/HANDOFF.md` e
@@ -35,7 +35,7 @@ funciona, não aparece como botão.
 
 Outros comandos:
 
-    npm test         # 548 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
+    npm test         # 553 testes: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e travas do projeto
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção
 

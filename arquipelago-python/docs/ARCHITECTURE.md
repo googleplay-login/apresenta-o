@@ -237,6 +237,8 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | O placar vem do progresso gravado | `src/app/paginas/Mundo.interacao.test.tsx` | Tentativa contada na tela, que mente depois de recarregar (D-037) |
 | O gabarito não se entrega por tamanho | `src/content/conteudo.test.ts`, `validadorDeConteudo.ts` | Acertar escolhendo a alternativa mais longa (D-038) |
 | O arquivo guardado de versão anterior é migrado, não descartado | `src/persistence/progressoSalvo.test.ts` | Perda de progresso por causa de um campo novo (D-035) |
+| Nada é gravado antes de o progresso lido chegar ao estado | `src/persistence/useProgressoPersistido.test.tsx` | A primeira passada de efeitos apagar o progresso guardado (D-039) |
+| O protótipo inteiro, da primeira à última ilha, com recarga no meio | `src/app/paginas/Mundo.interacao.test.tsx` | Percurso que só funciona numa sessão, ou que não fecha |
 
 ## Ambiente de execução (preview remoto)
 

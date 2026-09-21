@@ -1,17 +1,17 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, ao final da **Etapa 7 (a avaliação revisada)**.
+Atualizado em **21/09/2026**, ao final da **Etapa 8 (persistência e protótipo jogável)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 7 concluída; 8 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 8 concluída; 9 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
 | Mundo 3D | **existe**: quatro ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa |
 | Conteúdo pedagógico | **existe** para as 4 primeiras unidades: missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
-| Persistência | **existe**: `localStorage`, versão **2**, com migração da versão anterior e aviso honesto de falha |
+| Persistência | **existe**: `localStorage`, versão **2**, com migração da versão anterior, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Execução de código (Pyodide) | **não existe** — Etapa 9 |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
@@ -26,7 +26,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 548 testes, em 32 arquivos
+    npm test             # 553 testes, em 33 arquivos
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -182,6 +182,21 @@ Verificação:
 - **documento cumprido:** os documentos prometiam o aviso de honestidade desde a Etapa 2, e ele não
   existia na tela. Agora existe, com teste.
 
+### Etapa 8 — persistência revisada, e o protótipo percorrido inteiro
+
+- **defeito corrigido, o mais grave até agora:** a primeira gravação rodava antes de a leitura
+  chegar ao estado e **apagava** a chave guardada (gravar progresso sem unidades é o mesmo que "não
+  há nada"). Os 548 testes anteriores não pegaram porque conferiam o estado final da tela, que ficava
+  certo. `useProgressoPersistido` passou a não gravar enquanto o progresso em mãos for o do primeiro
+  render (D-039), com dois testes novos e prova de mutação;
+- `src/persistence/useProgressoPersistido.test.tsx` (novo): ordem das operações na chave, cota
+  estourada depois da leitura, e aviso de falha visível;
+- `Mundo.interacao.test.tsx`: o **protótipo jogável de ponta a ponta** — quatro ilhas aprovadas em
+  sequência, recarga da página no meio, placar a cada passo, fim do percurso e o arquivo guardado
+  conferido; mais o caso do navegador que recusa gravar, com a trilha inteira ainda jogável;
+- o caminho percorrido pela suíte é o **sem 3D** (não há WebGL no ambiente), que é exatamente a
+  alternativa acessível — a mesma de quem usa leitor de tela ou está sem placa de vídeo.
+
 ### Revisão da Etapa 4 — o mundo sob teste, e o gabarito desviciado
 
 Três mudanças, todas nascidas de revisão e não de pedido novo:
@@ -216,7 +231,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 41 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** | Registrado em `TEST_REPORT.md`, com roteiro manual de 45 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Pyodide não instalado | Sem execução de código no navegador | Etapa 9, que traz o pacote junto com o Web Worker (D-026) |
 
@@ -229,12 +244,12 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 8 — persistência local e protótipo jogável.** A persistência existe desde a Etapa 3 (com
-formato versionado, migração e aviso honesto de falha); a Etapa 8 fecha as pontas: o que acontece
-quando o armazenamento está indisponível, o que a pessoa vê quando a gravação falha no meio do
-percurso, o estado do protótipo inteiro do começo ao fim num navegador real, e a alternativa
-acessível sem 3D revista de ponta a ponta. O que **não** entra nesta etapa: Pyodide (Etapa 9) e
-correção automática de exercícios (Etapa 10).
+**Etapa 9 — prova de conceito do Pyodide em Web Worker.** Hoje o projeto **não** executa código
+Python: a pasta `src/python/` está vazia de propósito, e a dependência foi removida na revisão da
+Etapa 4 porque nada a usava (D-026). A Etapa 9 traz o pacote junto com o Web Worker que o usa,
+carregado sob demanda, e diz em voz alta o que isso **não** é: rodar código de terceiros no navegador
+não é seguro, e nenhuma tela vai prometer isso. O que **não** entra nesta etapa: exercícios com
+correção automática (Etapa 10), que dependem desta prova de conceito.
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null` e a
 leitura recomendada fala em capítulo e seção, não em página.

@@ -22,7 +22,8 @@ import {
  *  - **não apaga nada que não seja nosso**: `apagarProgresso` remove apenas as
  *    chaves com o prefixo da aplicação, jamais um `clear()` na origem inteira;
  *  - **a leitura acontece uma vez**, antes de qualquer gravação. Sem isso, o
- *    primeiro efeito de gravação passaria por cima do que estava salvo.
+ *    primeiro efeito de gravação passaria por cima do que estava salvo — e, no
+ *    caso do progresso vazio, apagaria o que estava salvo (D-039).
  */
 
 export type EstadoDaPersistencia = {
@@ -50,6 +51,16 @@ export function useProgressoPersistido({
   const armazenamento = useRef<Armazenamento | null>(null)
   const leituraFeita = useRef(false)
   const indisponivel = useRef(false)
+  /**
+   * Identidade do progresso do primeiro render — antes de a leitura acontecer.
+   *
+   * Existe por causa de um defeito real: o efeito de leitura e o de gravação
+   * rodam na **mesma** passada, e o de gravação ainda enxerga o progresso do
+   * primeiro render. Como gravar um progresso sem unidades quer dizer "não há
+   * nada guardado", ele removia a chave que acabara de ser lida — e quem
+   * recarregasse a página com o armazenamento cheio perdia tudo (D-039).
+   */
+  const progressoAntesDaLeitura = useRef(progresso)
 
   const avisar = useCallback(
     (aviso: string | null) => {
@@ -77,6 +88,12 @@ export function useProgressoPersistido({
 
   useEffect(() => {
     if (!ativo || !leituraFeita.current) {
+      return
+    }
+
+    // Nada é gravado antes de o progresso lido chegar ao estado: enquanto o
+    // progresso em mãos for o do primeiro render, a leitura ainda não voltou.
+    if (progresso === progressoAntesDaLeitura.current) {
       return
     }
 

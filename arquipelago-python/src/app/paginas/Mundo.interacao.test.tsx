@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Mundo } from './Mundo'
 import { PLANO_DE_UNIDADES } from '../../content/planoDeUnidades'
@@ -79,12 +79,27 @@ async function responderTudo(
 
   const gabarito = gabaritoDaUnidade(conteudo)
 
+  // O clique é pelo índice dentro do campo, e não pelo texto da alternativa: o
+  // nome acessível passa por normalização de espaços em branco, e uma das
+  // alternativas de `u03` tem espaços de propósito (D-034).
+  const campos = screen.getAllByRole('group')
+
   for (const [indice, pergunta] of conteudo.perguntas.entries()) {
     const certa = gabarito[indice] ?? 0
     const escolha = indice < erradas ? (certa + 1) % pergunta.alternativas.length : certa
-    const alternativa = pergunta.alternativas[escolha] ?? ''
+    const campo = campos[indice]
 
-    await usuario.click(screen.getByRole('radio', { name: alternativa }))
+    if (campo === undefined) {
+      throw new Error(`Campo da pergunta ${indice + 1} não encontrado`)
+    }
+
+    const alternativas = within(campo).getAllByRole('radio')
+    const alternativa = alternativas[escolha]
+    if (alternativa === undefined) {
+      throw new Error(`Alternativa ${escolha} da pergunta ${indice + 1} não encontrada`)
+    }
+
+    await usuario.click(alternativa)
   }
 }
 
@@ -409,6 +424,21 @@ describe('progresso guardado no navegador', () => {
     expect(screen.queryByText('0 de 4 ilhas aprovadas')).toBeNull()
   })
 
+  it('avisa que o progresso não será guardado quando o navegador recusa gravar', async () => {
+    // Modo privado, cota estourada ou armazenamento bloqueado: o estudo continua,
+    // mas a tela não pode deixar a pessoa acreditar que o progresso ficou salvo.
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError')
+    })
+
+    render(<Mundo />)
+
+    expect(await screen.findByText(/não permite guardar dados|não foi possível salvar/i)).toBeTruthy()
+    // E o mundo continua jogável: a trilha inteira está na tela.
+    expect(screen.getByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Entrar' }).length).toBeGreaterThan(0)
+  })
+
   it('apaga só o progresso da aplicação, e só depois de confirmação', async () => {
     // Uma chave de outro site na mesma origem: não pode ser tocada.
     window.localStorage.setItem('outro-site.token', 'nao-mexa')
@@ -524,6 +554,68 @@ describe('alternativa sem 3D', () => {
 
     for (const unidade of PLANO_DE_UNIDADES) {
       expect(screen.getByRole('heading', { level: 3, name: unidade.titulo })).toBeTruthy()
+    }
+  })
+})
+
+describe('o protótipo jogável, de ponta a ponta', () => {
+  it('aprova as quatro ilhas em sequência, sobrevive à recarga e fecha o percurso', async () => {
+    const usuario = userEvent.setup()
+    const { unmount } = render(<Mundo />)
+
+    expect(await screen.findByText('0 de 4 ilhas aprovadas')).toBeTruthy()
+
+    for (const [indice, unidade] of PLANO_DE_UNIDADES.entries()) {
+      const ultima = indice === PLANO_DE_UNIDADES.length - 1
+
+      // Com o painel aberto, a trilha sai de cena: só se abre a ilha quando o
+      // painel ainda não está nela (depois de "Seguir", ele já está).
+      if (screen.queryByRole('region', { name: `Unidade ${unidade.id}` }) === null) {
+        await abrirIlha(usuario, unidade.titulo)
+      }
+      await irParaAvaliacao(usuario)
+      await responderTudo(usuario, 0, unidade.id)
+      await usuario.click(screen.getByRole('button', { name: 'Enviar respostas' }))
+      expect(await screen.findByText('Aprovado nesta ilha'), `ilha ${unidade.id}`).toBeTruthy()
+
+      if (indice === 1) {
+        // No meio do percurso, a página é recarregada: o progresso tem de
+        // sobreviver, e a ilha seguinte tem de continuar destravada.
+        unmount()
+        render(<Mundo />)
+        expect(await screen.findByText('2 de 4 ilhas aprovadas')).toBeTruthy()
+      } else if (!ultima) {
+        await usuario.click(screen.getByRole('button', { name: 'Seguir para a próxima ilha' }))
+      }
+    }
+
+    expect(await screen.findByText('4 de 4 ilhas aprovadas')).toBeTruthy()
+
+    // Fecha o painel e confere o que o mundo diz com o percurso terminado.
+    await usuario.click(screen.getByRole('button', { name: /Fechar/ }))
+
+    // Clicar num cartão dispara `mouseenter`, e o HUD mostra o nome da ilha
+    // antes de qualquer outra frase. Sair do cartão devolve o HUD ao estado
+    // normal — que é o que está sendo conferido aqui.
+    const cartaoDaTerceira = screen
+      .getByRole('heading', { level: 3, name: PLANO_DE_UNIDADES[2]?.titulo ?? '' })
+      .closest('li')
+    fireEvent.mouseLeave(cartaoDaTerceira as HTMLElement)
+    expect(
+      await screen.findByText(/Todas as ilhas escritas até agora foram aprovadas/),
+    ).toBeTruthy()
+
+    // E o que ficou guardado: as quatro unidades aprovadas, sem unidade extra.
+    const guardado = JSON.parse(window.localStorage.getItem(CHAVE_DO_PROGRESSO) ?? '{}') as {
+      readonly versao?: number
+      readonly unidades?: Record<string, { readonly aprovada?: boolean }>
+    }
+    expect(guardado.versao).toBe(VERSAO_DO_PROGRESSO)
+    expect(Object.keys(guardado.unidades ?? {}).sort()).toEqual(
+      PLANO_DE_UNIDADES.map((unidade) => unidade.id).sort(),
+    )
+    for (const unidade of PLANO_DE_UNIDADES) {
+      expect(guardado.unidades?.[unidade.id]?.aprovada, `unidade ${unidade.id}`).toBe(true)
     }
   })
 })

@@ -667,3 +667,26 @@ caracteres ou mais, explicação com 40 ou mais e diferente de qualquer alternat
 "todas as anteriores" e afins, que não medem entendimento nenhum. Duas travas independentes medem o
 conjunto: o validador, com defeito injetado em teste, e uma varredura do conteúdo real que pergunta,
 do ponto de vista de quem está chutando, quantas perguntas a alternativa mais longa acertaria.
+
+---
+
+## D-039 — Nada é gravado antes de o progresso guardado chegar ao estado
+**21/09/2026** — decisão de persistência, na Etapa 8.
+
+**Decisão:** o gancho de persistência não grava enquanto o progresso em mãos for o do primeiro
+render. A primeira gravação só acontece **depois** de a leitura ter substituído o estado.
+
+**Contexto:** o efeito de leitura e o de gravação rodam na mesma passada de efeitos, e o de gravação
+ainda enxerga o progresso do primeiro render — vazio. Como gravar um progresso sem unidades significa
+"não há nada guardado" (é o que faz o botão de apagar terminar com o armazenamento limpo), a primeira
+gravação **removia** a chave que acabara de ser lida. Na maioria das vezes a gravação seguinte
+regravava tudo e ninguém notava; com o armazenamento cheio — ou com a aba fechando nesse intervalo —
+o progresso ia embora. O teste que provou isso mede a **ordem** das operações na chave:
+`removeItem` antes de `setItem`, e o valor sumindo quando a escrita é recusada. Nada disso aparecia
+nos testes anteriores, que conferiam o estado final da tela, e não as operações que levaram até ele.
+
+**Consequência:** `useProgressoPersistido` guarda a identidade do progresso do primeiro render e
+ignora qualquer gravação enquanto ele não for substituído. Dois testes novos trazem a prova, e a
+prova de mutação foi feita: desligar a guarda faz os dois falharem. O caso geral que fica registrado:
+**estado final correto não prova que o caminho até ele foi correto** — em persistência, a ordem das
+operações é o que decide se o dado sobrevive.

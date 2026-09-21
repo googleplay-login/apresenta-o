@@ -16,7 +16,7 @@ Legenda de estado: `concluída` · `em andamento` · `não iniciada`
 | 5 | Navegação e avatar | **concluída** |
 | 6 | Estudo e leitura do livro na tela | **concluída** |
 | 7 | Avaliação | **concluída** |
-| 8 | Persistência local e protótipo jogável | não iniciada |
+| 8 | Persistência local e protótipo jogável | **concluída** |
 | 9 | Prova de conceito de Pyodide | não iniciada |
 | 10 | Exercícios com correção automática | não iniciada |
 | 11 | Expansão curricular, em lotes de 2 a 3 unidades | não iniciada |
@@ -256,11 +256,37 @@ prova.
 
 ---
 
+## Etapa 8 — Persistência local e protótipo jogável (concluída em 21/09/2026)
+
+A persistência existia desde a Etapa 3, com formato versionado, migração e aviso honesto de falha. O
+que faltava era olhar o **caminho** dela — e o caminho tinha um defeito que o resultado escondia.
+
+- **Defeito real corrigido:** na primeira passada de efeitos, a gravação rodava antes de a leitura
+  chegar ao estado. Como gravar um progresso sem unidades significa "não há nada guardado", ela
+  **apagava** a chave que acabara de ler. Com o armazenamento cheio — ou a aba fechando nesse
+  intervalo — o progresso ia embora. A ordem das operações era o problema, e nenhum teste anterior
+  media isso: eles conferiam o estado final da tela, que ficava certo (D-039).
+- **O protótipo inteiro foi percorrido de ponta a ponta** em teste: as quatro ilhas aprovadas em
+  sequência, com **recarga da página no meio do percurso**, conferindo o placar a cada passo, o
+  desbloqueio da ilha seguinte, o fim do percurso e o que ficou guardado no armazenamento.
+- **A alternativa sem 3D é o caminho que a suíte inteira percorre**: não há WebGL no ambiente de
+  teste, então cada passo do protótipo é exercitado pela trilha em texto e pelo painel — o mesmo
+  caminho de quem usa leitor de tela ou está numa máquina sem placa de vídeo.
+- **Armazenamento recusado tem aviso, e o mundo continua jogável**: um teste novo cobre o navegador
+  que aceita existir e recusa gravar, conferindo a mensagem na tela e a trilha inteira disponível.
+- **Apagar o progresso continua apagando só o que é nosso**: o teste confere que uma chave de outro
+  site na mesma origem fica intacta, e que nada é apagado sem confirmação.
+
+**Limite explícito:** o navegador de verdade continua ausente. Recarregar a página, modo privado,
+cota estourada e fechar a aba no meio de uma gravação estão cobertos por simulação (jsdom e dublês de
+armazenamento) e por roteiro manual — **não** por teste de navegador.
+
+---
+
 ## Etapas seguintes — escopo previsto, não detalhado
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **8** — persistência local versionada e protótipo jogável.
 - **9** — prova de conceito de Pyodide em Web Worker, carregado sob demanda.
 - **10** — exercícios com correção automática.
 - **11** — expansão curricular em lotes de 2 a 3 unidades, uma autorização por lote.
