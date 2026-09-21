@@ -33,11 +33,13 @@ function linhaDaSonda(medida: {
   readonly tipo: string
   readonly repr: string
   readonly str?: string
+  readonly erro?: string
 }): string {
   return (
     MARCADOR_DA_SONDA +
     JSON.stringify({
       indice: medida.indice,
+      erro: medida.erro ?? '',
       tipo: medida.tipo,
       repr: medida.repr,
       str: medida.str ?? medida.repr,
@@ -68,10 +70,54 @@ describe('a sonda que mede valores', () => {
 
     expect(programa.startsWith('figurinhas = 40\nprint(figurinhas)\n')).toBe(true)
     expect(programa).toContain(LINHA_DA_SONDA)
-    expect(programa.match(/print\(/g)?.length).toBe(3)
+    // Uma medida, dois desfechos: o valor lido e o erro declarado. O `print` do
+    // estudante mais dois por medida — cada medida tem o seu próprio `try`.
+    expect(programa.match(/print\(/g)?.length).toBe(5)
+    expect(programa.match(/^except Exception as /gm)?.length).toBe(2)
     // O índice de cada sonda existe para a leitura saber qual valor é qual.
     expect(programa).toContain('"indice": 0')
     expect(programa).toContain('"indice": 1')
+  })
+
+  it('cada medida tem o seu próprio try: uma falha não derruba as outras', () => {
+    // Sem esta separação, um nome diferente do que o enunciado pediu — erro de
+    // quem escreveu, mas só naquela medida — derrubava a conferência inteira com
+    // um `NameError` no meio do programa (D-052).
+    const programa = programaDaConferencia(
+      'print("oi")',
+      correcao({
+        valoresEsperados: [
+          { rotulo: 'A saudação', expressao: 'saudacao("Ana")', igualA: "'Olá, Ana'" },
+          { rotulo: 'O total', expressao: 'total', igualA: '3' },
+        ],
+      }),
+    )
+
+    expect(programa).toContain('__arquipelago_medida_0 = saudacao("Ana")')
+    expect(programa).toContain('__arquipelago_medida_1 = total')
+    expect(programa.match(/^try:$/gm)?.length).toBe(2)
+  })
+
+  it('uma medida que não pôde ser feita é declarada, e não vira "não confere"', () => {
+    const resultado = conferirExercicio(
+      correcao({
+        valoresEsperados: [
+          { rotulo: 'A saudação', expressao: 'saudacao("Ana")', igualA: "'Olá, Ana'" },
+          { rotulo: 'O total', expressao: 'total', igualA: '3' },
+        ],
+      }),
+      semErro([
+        'oi',
+        linhaDaSonda({ indice: 0, tipo: '', repr: '', erro: 'NameError' }),
+        linhaDaSonda({ indice: 1, tipo: 'int', repr: '3' }),
+      ]),
+    )
+
+    expect(resultado.situacao).toBe('naoDeuParaConferir')
+    expect(resultado.itens[0]?.situacao).toBe('naoDeuParaConferir')
+    expect(resultado.itens[0]?.obtido).toContain('esse nome')
+    // E o item seguinte, que pôde ser medido, continua sendo conferido.
+    expect(resultado.itens[1]?.situacao).toBe('deuCerto')
   })
 
   it('o código do estudante é recuperável inteiro, sem o bloco da sonda', () => {
@@ -93,7 +139,7 @@ describe('a sonda que mede valores', () => {
     ])
 
     expect(doPrograma).toEqual(['40', 'fim'])
-    expect(sondas).toEqual([{ indice: 0, tipo: 'int', textoRepr: '40', texto: '40' }])
+    expect(sondas).toEqual([{ indice: 0, tipo: 'int', textoRepr: '40', texto: '40', erro: '' }])
   })
 
   it('aguenta um valor que contém o sinal do marcador e quebra de linha', () => {

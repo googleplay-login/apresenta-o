@@ -6,6 +6,77 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 11, lote 3 (capítulos 8 e 9: ilhas 9 e 10)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com as duas unidades novas (`u09OficinaDasFuncoes`, `u10TorreDasClasses`), dez unidades no
+plano e no registro, e os títulos dos capítulos 8 e 9 marcados como não conferidos (D-050).
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**40 arquivos, 702 testes, todos passando.** Os dois testes a mais vieram da mudança feita **antes** do
+conteúdo: a sonda da conferência ganhou `try` por medida (D-052), e o módulo puro passou a provar que
+uma medida que falha vira item declarado sem derrubar as outras. De novo, o conteúdo novo em si não
+exigiu teste novo — os testes percorrem o conteúdo real.
+
+| Arquivo | Testes | O que o lote 3 mudou aqui |
+|---|---|---|
+| `src/learning/correcaoDeExercicio.test.ts` | 27 | Dois casos novos: cada medida no seu `try`; uma medida que falha (`NameError`) e a medida seguinte conferida normalmente (era 25) |
+| `src/python/pyodideDeVerdade.test.ts` | 18 | Roda no Pyodide real **73 trechos** que o conteúdo promete que rodam (eram 54) e os **13 marcados** (mesmo número do lote 2) — e o caso da sonda que não existe passou a exigir que o programa **não** termine com erro |
+| `src/content/conteudo.test.ts` | 42 | Percorre **dez** unidades: forma, correção com `limite`, gabarito em quatro posições por unidade, diagramas e nenhum trecho do livro |
+| `src/content/percursoDoConteudo.test.ts` | 6 | A conta de exercícios saiu do conteúdo: **30 exercícios** (eram 24), todos aceitos pelo domínio |
+| `src/content/planoDeUnidades.test.ts` | 16 | Compara `situacao` com o conteúdo nas duas direções para as dez unidades (D-048) |
+| `src/app/paginas/Mundo.interacao.test.tsx` | 24 | O HUD virou `0 de 10 ilhas aprovadas`, derivado do plano; o percurso de ponta a ponta aprova **dez** ilhas em sequência |
+| `src/world/*.test.ts*` | — | Uma ilha por unidade planejada e uma ponte por par vizinho continuam valendo para as dez, sem alteração no teste |
+
+Números do conteúdo, medidos pelo teste que roda Python de verdade: **10 unidades**, **56 blocos de
+código** de Python na explicação, **30 exercícios** (28 com correção), **73 trechos que rodam** e
+**13 trechos marcados** como "não roda neste console".
+
+### 3. O que a mudança na conferência consertou (D-052)
+
+O lote começou pela sonda, e não pelo conteúdo, por um motivo concreto: o capítulo 8 usa **chamadas**
+nas expressões medidas (`saudacao("Ana")`). Se o nome da função da pessoa estivesse diferente, o
+programa da sonda terminava com `NameError` no meio e a conferência inteira virava "não deu para
+conferir" — com um traceback de Python apontando para uma linha que ninguém escreveu. Agora cada medida
+roda no próprio `try`, e a que falha vira um item com frase curta em português ("o programa não tem
+esse nome quando termina (NameError)"), enquanto as outras continuam sendo conferidas. O teste que roda
+soluções no interpretador real foi endurecido para exigir isso.
+
+Um detalhe do guarda de acentuação apareceu aqui: `qa/acentuacao.test.ts` lê strings com espaço como
+frases humanas, e um nome de classe CSS de dois tokens foi lido como se fosse texto — o guarda achou
+ali uma palavra sem acento. A saída foi usar nome de classe de **um token só**
+(`exercicio__aviso-do-console`, `explicacao__aviso-do-console`), sem afrouxar o guarda.
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/index.html` | 0,63 kB | 0,40 kB |
+| `dist/assets/index-*.js` | 417,14 kB | 127,39 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/Cena-*.js` | 912,10 kB | 242,34 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+O pedaço principal cresceu 32,92 kB com as duas unidades (384,22 → 417,14), e o pedaço da cena 3D
+continuou **sem mudar um byte** pelo terceiro lote seguido.
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Nenhum navegador.** As ilhas 9 e 10 nunca foram vistas por ninguém: prova-se o mundo montado em
+  teste (dez ilhas, uma ponte por par vizinho), o conteúdo e a conferência — não a aparência.
+- **O `input()` de verdade** segue sem rodar por aqui: o console recusa, e o teste de verdade confere a
+  **recusa** e a versão adaptada (D-051).
+- **A travessia a pé até as ilhas 9 e 10**: geometria e mapa caminhável passam em teste; a caminhada de
+  verdade é roteiro manual (item 54, agora cobrindo todas as ilhas escritas depois da quarta).
+
 ## Execução de 21/09/2026 — Etapa 11, lote 2 (capítulos 6 e 7: ilhas 7 e 8)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -127,14 +198,16 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
 ### 5. Roteiro manual das ilhas novas (item 54)
 
 54. **As ilhas escritas depois da quarta existem, com as pontes certas**: abrir o mundo e contar as
-    ilhas suspensas — devem ser **oito**, na mesma curva em S, com uma ponte entre cada par vizinho
-    (7 pontes). Com a quinta ilha ainda não aprovada, a ponte 4–5 deve aparecer pela metade, como as
+    ilhas suspensas — devem ser **dez**, na mesma curva em S, com uma ponte entre cada par vizinho
+    (9 pontes). Com a quinta ilha ainda não aprovada, a ponte 4–5 deve aparecer pela metade, como as
     outras fechadas. Aprovar a ilha 4 (responder as perguntas, 4 de 5) e conferir que a ponte 4–5 fica
     inteira e que a travessia a pé, com `W`, leva o avatar até a ilha 5; entrar nela e conferir missão,
-    leitura (capítulo 4), explicação, os 3 exercícios e as 5 perguntas. Repetir ilha por ilha até a 8
-    (capítulos 5, 6 e 7). Os itens 51 a 53 valem para os exercícios novos — inclusive o do capítulo 5,
-    em que a conferência exige um valor **booleano** (`True`), e o da tabuada, em que ela exige o número
-    inteiro 7 no lugar do que o `input()` teria devolvido.
+    leitura (capítulo 4), explicação, os 3 exercícios e as 5 perguntas. Repetir ilha por ilha até a 10
+    (capítulos 5, 6, 7, 8 e 9). Os itens 51 a 53 valem para os exercícios novos — inclusive o do
+    capítulo 5, em que a conferência exige um valor **booleano** (`True`); o da tabuada, em que ela exige
+    o número inteiro 7 no lugar do que o `input()` teria devolvido; e os do capítulo 8 e do capítulo 9,
+    em que ela chama a **função** e o **método** escritos por quem estuda — e mostra a frase "o programa
+    não tem esse nome quando termina" quando o nome combinado no enunciado não existe (D-052).
 
 Resultado esperado, somando as etapas 5 a 11: **54 de 54 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.

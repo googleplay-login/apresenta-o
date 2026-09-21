@@ -1,18 +1,18 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, no **lote 2 da Etapa 11 (expansão curricular: capítulos 4 a 7)**.
+Atualizado em **21/09/2026**, no **lote 3 da Etapa 11 (expansão curricular: capítulos 4 a 9)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lotes 1 e 2 entregues (capítulos 4 a 7, ilhas 5 a 8); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1, 2 e 3 entregues (capítulos 4 a 9, ilhas 5 a 10); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: oito ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as quatro últimas nasceram do conteúdo, sem código novo de posicionamento |
-| Conteúdo pedagógico | **existe** para as 8 unidades escritas (capítulos 1 a 7): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Mundo 3D | **existe**: dez ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as seis últimas nasceram do conteúdo, sem código novo de posicionamento |
+| Conteúdo pedagógico | **existe** para as 10 unidades escritas (capítulos 1 a 9): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
-| Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir`, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
+| Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir` — agora com **`try` por medida**, para uma medida impossível virar frase e não derrubar as outras (D-052) —, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
 | Execução de código (Pyodide) | **existe como prova de conceito**: console por ilha, interpretador servido pela própria aplicação, carregado sob demanda (Etapa 9). A ligação do Worker com o navegador é roteiro manual |
 | Avatar | **existe**: anda pelo capim e pelas pontes, com chão declarado e sem queda (Etapa 5) |
 | Livro na tela | **existe como orientação**: qual parte ler, por que, e o que procurar nela — **sem reproduzir texto do livro e sem número de página** (o PDF não está aqui) |
@@ -27,7 +27,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 700 testes, em 40 arquivos (a suíte não cresce com o conteúdo: os testes percorrem o conteúdo real)
+    npm test             # 702 testes, em 40 arquivos (a suíte não cresce com o conteúdo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -71,7 +71,7 @@ que descarta o Worker — a única forma de interromper um laço infinito (D-041
 
 - Projeto Vite + React + TypeScript, dependências **exatas** e lockfile versionado.
 - `src/ui/theme/tokens.ts`: fonte única das cores, com teste de contraste WCAG AA.
-- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 8 — capítulos 1 a 7) e a regra de
+- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 10 — capítulos 1 a 9) e a regra de
   referência ao livro, com página `null` + `referencia-pendente` e o título do capítulo marcado como
   "a confirmar" quando não foi conferido (D-050).
 - `src/`: esqueleto das pastas, cada uma com `README.md` dizendo sua responsabilidade e limites.
@@ -254,6 +254,35 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Etapa 11 — lote 3: capítulos 8 e 9 nas ilhas 9 e 10
+
+- **a sonda da conferência ficou defensiva antes do conteúdo (D-052)**: cada valor medido roda no
+  próprio `try`, e a medida que não pode ser feita vira um item com frase em português ("o programa não
+  tem esse nome quando termina") — sem isso, uma função com o nome trocado derrubava a conferência
+  inteira com um `NameError` que a pessoa não escreveu. O teste do interpretador real passou a exigir
+  que o programa **não** termine com erro nesse caso;
+- `src/content/unidades/u09OficinaDasFuncoes.ts`: definir função, parâmetro × argumento, chamada por
+  posição e por palavra-chave, valor padrão e por que ele vem por último, `return` contra `print` (com o
+  `None` aparecendo na tela), devolver dicionário em vez de fila de valores, lista recebida por
+  referência, e as três formas de `import`. 3 exercícios (todos com correção), 5 perguntas, nenhum
+  trecho marcado;
+- `src/content/unidades/u10TorreDasClasses.ts`: classe como molde × objeto, `__init__` e `self`, dois
+  objetos com estados independentes, método que muda o estado (a conta que deposita), herança com
+  `super().__init__` e um `avisoDeVersao` explicando por que o livro escreve `class Cachorro(object)` e
+  `super(Cachorro, self)` — porque era o certo na época. 3 exercícios (todos com correção), 5 perguntas;
+- **a conferência agora chama o código de quem estuda**: os exercícios do capítulo 8 medem
+  `saudacao("Ana")`, `media([7, 9, 5])` e `descrever_pizza("grande")`; os do capítulo 9 medem
+  `rex.nome`, `Conta("Bia").saldo` e `mimi.falar()`. O `limite` de cada exercício diz isso em português,
+  inclusive que a conferência não exige o nome do parâmetro (as chamadas dela são por posição);
+- **um guarda do projeto apontou um nome de classe CSS como se fosse texto humano**:
+  `qa/acentuacao.test.ts` lê strings com espaço como frases, e o nome de classe de dois tokens foi lido
+  como prosa — o guarda achou ali uma palavra sem acento. Os nomes viraram um token só
+  (`exercicio__aviso-do-console`, `explicacao__aviso-do-console`), sem afrouxar o guarda;
+- as ilhas 9 e 10 nasceram do conteúdo, outra vez sem uma linha nova de posicionamento, e as pontes 8–9
+  e 9–10 fecharam sozinhas (D-049);
+- o lote **não foi visto em navegador nenhum**: o mundo com dez ilhas é provado em teste, e a travessia
+  a pé até as ilhas novas é o item 54 do roteiro manual.
+
 ### Etapa 11 — lote 1: capítulos 4 e 5 nas ilhas 5 e 6
 
 - `src/content/unidades/u05MoinhoDasRepeticoes.ts`: laço `for` (a variável recebe o item, não o índice),
@@ -350,16 +379,18 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11, lote 3 — os capítulos 8 em diante, em lotes de 2 a 3 unidades.** Os lotes 1 e 2 (capítulos 4
-a 7) estão entregues; o caminho está medido: escrever o conteúdo, registrar no plano e no registro, e
-deixar que o validador, os testes de conteúdo e o teste do interpretador de verdade digam o que está
-faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal de que a Etapa 4 deixou
-alguma conta escrita à mão, e o conserto é na conta, não no lote.
+**Etapa 11, lote 4 — os capítulos 10 em diante, em lotes de 2 a 3 unidades.** Os lotes 1, 2 e 3
+(capítulos 4 a 9) estão entregues; o caminho está medido: escrever o conteúdo, registrar no plano e no
+registro, e deixar que o validador, os testes de conteúdo e o teste do interpretador de verdade digam o
+que está faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal de que a Etapa 4
+deixou alguma conta escrita à mão, e o conserto é na conta, não no lote. Depois do capítulo 11, a Parte I
+termina e os capítulos seguintes são os três **projetos** do livro (Pygame, visualização de dados e
+Django), que a Etapa 12 precisa tratar como trilhas, e não como ilhas de conteúdo comum.
 
-**Antes do lote 3, uma decisão de produto vale a pena:** o console não sabe ler o teclado, e o capítulo
-7 mostrou o custo disso. Fazer o console receber as respostas do `input()` (uma lista de linhas que o
-programa lê) é o primeiro candidato da Etapa 12 — e, quando existir, os trechos marcados da unidade 8
-são os primeiros a serem reescritos (D-051).
+**Ao chegar na Etapa 12, uma decisão de produto vale a pena:** o console não sabe ler o teclado, e o
+capítulo 7 mostrou o custo disso. Fazer o console receber as respostas do `input()` (uma lista de linhas
+que o programa lê) é o primeiro candidato da Etapa 12 — e, quando existir, os trechos marcados da
+unidade 8 são os primeiros a serem reescritos (D-051).
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null`, o
 título em português dos capítulos novos fica marcado como "a confirmar" e a leitura recomendada fala em

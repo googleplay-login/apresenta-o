@@ -29,7 +29,7 @@ Consequências práticas, e o motivo de cada uma:
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
 | `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação e a conferência do exercício (sonda, comparação, veredito) | Existe e testado |
-| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios (com correção declarada) e perguntas. Também o percurso que o domínio enxerga (`percursoDoConteudo.ts`) | Existe para 6 unidades, com validador e testes que cobram a forma |
+| `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios (com correção declarada) e perguntas. Também o percurso que o domínio enxerga (`percursoDoConteudo.ts`) | Existe para as 10 unidades escritas, com validador e testes que cobram a forma |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
 | `src/persistence/` | Gravação e leitura do progresso, versionado (formato **3**, com migração da 1 e da 2) e com aviso honesto de falha | Existe e testado |
 | `src/python/` | Pyodide em Web Worker, sob demanda: protocolo puro, núcleo, trabalhador, gancho do React e o endereço dos arquivos do interpretador | Existe e testado (D-040 a D-043) |

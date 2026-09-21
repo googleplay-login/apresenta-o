@@ -441,8 +441,11 @@ describe('a correção automática, contra o Python de verdade', () => {
     )
     const resultado = conferirExercicio(correcao, execucao)
 
-    expect(resultado.situacao).not.toBe('deuCerto')
-    expect(execucao.foiErro || resultado.situacao === 'naoDeuParaConferir').toBe(true)
+    // Desde D-052, a medida que falha é declarada: o programa **não** termina com
+    // erro, e o item diz que a conferência não conseguiu olhar aquele nome.
+    expect(execucao.foiErro).toBe(false)
+    expect(resultado.situacao).toBe('naoDeuParaConferir')
+    expect(resultado.itens[0]?.obtido).toContain('esse nome')
   }, 180_000)
 
   it('a sonda sobrevive a aspas, acento, quebra de linha e ao sinal do marcador', async () => {

@@ -20,6 +20,10 @@
  * aparece escrito na tela, junto do resultado. A regra do projeto vale aqui
  * igual: nada de prometer teste inviolável (D-036, D-044).
  *
+ * Uma medida que não pôde ser feita é **declarada**: cada valor é avaliado dentro
+ * do seu próprio `try`, e o erro vira uma frase do item, em vez de derrubar a
+ * conferência inteira com um erro de Python que a pessoa não escreveu (D-052).
+ *
  * A sonda é uma decisão técnica com consequência prática: em vez de duas
  * execuções do programa (uma para ver a saída, outra para medir valores), o
  * projeto acrescenta **linhas marcadas** ao fim do programa do estudante e roda
@@ -59,6 +63,16 @@ export type Sondagem = {
   readonly textoRepr: string
   /** `str()` do valor — o que `print` mostra. */
   readonly texto: string
+  /**
+   * Nome do erro, quando a medida **não pôde ser feita** — `NameError` quando o
+   * nome não existe no fim do programa, `KeyError` quando a chave não está lá.
+   *
+   * Vazio quando a medida deu certo. Existe porque uma medida que falha é
+   * assunto **daquela** medida, e não do programa inteiro: sem esta separação, um
+   * nome digitado diferente reprovava a conferência toda com um erro de Python
+   * que a pessoa não escreveu (D-052).
+   */
+  readonly erro: string
 }
 
 /** O que o programa produziu, como a conferência precisa ver. */
@@ -127,11 +141,23 @@ export function programaDaConferencia(codigo: string, correcao: CorrecaoDoExerci
   }
 
   const marca = JSON.stringify(MARCADOR_DA_SONDA)
-  const sondas = valores.map((valor, indice) => {
-    const medida =
-      `{"indice": ${indice}, "tipo": type(${valor.expressao}).__name__, ` +
-      `"repr": repr(${valor.expressao}), "str": str(${valor.expressao})}`
-    return `print(${marca} + __arquipelago_json.dumps(${medida}))`
+  const sondas: string[] = []
+
+  valores.forEach((valor, indice) => {
+    // Cada medida tem o seu próprio `try`: uma expressão que não pode ser
+    // avaliada — o nome que a pessoa não criou, a chave que não existe — diz
+    // respeito àquela medida, e não às outras (D-052).
+    const medido = `__arquipelago_medida_${indice}`
+    const problema = `__arquipelago_erro_${indice}`
+    sondas.push(
+      'try:',
+      `    ${medido} = ${valor.expressao}`,
+      `    print(${marca} + __arquipelago_json.dumps({"indice": ${indice}, "erro": "", ` +
+        `"tipo": type(${medido}).__name__, "repr": repr(${medido}), "str": str(${medido})}))`,
+      `except Exception as ${problema}:`,
+      `    print(${marca} + __arquipelago_json.dumps({"indice": ${indice}, ` +
+        `"erro": type(${problema}).__name__, "tipo": "", "repr": "", "str": ""}))`,
+    )
   })
 
   return [
@@ -180,7 +206,13 @@ export function separarSondagem(linhas: readonly string[]): {
     if (bruto === null || typeof bruto !== 'object') {
       continue
     }
-    const medida = bruto as { indice?: unknown; tipo?: unknown; repr?: unknown; str?: unknown }
+    const medida = bruto as {
+      indice?: unknown
+      tipo?: unknown
+      repr?: unknown
+      str?: unknown
+      erro?: unknown
+    }
     if (typeof medida.indice !== 'number') {
       continue
     }
@@ -190,6 +222,7 @@ export function separarSondagem(linhas: readonly string[]): {
       tipo: typeof medida.tipo === 'string' ? medida.tipo : '',
       textoRepr: typeof medida.repr === 'string' ? medida.repr : '',
       texto: typeof medida.str === 'string' ? medida.str : '',
+      erro: typeof medida.erro === 'string' ? medida.erro : '',
     })
   }
 
@@ -270,6 +303,19 @@ function conferirValor(
       situacao: 'naoDeuParaConferir',
       esperado,
       obtido: 'a conferência não chegou a olhar este valor',
+    }
+  }
+
+  if (medida.erro !== '') {
+    // A medida não pôde ser feita. Dizer "não confere" aqui culparia o programa
+    // por algo que a conferência não conseguiu olhar — e o erro é do Python, e
+    // não necessariamente de quem escreveu: pode ser só um nome diferente do que
+    // o enunciado pediu, e a frase abaixo diz qual foi o problema.
+    return {
+      rotulo: valor.rotulo,
+      situacao: 'naoDeuParaConferir',
+      esperado,
+      obtido: explicarErroDaMedida(medida.erro),
     }
   }
 
@@ -377,6 +423,30 @@ export function conferirExercicio(
       : 'deuCerto'
 
   return { situacao, itens, explicacao: explicacaoDa(situacao, itens), limite: correcao.limite }
+}
+
+/**
+ * Traduz o erro da medida para uma frase curta, sem culpar quem escreveu.
+ *
+ * A distinção importa: `NameError` quase sempre quer dizer que o nome combinado
+ * no enunciado não existe no fim do programa — a conferência não conseguiu
+ * olhar, e o estudante precisa saber **o que** não foi encontrado.
+ */
+function explicarErroDaMedida(erro: string): string {
+  switch (erro) {
+    case 'NameError':
+      return 'o programa não tem esse nome quando termina (NameError)'
+    case 'KeyError':
+      return 'a chave não existe no dicionário quando o programa termina (KeyError)'
+    case 'IndexError':
+      return 'não existe esse índice quando o programa termina (IndexError)'
+    case 'TypeError':
+      return 'o valor guardado não aceita essa consulta (TypeError)'
+    case 'AttributeError':
+      return 'o valor guardado não tem esse atributo (AttributeError)'
+    default:
+      return `a conferência não conseguiu medir (${erro})`
+  }
 }
 
 function explicacaoDa(

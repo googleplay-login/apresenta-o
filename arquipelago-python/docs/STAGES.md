@@ -359,6 +359,17 @@ Decisões", com 5 perguntas e 3 exercícios cada, todos com correção.
 Lote 2: **capítulos 6 e 7**, nas ilhas 7 e 8 — "O Farol dos Registros" (dicionários) e "A Estação das
 Perguntas" (`input()` e laços `while`), com 5 perguntas e 3 exercícios cada, todos com correção.
 
+Lote 3: **capítulos 8 e 9**, nas ilhas 9 e 10 — "A Oficina das Funções" (definir, receber, devolver e
+importar) e "A Torre das Classes" (`__init__`, `self`, atributos, métodos e herança), com 5 perguntas e
+3 exercícios cada, todos com correção.
+
+Antes de escrever o conteúdo do lote, a **sonda da conferência ficou defensiva**: cada valor medido
+passou a ser avaliado dentro do próprio `try`, e uma medida que não pode ser feita — a função que tem
+outro nome, a chave que não existe — virou uma frase do item ("o programa não tem esse nome quando
+termina"), em vez de derrubar a conferência inteira com um `NameError` que a pessoa não escreveu
+(D-052). Sem isso, conferir uma função exigiria que o nome dela estivesse certo para que **qualquer**
+outro item fosse olhado.
+
 O lote 2 trouxe uma limitação do projeto para dentro do conteúdo, em vez de escondê-la: o **console da
 ilha não tem teclado**, e o capítulo 7 inteiro é sobre perguntar ao usuário. O capítulo entrou assim
 mesmo — com todo trecho de `input()` marcado como "não roda no console", a alternativa escrita ao lado
@@ -396,8 +407,8 @@ ambiente. O que ele prova está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide 
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1 e 2 estão acima,
-  e os lotes seguintes continuam pelo capítulo 8 em diante.
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1, 2 e 3 estão
+  acima, e o lote seguinte continua pelo capítulo 10 (arquivos e exceções) em diante.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

@@ -176,6 +176,38 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
     },
     situacao: 'pronta',
   },
+  {
+    id: 'u09-oficina-das-funcoes',
+    ordem: 9,
+    titulo: 'A Oficina das Funções',
+    tema: 'Escrever funções com parâmetros, devolver resultados com return, usar valores padrão e importar módulos.',
+    referencia: {
+      capitulo: 8,
+      tituloCapitulo: 'Functions (do original; título em português a confirmar)',
+      recorteProposto:
+        'Definir funções, passar argumentos por posição e por palavra-chave, valores padrão, return e a diferença entre devolver e imprimir, funções que devolvem estruturas, listas recebidas por referência e importação de módulos.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
+  {
+    id: 'u10-torre-das-classes',
+    ordem: 10,
+    titulo: 'A Torre das Classes',
+    tema: 'Criar classes com __init__, guardar dados em atributos, escrever métodos que mudam o estado e reaproveitar com herança.',
+    referencia: {
+      capitulo: 9,
+      tituloCapitulo: 'Classes (do original; título em português a confirmar)',
+      recorteProposto:
+        'Criar e usar classes, o método __init__ e o self, atributos, valores padrão, métodos que alteram o estado, herança com super(), importação de classes e a biblioteca padrão.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
 ]
 
 /** Ordem das unidades planejadas, da primeira à última. */

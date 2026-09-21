@@ -948,3 +948,27 @@ que fazer no lugar. E fica registrado o caminho melhor para o futuro: **fazer o 
 respostas do `input()`** — uma lista de linhas que o programa lê, em vez de esperar por um teclado que
 não existe. É candidato ao primeiro item da Etapa 12; quando existir, os trechos marcados desta unidade
 são os primeiros a serem reescritos, e o exercício da tabuada perde a versão adaptada.
+
+## D-052 — Medida que não pôde ser feita é declarada, e não derruba a conferência
+**21/09/2026** — decisão técnica com consequência pedagógica, na Etapa 11 (lote 3).
+
+**Decisão:** cada valor que a sonda mede passou a ser avaliado dentro do **seu próprio `try`**. Quando
+a expressão não pode ser avaliada — `NameError` porque o nome combinado no enunciado não existe,
+`KeyError` porque a chave não está no dicionário, `TypeError` porque o valor guardado não aceita
+aquela consulta —, a sonda imprime a medida **com o erro declarado**, e a conferência transforma isso
+em um item `naoDeuParaConferir` com uma frase curta em português: *"o programa não tem esse nome
+quando termina (NameError)"*. Os outros itens continuam sendo conferidos normalmente.
+
+**Contexto:** a sonda anterior avaliaria a expressão direto. Com exercícios de dicionário e, agora, de
+funções, a expressão medida costuma ser uma **chamada à função da pessoa** — `saudacao("Ana")`. Se o
+nome estivesse diferente, o programa terminava com `NameError` no meio do bloco da sonda, a conferência
+inteira virava "não deu para conferir" e o traceback mostrado apontava para uma linha que a pessoa não
+escreveu. O resultado era tecnicamente honesto e praticamente inútil: quem errou o nome da função
+recebia um erro de Python em código alheio, sem a informação de que o problema era o nome.
+
+**Consequência:** o tipo `Sondagem` ganhou o campo `erro` (vazio quando a medida deu certo), o
+programa da conferência ganhou um `try` por medida, e a conferência traduz os erros conhecidos. O teste
+que roda o conteúdo no interpretador real passou a exigir que o programa **não** termine com erro nesse
+caso: a medida que falha tem de chegar como medida declarada. Duas provas cobrem isso — uma no módulo
+puro (uma medida falha, a outra confere) e outra no Pyodide de verdade (o programa roda até o fim e o
+item diz que o nome não existe).

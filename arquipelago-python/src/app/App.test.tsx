@@ -132,7 +132,7 @@ describe('painel do projeto', () => {
     // escritas. O Pyodide saiu desta lista na Etapa 9 — e a conferência do
     // exercício, na Etapa 10: recurso pronto não fica na lista de ausentes.
     expect(painel).toContain('Playwright')
-    expect(painel).toContain('unidades 9 em diante')
+    expect(painel).toContain('unidades 11 em diante')
     expect(painel).not.toContain('nada de código roda ainda')
   })
 
@@ -157,7 +157,7 @@ describe('painel do projeto', () => {
     // Esta lista envelheceu uma vez: durante três etapas o painel continuou
     // dizendo "nenhuma ilha, nenhuma ponte, nenhum avatar" e "nada é gravado no
     // navegador". Texto de estado que mente é defeito, e o teste trava o retorno.
-    expect(painel).toMatch(/oito ilhas suspensas/)
+    expect(painel).toMatch(/dez ilhas suspensas/)
     expect(painel).not.toContain('nenhuma ilha, nenhuma ponte')
     expect(painel).not.toContain('nada é gravado no navegador')
     expect(painel).not.toContain('nenhuma pergunta escrita')
