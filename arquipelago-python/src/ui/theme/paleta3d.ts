@@ -124,14 +124,15 @@ export function corDaSituacao(situacao: 'bloqueada' | 'disponivel' | 'aprovada')
  * Os tons das ilhas.
  *
  * Cada ilha recebe um tom, e o tom aparece no marco dela — a construção que só
- * aquela ilha tem. São dez misturas de tokens existentes, e não dez valores
- * novos: a regra do projeto continua valendo (D-005), e o teste refaz cada
- * mistura a partir dos tokens para provar isso.
+ * aquela ilha tem. São doze misturas de tokens existentes, e não doze valores
+ * novos: a regra do projeto continua valendo (D-005), e o teste refaz as misturas
+ * a partir dos tokens para provar isso.
  *
- * Por que dez e não uma cor por ilha para sempre: quando o arquipélago passar de
- * dez ilhas, o tom volta ao começo — e mesmo assim duas ilhas não ficam iguais,
- * porque a silhueta, o marco e a vegetação vêm da semente de cada uma
- * (`geometria/identidade.ts`).
+ * A lista cresce com o percurso: as ilhas 11 e 12 (capítulos 10 e 11) chegaram
+ * com o lote 4, e ganharam tom próprio em vez de repetir o da ilha 1 e o da
+ * ilha 2. Quando o arquipélago passar deste tamanho, o tom volta ao começo — e
+ * mesmo assim duas ilhas não ficam iguais, porque a silhueta, o marco e a
+ * vegetação vêm da semente de cada uma (`geometria/identidade.ts`).
  */
 export const CORES_DAS_ILHAS: readonly Cor3D[] = [
   /** Verde da marca: o tom da primeira ilha, o que o projeto já usava. */
@@ -154,6 +155,10 @@ export const CORES_DAS_ILHAS: readonly Cor3D[] = [
   misturar(deHex(cores.terreno.madeira), deHex(cores.terreno.rocha), 0.3),
   /** Rosado de pedra: o vermelho da marca lavado no horizonte do céu. */
   misturar(deHex(cores.acento.vermelho), deHex(cores.ceu.horizonte), 0.5),
+  /** Verde-água fundo: o mar profundo com o verde da marca. */
+  misturar(deHex(cores.mar.fundo), deHex(cores.acento.verdeClaro), 0.2),
+  /** Cinza quente: a pedra clara com a madeira — o mais neutro dos doze. */
+  misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.madeira), 0.5),
 ] as const
 
 /** O tom de uma ilha, pelo índice. Índices fora da lista dão a volta. */

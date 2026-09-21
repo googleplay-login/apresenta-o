@@ -6,6 +6,114 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — lote 4 da Etapa 11 (capítulos 10 e 11: arquivos e testes)
+
+Versão **0.17.0**. Este lote tinha duas metades: duas ilhas novas de conteúdo (unidades 11 e 12) e o
+maquinário do mundo que elas exigem — dois marcos e dois tons. As duas metades tiveram defeito achado
+por medida, e os dois estão registrados aqui com o número que os denunciou.
+
+### 1. O defeito de geometria, medido antes do conserto
+
+O teste `a altura total declarada corresponde à malha` reprovou no primeiro marco novo que ele mediu.
+A sonda que mediu peça por peça encontrou **três** erros no mesmo trecho, todos de sinal ou de
+referência:
+
+| Peça | Declarado | Medido | Causa |
+|---|---|---|---|
+| `arquivo` — puxador de gaveta | barra deitada no meio da gaveta | topo em **3,95 × escala** (a peça mais alta do móvel era a pasta, em 3,52) | `cilindro` nasce **em pé, a partir da base**: sem girar, o puxador virou uma coluna que atravessa as três gavetas |
+| `balanca` — coluna do fulcro | terminava no fulcro (2,6 × escala) | terminava em **2,94 × escala** | o comprimento do cilindro foi declarado como a altura do fulcro, e não como a diferença até a base — a coluna passava 0,34 acima da travessa |
+| `balanca` — `raioOcupado` | 1,95 × escala | **2,1064 × escala** | o prato da ponta da travessa é a peça que mais se afasta do centro; o valor declarado era **menor** que o real, que é o lado perigoso: o marco encostaria na borda do capim sem nenhum teste reclamar |
+
+O peso da balança estava, ainda, no prato **errado**: o desenho conta que um prato desceu porque
+recebeu o peso, e o peso estava no prato que subiu — a balança contava a história ao contrário.
+
+Depois do conserto, medida final (em unidades de escala), com o mundo todo montado:
+
+| Peça | x | y | raio | declarado |
+|---|---|---|---|---|
+| `arquivo` | -1,600 a +1,600 (a largura pedida, simétrica) | 0 a **3,520** | **1,8608** | altura 3,520 · raio 1,900 |
+| `balanca` | -2,025 a +2,025 | 0 a **3,210** | **2,1064** | altura 3,220 · raio 2,110 |
+
+A remedição do `arquivo` pegou ainda um segundo erro do mesmo puxador: o giro em z leva a barra para o
+lado **negativo** de x (de -1,1 a 0), então o deslocamento de meia barra é o que a traz para o meio da
+gaveta — sem ele, os três puxadores ficavam empurrados para a esquerda, saindo pela lateral do móvel.
+Corrigido no mesmo passo, e a medida do intervalo de x é o que prova: a peça ocupa exatamente a largura
+declarada, de -1,600 a +1,600. A correção está em **D-058**.
+
+### 2. O defeito de conteúdo, medido no intérprete
+
+A unidade do capítulo 11 é a primeira em que o texto depende do que o **console** sabe rodar. Antes de
+escrever, cada peça foi executada no Pyodide deste projeto, com o mesmo espaço de nomes que o console
+usa (`__name__` de programa principal). O que a medição mostrou:
+
+| Trecho | Resultado medido |
+|---|---|
+| `unittest.TextTestRunner` com dois testes | `Ran 2 tests in 0.001s` / `OK` |
+| `unittest.TextTestRunner` com um teste errado de propósito | `... FAIL`, `AssertionError: 8 != 9`, `FAILED (failures=1)` |
+| `unittest.main(argv=["prog"], exit=False)` | `Ran 0 tests in 0.000s` / **`NO TESTS RAN`** — e **sem exceção**: o programa termina como se tivesse dado certo |
+| `assert dobro(4) == 9, "mensagem"` | a mensagem chega à tela junto do `AssertionError` |
+| `hasattr` das asserções | `assertEqual`, `assertTrue`, `assertFalse`, `assertIn`, `assertRaises` existem |
+| `open()`, `json.dump/load`, `os.path.exists` no console | funcionam, com sistema de arquivos **em memória** |
+
+Por causa da terceira linha, a unidade **não** manda usar `unittest.main()` — ela ensina o
+`TextTestRunner` e explica por que, com o resultado medido escrito na tela. O notebook do lote está em
+**D-059**.
+
+### 3. Execução dos seis exercícios novos, no Pyodide de verdade
+
+As três soluções de cada unidade foram rodadas no Pyodide (Node, mesmo pacote servido pela aplicação),
+junto com as medidas que a conferência automática faz. Resultado, sem nenhuma exceção:
+
+| Exercício | Saída medida | Medidas da conferência |
+|---|---|---|
+| `e11-1` (gravar e reler duas linhas) | `['Ana', 'estudando Python']` | `open(...).read().splitlines()` = `['Ana', 'estudando Python']` |
+| `e11-2` (primeira linha, com arquivo ausente) | `['(vazio)']` | `'(vazio)'` com o arquivo ausente; `'primeira'` com o arquivo escrito na hora |
+| `e11-3` (dicionário em `json`) | `['1.72']` | chaves `['altura', 'nome']`; tipo da altura `float` |
+| `e12-1` (`dobro` com três `assert`) | `['os testes passaram']` | `8`, `0`, `-6` |
+| `e12-2` (`TestCase` com dois testes) | `['... OK']` + `Ran 2 tests` | `True`, `False`; `OK` na saída |
+| `e12-3` (`desconto` com valor padrão) | `['tudo conferido']` | `90.0`, `40.0`, `0.0` |
+
+### 4. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, na versão 0.17.0.
+
+### 5. Testes automáticos — EXECUTADO
+
+**42 arquivos, 750 testes, todos aprovados.**
+
+Entre eles, os que este lote fez valer: as ilhas 11 e 12 têm marco, silhueta e tom **diferentes de
+todas as outras** (comparação por par, com o menor par de tons em 48,9 de distância); os doze tipos de
+marco são exatamente os doze de `MARCOS`, sem sobrar nem faltar; a altura declarada de todo marco
+cabe na malha; o conteúdo novo passa pelo validador (5 perguntas em 4 posições distintas, 3 exercícios
+com correção e limite, referência de página pendente); e nenhum trecho de código novo é recusado pelo
+console.
+
+Os nomes de teste que diziam "dez" viraram "cada ilha" ou o número que vem do plano, e os testes que
+contavam ilhas passaram a usar `PLANO_DE_UNIDADES.length` e `CORES_DAS_ILHAS.length`: número de ilha
+escrito à mão no teste é o que quebrou quando o lote 4 chegou.
+
+### 6. Build de produção — EXECUTADO, passou
+
+    dist/index.html                                0.63 kB │ gzip:   0.40 kB
+    dist/assets/trabalhadorDoPython-BzMdATh1.js    2.60 kB
+    dist/assets/index-gX3ovVZb.css                25.11 kB │ gzip:   4.06 kB
+    dist/assets/index-9bE1eJG8.js                453.18 kB │ gzip: 137.99 kB
+    dist/assets/Cena-BGmaUM_P.js                 920.87 kB │ gzip: 245.31 kB
+
+    ✓ built in 668ms
+
+### 7. Não executado neste lote
+
+- **Nada foi visto em navegador.** Não há navegador com WebGL neste ambiente: a cena com as duas ilhas
+  novas, os dois marcos novos e os dois tons novos continua **sem verificação de pixel** — depende de
+  captura de tela de quem tem WebGL (itens 60 e 61 do roteiro manual).
+- **`pytest` não foi executado nem recomendado**: medido como ausente no Pyodide (D-059), e instalá-lo
+  exigiria baixar pacote da internet.
+
+---
+
 ## Execução de 21/09/2026 — a ponta da pedra (captura de tela da fileira de ilhas)
 
 ### 1. O defeito, medido

@@ -1,16 +1,16 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, no **lote 3 da Etapa 11 (capítulos 4 a 9)** — e no conserto da
-identidade visual das ilhas, depois de um relato de quem usa o mundo (D-053).
+Atualizado em **21/09/2026**, no **lote 4 da Etapa 11 (capítulos 10 e 11)** — o lote que fecha a
+**Parte I** do livro: os onze capítulos de conceitos básicos têm unidade escrita.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lotes 1, 2 e 3 entregues (capítulos 4 a 9, ilhas 5 a 10); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1, 2, 3 e 4 entregues (capítulos 4 a 11, ilhas 5 a 12); o lote seguinte entra na Parte II do livro (projetos), e 12 a 14 seguem em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: dez ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as seis últimas nasceram do conteúdo, sem código novo de posicionamento |
-| Conteúdo pedagógico | **existe** para as 10 unidades escritas (capítulos 1 a 9): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Mundo 3D | **existe**: doze ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as ilhas nascem do conteúdo, sem código novo de posicionamento |
+| Conteúdo pedagógico | **existe** para as 12 unidades escritas (capítulos 1 a 11, a Parte I inteira): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir` — agora com **`try` por medida**, para uma medida impossível virar frase e não derrubar as outras (D-052) —, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
@@ -72,7 +72,7 @@ que descarta o Worker — a única forma de interromper um laço infinito (D-041
 
 - Projeto Vite + React + TypeScript, dependências **exatas** e lockfile versionado.
 - `src/ui/theme/tokens.ts`: fonte única das cores, com teste de contraste WCAG AA.
-- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 10 — capítulos 1 a 9) e a regra de
+- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 12 — capítulos 1 a 11) e a regra de
   referência ao livro, com página `null` + `referencia-pendente` e o título do capítulo marcado como
   "a confirmar" quando não foi conferido (D-050).
 - `src/`: esqueleto das pastas, cada uma com `README.md` dizendo sua responsabilidade e limites.
@@ -301,7 +301,7 @@ Verificação:
   de baixo de cada nuvem recebia só essa metade (calculado: `#4E93A5`). `Malha3D` ganhou `semLuz`, e as
   nuvens são desenhadas chapadas — é a única forma chapada do mundo, e é de propósito;
 - **dois testes novos cobram o que faltava**: o capim cobre a pedra em cada direção (no teste da
-  árvore 3D, nas dez ilhas) e nenhuma nuvem recebe luz.
+  árvore 3D, em todas as ilhas) e nenhuma nuvem recebe luz.
 
 ### Conserto depois do lote 3: a cor do mundo (D-054)
 
@@ -318,8 +318,8 @@ Verificação:
   reconhecível pela própria pedra; as estruturas, a placa e o farol seguem com `corDaSituacao`;
 - **o tom da ilha no capim caiu de 45% para 22%** (D-053 tinha deixado o capim da ilha de tom rosado
   rosado). O tom fica inteiro no marco, que é a assinatura da ilha;
-- **três testes novos cobram o que faltava**: malha pintada sem tinta (as 20 malhas das dez ilhas),
-  canais abaixo de 0,8 (a faixa que só existe em sRGB) e **o capim é verde nas dez ilhas**;
+- **três testes novos cobram o que faltava**: malha pintada sem tinta (as 20 malhas de cada ilha),
+  canais abaixo de 0,8 (a faixa que só existe em sRGB) e **o capim é verde em todas as ilhas**;
 - o caminho antigo (`corDaRocha`, `corDoCapim` e as duas cores de terreno bloqueado pré-calculadas)
   saiu junto, por não ter mais chamador; `escurecerCores` ficou, registrado em D-054.
 
@@ -346,6 +346,37 @@ Verificação:
   distintos e **profundidades de pedra distintas**;
 - **o que continua sem prova**: a aparência. Não há navegador com WebGL aqui — a conferência visual
   do conserto é o **item 55** do roteiro manual, e quem olha é quem usa.
+
+### Etapa 11 — lote 4: capítulos 10 e 11 nas ilhas 11 e 12 (a Parte I fica inteira)
+
+- `src/content/unidades/u11ArquivoDasGavetas.ts`: `with open(...)`, os três modos (`"r"`, `"w"` que
+  apaga, `"a"` que acrescenta), ler linha por linha e o `\n` que vem junto, `try`/`except
+  FileNotFoundError`/`else`, e `json.dump`/`json.load` guardando um dicionário. 3 exercícios (todos com
+  correção), 5 perguntas, nenhum trecho marcado — **os exercícios de arquivo rodam no console**, que tem
+  um sistema de arquivos em memória (D-059);
+- `src/content/unidades/u12BalancaDosTestes.ts`: o que é um teste, `assert` com mensagem, a classe
+  `TestCase` com `assertEqual`, os casos que quebram (zero, vazio, limite) e o limite do que um teste
+  prova. Ensina o **`TextTestRunner`**, e explica com o resultado medido por que o `unittest.main()` do
+  livro informa `Ran 0 tests` neste console (D-059);
+- **dois marcos novos, estáticos**: o **arquivo de gavetas** (ilha 11) e a **balança de dois pratos**
+  (ilha 12). `MARCOS` passou de 10 para 12;
+- **dois tons novos**, misturas de tokens escolhidas por distância medida: `#35888a` e `#7a6858`. O menor
+  par dos doze tons ficou em 48,9, e o teste cobra 40;
+- **a medida achou três contas erradas** nos marcos recém-escritos (D-058): o puxador da gaveta foi feito
+  com `cilindro`, que nasce em pé a partir da base — virou uma coluna atravessando as três gavetas, com o
+  topo em 3,95 × escala onde a peça mais alta do móvel está em 3,52; a coluna da balança recebeu como
+  comprimento a altura do fulcro em vez da diferença até a base, e terminava 0,34 acima da travessa; e o
+  `raioOcupado` da balança dizia 1,95 quando a peça ocupa 2,1064 — declarado **menor** que o real. O peso
+  também estava no prato que subiu, contando a história ao contrário. Tudo corrigido e remedido;
+- **número escrito à mão em teste é dívida**: os testes que contavam ilhas passaram a usar
+  `PLANO_DE_UNIDADES.length` e `CORES_DAS_ILHAS.length`, os nomes "as dez ilhas têm dez tons" viraram
+  "cada ilha tem um tom diferente", e o painel do projeto passou a derivar o total das unidades dos dados
+  — os quatro textos "10 unidades" do painel envelheciam a cada lote;
+- todas as seis soluções novas foram **rodadas no Pyodide de verdade**, junto com as medidas da
+  conferência: nenhuma exceção, e cada medida deu exatamente o valor declarado (tabela em
+  `docs/TEST_REPORT.md`);
+- o lote **não foi visto em navegador nenhum**: as duas ilhas novas, os dois marcos e os dois tons são
+  provados por medida, e a captura de tela de quem tem WebGL continua sendo a verificação de pixel.
 
 ### Etapa 11 — lote 3: capítulos 8 e 9 nas ilhas 9 e 10
 
@@ -472,13 +503,17 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11, lote 4 — os capítulos 10 em diante, em lotes de 2 a 3 unidades.** Os lotes 1, 2 e 3
-(capítulos 4 a 9) estão entregues; o caminho está medido: escrever o conteúdo, registrar no plano e no
-registro, e deixar que o validador, os testes de conteúdo e o teste do interpretador de verdade digam o
-que está faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal de que a Etapa 4
-deixou alguma conta escrita à mão, e o conserto é na conta, não no lote. Depois do capítulo 11, a Parte I
-termina e os capítulos seguintes são os três **projetos** do livro (Pygame, visualização de dados e
-Django), que a Etapa 12 precisa tratar como trilhas, e não como ilhas de conteúdo comum.
+**Etapa 11, lote 5 — a Parte II do livro: os três projetos.** Os lotes 1 a 4 (capítulos 4 a 11) estão
+entregues, e com eles a **Parte I está inteira**: nada mais de conceito básico ficou de fora. O que vem
+agora é de outra natureza — os capítulos 12 a 14 (Pygame), 15 a 17 (visualização de dados: matplotlib,
+CSV, JSON, mapas, APIs) e 18 a 20 (Django) não são ilhas de conteúdo comum: são **trilhas**, com
+dependências que o livro instala e que este console não tem (nem pode ter, sem baixar pacote da
+internet). A decisão de como tratá-las — trilha sem console, console com aviso de indisponível, ou
+recorte do que roda — precisa ser tomada antes do conteúdo, e é a primeira coisa do lote.
+
+O caminho de um lote de conteúdo, para quem continuar: escrever as duas unidades, registrar no plano e
+no registro, deixar o validador, os testes de conteúdo e o teste do interpretador de verdade apontarem o
+que falta, e conferir em Pyodide **antes** de escrever qualquer afirmação sobre o que roda.
 
 **Ao chegar na Etapa 12, uma decisão de produto vale a pena:** o console não sabe ler o teclado, e o
 capítulo 7 mostrou o custo disso. Fazer o console receber as respostas do `input()` (uma lista de linhas
@@ -486,7 +521,7 @@ que o programa lê) é o primeiro candidato da Etapa 12 — e, quando existir, o
 unidade 8 são os primeiros a serem reescritos (D-051).
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null`, o
-título em português dos capítulos novos fica marcado como "a confirmar" e a leitura recomendada fala em
+título em português dos capítulos 4 a 11 fica marcado como "a confirmar" e a leitura recomendada fala em
 capítulo e seção, não em página.
 
 ## Como continuar sem mim

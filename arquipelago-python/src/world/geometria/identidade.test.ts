@@ -17,14 +17,14 @@ import { CORES_DAS_ILHAS, corDaIlha } from '../../ui/theme/paleta3d'
  * A identidade de cada ilha.
  *
  * Este arquivo existe por causa de um defeito relatado por quem usa: **as ilhas
- * estavam todas iguais**. Era verdade — as dez saíam do mesmo raio, da mesma
+ * estavam todas iguais**. Era verdade — as dez primeiras saíam do mesmo raio, da mesma
  * altura, das mesmas estruturas e da mesma cor, e a única diferença era um tremor
  * pequeno na pedra. De longe, o arquipélago parecia o mesmo lugar repetido.
  *
  * O que se prova aqui, sem precisar de navegador:
  *
- *  - as dez ilhas do percurso têm dez **marcos** diferentes, dez **silhuetas**
- *    diferentes e dez **tons** diferentes;
+ *  - as ilhas do percurso têm **marcos** diferentes, **silhuetas** diferentes e
+ *    **tons** diferentes, uma a uma;
  *  - a identidade é **determinística**: a mesma ilha tem sempre a mesma cara, o
  *    que é o que permite reconhecer o próprio mundo ao voltar;
  *  - tudo cabe nas faixas declaradas, e o marco cabe no capim da ilha onde ele
@@ -39,14 +39,14 @@ const ILHAS = PLANO_DE_UNIDADES.map((unidade) => ({
 const IDENTIDADES = ILHAS.map((ilha, indice) => identidadeDaIlha(indice, ilha.semente))
 
 describe('uma ilha não é a outra', () => {
-  it('as dez ilhas do percurso têm dez marcos diferentes', () => {
+  it('cada ilha do percurso tem um marco diferente', () => {
     const marcos = IDENTIDADES.map((identidade) => identidade.marco)
     expect(marcos).toHaveLength(ILHAS.length)
     expect(new Set(marcos).size, `Marcos repetidos: ${marcos.join(', ')}`).toBe(ILHAS.length)
     expect(new Set(marcos).size).toBeLessThanOrEqual(MARCOS.length)
   })
 
-  it('as dez ilhas têm dez silhuetas diferentes', () => {
+  it('cada ilha tem uma silhueta diferente', () => {
     const assinaturas = IDENTIDADES.map(assinaturaDaSilhueta)
     expect(
       new Set(assinaturas).size,
@@ -54,7 +54,7 @@ describe('uma ilha não é a outra', () => {
     ).toBe(ILHAS.length)
   })
 
-  it('as dez ilhas têm dez tons diferentes', () => {
+  it('cada ilha tem um tom diferente', () => {
     const tons = IDENTIDADES.map((identidade) => corDaIlha(identidade.tom))
     expect(new Set(tons).size).toBe(ILHAS.length)
     expect(TONS_DAS_ILHAS).toBe(CORES_DAS_ILHAS.length)
@@ -74,18 +74,23 @@ describe('uma ilha não é a outra', () => {
   })
 
   it('mudar a semente muda a silhueta, mas não o marco: o marco é da posição', () => {
-    // Quando o arquipélago passar de dez ilhas, o marco volta ao começo da lista.
-    // Mesmo assim duas ilhas não ficam iguais: a silhueta continua vindo da
-    // semente, que é o id da unidade.
+    // O marco sai do **índice**, e a silhueta sai da **semente**. Duas provas:
+    // a mesma posição com sementes diferentes dá o mesmo marco, e posições que
+    // distam o tamanho da lista dão o mesmo marco (a lista dá a volta).
     const primeira = identidadeDaIlha(0, 1234)
-    const decimaPrimeira = identidadeDaIlha(10, 1234)
+    const comOutraSemente = identidadeDaIlha(0, 4321)
 
-    expect(decimaPrimeira.marco).toBe(primeira.marco)
-    expect(assinaturaDaSilhueta(decimaPrimeira)).toBe(assinaturaDaSilhueta(primeira))
+    expect(comOutraSemente.marco).toBe(primeira.marco)
+    expect(assinaturaDaSilhueta(comOutraSemente)).not.toBe(assinaturaDaSilhueta(primeira))
 
-    const outraSemente = identidadeDaIlha(10, 4321)
-    expect(outraSemente.marco).toBe(primeira.marco)
-    expect(assinaturaDaSilhueta(outraSemente)).not.toBe(assinaturaDaSilhueta(primeira))
+    const voltaALista = identidadeDaIlha(MARCOS.length, 1234)
+    expect(voltaALista.marco).toBe(primeira.marco)
+    expect(assinaturaDaSilhueta(voltaALista)).toBe(assinaturaDaSilhueta(primeira))
+
+    // E enquanto houver marco na lista, nenhuma ilha do percurso repete o da
+    // vizinha: as ilhas 11 e 12 (capítulos 10 e 11) ganharam construções próprias.
+    const doze = Array.from({ length: MARCOS.length }, (_, indice) => identidadeDaIlha(indice, 7).marco)
+    expect(new Set(doze).size).toBe(MARCOS.length)
   })
 
   it('com dez mil sementes diferentes, as silhuetas se espalham', () => {

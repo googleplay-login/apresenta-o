@@ -44,7 +44,9 @@ conferido.
 ## As unidades escritas até agora
 
 Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescentou os capítulos 4 e 5
-(lote 1), os capítulos 6 e 7 (lote 2) e os capítulos 8 e 9 (lote 3), um por ilha.
+(lote 1), os capítulos 6 e 7 (lote 2), os capítulos 8 e 9 (lote 3) e os capítulos 10 e 11 (lote 4), um
+por ilha. Com o lote 4, a **Parte I do livro está inteira mapeada** — os onze capítulos têm unidade
+escrita.
 
 | # | Unidade | Capítulo | Recorte | Página impressa | Página do PDF |
 |---|---|---|---|---|---|
@@ -58,8 +60,10 @@ Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescen
 | 8 | A Estação das Perguntas | 7 — *User Input and while Loops* (título do original, a confirmar em português) | `input()`, conversão com `int()`, `while` com contador, `break` e `continue`, `while` com listas, laço infinito | `null` | `null` |
 | 9 | A Oficina das Funções | 8 — *Functions* (título do original, a confirmar em português) | Definir função, parâmetro e argumento, chamada por palavra-chave, valor padrão, `return` contra `print`, devolver estruturas, lista por referência, `import` | `null` | `null` |
 | 10 | A Torre das Classes | 9 — *Classes* (título do original, a confirmar em português) | Classe e objeto, `__init__`, `self`, atributos, método que muda o estado, valor padrão, herança com `super()`, biblioteca padrão | `null` | `null` |
+| 11 | O Arquivo das Gavetas | 10 — *Files and Exceptions* (título do original, a confirmar em português) | Ler de um arquivo, escrever, acrescentar sem apagar, exceções com `try`/`except`/`else` ou `finally`, guardar dados com `json` | `null` | `null` |
+| 12 | A Balança dos Testes | 11 — *Testing Your Code* (título do original, a confirmar em português) | Testar uma função, `assert` com mensagem, classe `TestCase` do `unittest`, asserções, ler a mensagem de um teste que falhou | `null` | `null` |
 
-Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 9 foram
+Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 11 foram
 acrescentados na Etapa 11** sem esse material em mãos: o número do capítulo e o assunto são certos, e o
 título em português está marcado como **a confirmar**. É a mesma regra da página (`null`): campo que não
 pode ser conferido não recebe valor inventado.
@@ -73,9 +77,9 @@ Desde a Etapa 6, cada unidade carrega, além de `parte` (capítulo e seção) e 
 
 | Campo | O que é | Estado |
 |---|---|---|
-| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 10 unidades |
-| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 10 unidades |
-| `pagina` / `paginaPdf` | Número da página | `null` nas 10 — o PDF não está em mãos (D-010) |
+| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 12 unidades |
+| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 12 unidades |
+| `pagina` / `paginaPdf` | Número da página | `null` nas 12 — o PDF não está em mãos (D-010) |
 
 Nenhum dos dois campos cita o livro: eles dizem o que **procurar** e como seguir sem ele.
 Nem a interface nem o conteúdo copiam trecho, nome de exemplo ou exercício da obra

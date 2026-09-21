@@ -644,7 +644,7 @@ describe('a ilha é o capim em cima da pedra, e não o contrário (D-055)', () =
 })
 
 describe('as ilhas não terminam todas no mesmo bico (D-057)', () => {
-  it('as pontas das dez ilhas são de tamanhos diferentes, do espinho ao toco', async () => {
+  it('as pontas das ilhas são de tamanhos diferentes, do espinho ao toco', async () => {
     // Medido antes do conserto: as dez pontas tinham 0,02 do raio do topo — o
     // mesmo espinho. Vista de longe, a ponta é a única parte da ilha que aparece
     // sozinha contra o céu, e dez bicos iguais fazem a fileira parecer a mesma

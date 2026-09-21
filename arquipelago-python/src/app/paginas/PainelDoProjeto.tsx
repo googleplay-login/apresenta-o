@@ -9,6 +9,8 @@ import { Chip } from '../../ui/components/Chip'
  * O que existe de verdade hoje, com o comando que comprova cada item.
  * Nada entra nesta lista sem ter sido executado.
  */
+const TOTAL_DE_UNIDADES = PLANO_DE_UNIDADES.length
+
 const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }[] = [
   {
     item: 'Projeto React + TypeScript compilando, com versões exatas fixadas.',
@@ -23,19 +25,19 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
     verificar: 'npm test',
   },
   {
-    item: 'As 10 unidades escritas mapeadas para o livro, com as páginas marcadas como referência pendente.',
+    item: `As ${TOTAL_DE_UNIDADES} unidades escritas mapeadas para o livro, com as páginas marcadas como referência pendente.`,
     verificar: 'npm test',
   },
   {
-    item: 'O mundo 3D: dez ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
+    item: `O mundo 3D: ${TOTAL_DE_UNIDADES} ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.`,
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O ciclo de estudo das 10 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
+    item: `O ciclo de estudo das ${TOTAL_DE_UNIDADES} unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.`,
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O conteúdo escrito das 10 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
+    item: `O conteúdo escrito das ${TOTAL_DE_UNIDADES} unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.`,
     verificar: 'npm test',
   },
   {
@@ -64,7 +66,7 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
 const AINDA_NAO_EXISTE: readonly string[] = [
   'A animação de caminhada do avatar: a figura anda, as pernas não se mexem.',
   'O som e a narração: nenhum áudio existe, e não há previsão de ligá-lo por padrão.',
-  'As unidades 11 em diante: só as 10 primeiras têm conteúdo escrito.',
+  `As unidades ${TOTAL_DE_UNIDADES + 1} em diante: só as ${TOTAL_DE_UNIDADES} primeiras têm conteúdo escrito.`,
   'O teste de navegador automatizado (Playwright): nenhum navegador com WebGL existe neste ambiente.',
   'A conferência do exercício não julga estilo nem impede quem quiser enganar: ela roda no cliente, e a tela diz isso.',
 ]

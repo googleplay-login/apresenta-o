@@ -195,7 +195,7 @@ Regras que valem para as dez:
   em todas as ilhas;
 - **o tom fica inteiro no marco e entra a 22% no alto do capim**: o tom é assinatura, não tinta. A 45%
   (o primeiro valor usado), uma ilha de tom rosado ficava com capim rosado — e capim deixava de ser
-  capim. Hoje o teste mede o capim das dez ilhas e cobra que o verde seja o canal dominante;
+  capim. Hoje o teste mede o capim de todas as ilhas e cobra que o verde seja o canal dominante;
 - **o marco fica do lado oposto às estruturas do estudo**, para não tapar a biblioteca, a mesa e a
   placa de missão.
 

@@ -31,11 +31,12 @@ import { criarSorteador, entre } from './aleatorio'
 /**
  * Os marcos, na ordem em que aparecem pelo percurso.
  *
- * A lista é percorrida pelo índice da ilha, e não sorteada: assim as dez
- * primeiras ilhas têm dez marcos **diferentes**, sem depender de sorte. Quando o
- * arquipélago passar de dez ilhas, o marco volta ao começo — e mesmo assim as
- * duas ilhas não ficam iguais, porque a silhueta, a vegetação e o tom continuam
- * vindo da semente de cada uma.
+ * A lista é percorrida pelo índice da ilha, e não sorteada: assim as ilhas do
+ * percurso têm marcos **diferentes**, sem depender de sorte. A lista cresce com o
+ * percurso — o lote 4 do capítulo 10 em diante acrescentou o arquivo de gavetas e
+ * a balança de dois pratos. Quando o arquipélago passar do tamanho desta lista, o
+ * marco volta ao começo — e mesmo assim as duas ilhas não ficam iguais, porque a
+ * silhueta, a vegetação e o tom continuam vindo da semente de cada uma.
  */
 export const MARCOS = [
   'portal',
@@ -48,6 +49,8 @@ export const MARCOS = [
   'estacao',
   'engrenagens',
   'torre',
+  'arquivo',
+  'balanca',
 ] as const
 
 export type TipoDeMarco = (typeof MARCOS)[number]
@@ -64,6 +67,8 @@ export const NOMES_DOS_MARCOS: Readonly<Record<TipoDeMarco, string>> = {
   estacao: 'Estação de perguntas',
   engrenagens: 'Par de engrenagens',
   torre: 'Torre de anéis',
+  arquivo: 'Arquivo de gavetas',
+  balanca: 'Balança de dois pratos',
 }
 
 /** O formato da pedra e do capim de uma ilha. */
@@ -127,7 +132,7 @@ export const FAIXAS = {
 } as const
 
 /** Quantos tons a paleta oferece para as ilhas. Ver `paleta3d.ts`. */
-export const TONS_DAS_ILHAS = 10
+export const TONS_DAS_ILHAS = 12
 
 /**
  * As três famílias de ponta de pedra: como a ilha termina embaixo.
@@ -150,7 +155,7 @@ export const FAMILIAS_DE_PONTA = [
  *
  * A semente vem do id da unidade (ver `sementeDeTexto`): é ela que faz a pedra,
  * o capim e a vegetação de cada ilha serem sempre os mesmos, e diferentes dos
- * das outras. O índice entra só no marco e no tom, para que dez ilhas não
+ * das outras. O índice entra só no marco e no tom, para que duas ilhas não
  * repitam a mesma construção nem a mesma cor.
  */
 export function identidadeDaIlha(indice: number, semente: number): IdentidadeDaIlha {

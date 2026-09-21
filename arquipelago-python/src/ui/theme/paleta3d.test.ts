@@ -89,8 +89,8 @@ describe('origem das cores do mundo', () => {
 })
 
 describe('os tons das ilhas', () => {
-  it('são dez, todos diferentes, e nenhum é preto ou branco puro', () => {
-    expect(CORES_DAS_ILHAS).toHaveLength(10)
+  it('são doze, todos diferentes, e nenhum é preto ou branco puro', () => {
+    expect(CORES_DAS_ILHAS).toHaveLength(12)
     const unicos = new Set(CORES_DAS_ILHAS)
     expect(unicos.size).toBe(CORES_DAS_ILHAS.length)
 
@@ -113,13 +113,25 @@ describe('os tons das ilhas', () => {
     expect(CORES_DAS_ILHAS[9]).toBe(
       misturar(deHex(cores.acento.vermelho), deHex(cores.ceu.horizonte), 0.5),
     )
+    // As duas últimas nasceram com o lote 4, quando as ilhas 11 e 12 deixaram de
+    // repetir o tom das duas primeiras.
+    expect(CORES_DAS_ILHAS[10]).toBe(
+      misturar(deHex(cores.mar.fundo), deHex(cores.acento.verdeClaro), 0.2),
+    )
+    expect(CORES_DAS_ILHAS[11]).toBe(
+      misturar(deHex(cores.terreno.rochaClara), deHex(cores.terreno.madeira), 0.5),
+    )
   })
 
   it('corDaIlha dá a volta em vez de estourar', () => {
+    // Os índices saem do tamanho da lista: com dois tons novos no lote 4, o
+    // literal 10 e o `-1` antigo deixariam de provar a volta (D-058).
+    const ultimo = CORES_DAS_ILHAS.length - 1
     expect(corDaIlha(0)).toBe(CORES_DAS_ILHAS[0])
-    expect(corDaIlha(9)).toBe(CORES_DAS_ILHAS[9])
-    expect(corDaIlha(10)).toBe(CORES_DAS_ILHAS[0])
-    expect(corDaIlha(-1)).toBe(CORES_DAS_ILHAS[9])
+    expect(corDaIlha(ultimo)).toBe(CORES_DAS_ILHAS[ultimo])
+    expect(corDaIlha(CORES_DAS_ILHAS.length)).toBe(CORES_DAS_ILHAS[0])
+    expect(corDaIlha(-1)).toBe(CORES_DAS_ILHAS[ultimo])
+    expect(corDaIlha(-CORES_DAS_ILHAS.length)).toBe(CORES_DAS_ILHAS[0])
   })
 
   it('dois tons vizinhos são distinguíveis: nenhum par é quase a mesma cor', () => {

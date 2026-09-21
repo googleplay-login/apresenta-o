@@ -18,7 +18,7 @@ import { gerarCaixa, gerarCilindro } from './solidos'
  * Cada marco é a construção que só uma ilha tem. Este arquivo cobra o que a
  * geometria promete:
  *
- *  - as dez construções existem, são diferentes entre si e cabem no capim;
+ *  - todas as construções existem, são diferentes entre si e cabem no capim;
  *  - a malha está fechada e com as faces **para fora** — o defeito que o descarte
  *    de face traseira esconde: a peça some quando a câmera passa de lado;
  *  - os marcos animados têm mesmo uma parte girando, e ela gira no eixo certo —
@@ -73,7 +73,7 @@ function alturaMaxima(malha: Malha): number {
   return maxima
 }
 
-describe('os dez marcos existem e são diferentes', () => {
+describe('os marcos existem e são diferentes', () => {
   it('gera um marco para cada tipo da lista, sem sobrar nem faltar', () => {
     const tipos = new Set(ILHAS.map((ilha) => ilha.marco.tipo))
     expect([...tipos].sort()).toEqual([...MARCOS].sort())
@@ -89,7 +89,7 @@ describe('os dez marcos existem e são diferentes', () => {
     }
   })
 
-  it('as dez construções são diferentes entre si', () => {
+  it('as construções são todas diferentes entre si', () => {
     // Duas ilhas com o mesmo marco seriam a mesma construção repetida — o defeito
     // que o projeto acabou de consertar. A contagem de vértices e a altura não
     // bastariam para provar diferença (dois marcos podem empatar), então a
@@ -143,7 +143,7 @@ describe('o marco cabe no capim onde ele fica em pé', () => {
 })
 
 describe('as faces dos marcos apontam para fora', () => {
-  it('o volume dos dez marcos é positivo, e portanto as faces estão voltadas para fora', () => {
+  it('o volume de todos os marcos é positivo, e portanto as faces estão voltadas para fora', () => {
     // A malha é fechada (caixas e cilindros com tampa). Se qualquer peça fosse
     // montada com o sentido trocado, o volume assinado cairia — e a peça
     // desapareceria na tela por causa do descarte de face traseira.
@@ -221,6 +221,8 @@ describe('as partes animadas existem e giram no eixo certo', () => {
       estacao: 'y',
       engrenagens: 'z',
       torre: 'y',
+      arquivo: null,
+      balanca: null,
     }
 
     for (const { identidade, marco } of ILHAS) {

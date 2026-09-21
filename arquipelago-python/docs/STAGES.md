@@ -363,6 +363,11 @@ Lote 3: **capítulos 8 e 9**, nas ilhas 9 e 10 — "A Oficina das Funções" (de
 importar) e "A Torre das Classes" (`__init__`, `self`, atributos, métodos e herança), com 5 perguntas e
 3 exercícios cada, todos com correção.
 
+Lote 4: **capítulos 10 e 11**, nas ilhas 11 e 12 — "O Arquivo das Gavetas" (gravar, ler, acrescentar,
+tratar o arquivo que não existe, `json`) e "A Balança dos Testes" (`assert`, `unittest`, escolher os
+casos), com 5 perguntas e 3 exercícios cada, todos com correção. Com este lote, **a Parte I do livro
+está inteira**: os onze capítulos de conceitos básicos têm unidade escrita.
+
 Depois do lote, e a partir de um relato de quem usa o mundo, veio um conserto de direção visual: **as
 ilhas estavam todas iguais** — mesmo raio, mesma altura, mesmas estruturas, mesma cor. Cada ilha passou
 a ter silhueta, marco, vegetação e tom próprios, derivados da semente da unidade e da posição no
@@ -404,8 +409,21 @@ O que a etapa provou, além do conteúdo novo:
 - **A honestidade sobre o livro continua:** os capítulos 4 e 5 entraram sem o PDF em mãos, com o título
   em português marcado como **a confirmar** e as páginas em `null`.
 
-**Limite explícito:** o lote 1 não foi visto em navegador — nenhum navegador com WebGL existe neste
-ambiente. O que ele prova está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real).
+O lote 4 chegou com duas particularidades que a medida resolveu, e as duas ficaram registradas:
+
+- **o que o console roda mudou de resposta neste lote.** O capítulo 10 é sobre arquivo, e o console não
+  tem disco — mas tem um sistema de arquivos em memória, com `open`, `json` e `os.path` funcionando de
+  verdade (medido). Já o capítulo 11 manda rodar `unittest.main()`, e **esse** comando não funciona
+  aqui: ele informa `Ran 0 tests` e `NO TESTS RAN`, sem erro nenhum, porque o console roda cada
+  programa em um espaço de nomes novo. A unidade ensina o `TextTestRunner`, que roda, e explica a
+  diferença na tela com o resultado medido. `pytest` não existe no Pyodide e não foi prometido (D-059).
+- **duas ilhas novas precisaram de dois marcos e dois tons novos** — e a medida da geometria achou três
+  contas erradas nos marcos recém-escritos (um puxador de pé em vez de deitado, uma coluna mais alta que
+  o próprio topo, um `raioOcupado` menor que a peça). O conserto e a regra que fica estão em D-058.
+
+**Limite explícito:** nenhum lote foi visto em navegador — nenhum navegador com WebGL existe neste
+ambiente. O que eles provam está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide real), e a verificação
+de pixel depende de captura de tela de quem tem WebGL.
 
 ---
 
@@ -413,8 +431,10 @@ ambiente. O que ele prova está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide 
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1, 2 e 3 estão
-  acima, e o lote seguinte continua pelo capítulo 10 (arquivos e exceções) em diante.
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1, 2, 3 e 4 estão
+  acima, e a Parte I do livro está inteira. O lote seguinte entra na **Parte II** (os três projetos:
+  Pygame nos capítulos 12 a 14, visualização de dados nos 15 a 17, Django nos 18 a 20), que a Etapa 12
+  precisa tratar como trilhas, e não como ilhas de conteúdo comum.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

@@ -9,16 +9,16 @@ avaliação e — alcançando 80% — a ponte para a próxima ilha se abre.
 
 ## Estado atual: o protótipo já ensina e já avalia
 
-> **O que existe hoje:** mundo 3D navegável com **dez** ilhas suspensas — cada uma com a própria
+> **O que existe hoje:** mundo 3D navegável com **doze** ilhas suspensas — cada uma com a própria
 > forma, o próprio marco e o próprio tom (D-053) — e pontes, um **avatar que
 > anda** pelo capim e pelas pontes (com câmera de terceira pessoa, voo livre e vista de mapa), o
-> ciclo de estudo completo das dez unidades escritas — capítulos 1 a 9 do livro (missão, estudo,
+> ciclo de estudo completo das doze unidades escritas — a Parte I inteira do livro, capítulos 1 a 11 (missão, estudo,
 > prática, avaliação e resultado), 5 perguntas por ilha, aprovação com 80%, progresso salvo no próprio navegador, um
 > **console de Python de verdade** em cada ilha — interpretador servido pela própria aplicação,
 > carregado só quando a pessoa pede — e a **conferência automática do exercício**, com o limite dela
 > escrito na tela.
 >
-> **O que ainda não existe:** expansão para as unidades seguintes (os capítulos 10 em diante),
+> **O que ainda não existe:** a Parte II do livro (os três projetos: Pygame, dados e Django),
 > animação de caminhada do avatar e som. O livro **não** aparece na tela: o que existe é orientação de leitura escrita por
 > nós — qual parte ler, por que, o que procurar e o caminho de quem não tem o livro —, sem nenhuma
 > linha reproduzida e sem número de página, porque o PDF não está em mãos.
@@ -50,7 +50,7 @@ interpretador (13,9 MB) para `public/pyodide/`, que fica **fora do Git**. Para r
 
 Outros comandos:
 
-    npm test         # 733 testes em 42 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e a conferência no Python de verdade
+    npm test         # 750 testes em 42 arquivos: regras, geometria, chão caminhável, avatar, mundo 3D, conteúdo, leitura, interface e a conferência no Python de verdade
                      # e travas do projeto — inclusive os trechos de código rodando em Python de verdade
     npm run build    # checagem de tipos + build de produção
     npm run preview  # servir o build de produção

@@ -1236,3 +1236,83 @@ mesmo bico** (a maior menos a menor passa de 1 unidade, com a menor abaixo de 0,
 
 **O que continua sem prova:** os **pixels**. A medida aqui é geometria, não tela — e a conferência é de
 quem olha (item 60 do roteiro manual).
+
+## D-058 — As ilhas 11 e 12: dois marcos novos, dois tons novos, e três contas que mentiam
+
+**Contexto.** O lote 4 da Etapa 11 abriu os capítulos 10 e 11 do livro (arquivos e exceções; testes).
+Como todo lote, ele não é só conteúdo: cada unidade nova é uma ilha nova, e cada ilha nova precisa de
+identidade própria — o marco, a silhueta e o tom. Sem isso, as ilhas 11 e 12 repetiriam o marco e o tom
+das duas primeiras, que é exatamente o defeito que a D-053 mandou não repetir.
+
+**A decisão, em três partes.**
+
+1. **Dois marcos estáticos.** A ilha 11 ficou com o **arquivo de gavetas** e a ilha 12 com a **balança de
+   dois pratos**. `MARCOS` passou de 10 para 12; `NOMES_DOS_MARCOS` ganhou os dois nomes. Os dois marcos
+   são estáticos (`girantes: []`) de propósito: o capítulo 11 já é abstrato o bastante sem uma peça
+   girando, e girar não ensina nada sobre arquivo nem sobre teste.
+
+2. **Dois tons novos, misturas de tokens.** `#35888a` (o mar fundo com o verde da marca) e `#7a6858`
+   (a pedra clara com a madeira). Os dois foram escolhidos por medida, não por gosto: a banda de
+   luminância útil é 0,2 a 0,65 (a banda larga só devolve tons quase pretos), e o critério foi a
+   **distância ao tom mais próximo** — 70,7 e 59,1. O menor par dos doze tons ficou em 48,9, e o teste
+   cobra 40.
+
+3. **A contagem sai dos dados, não do texto.** Tudo o que dizia "dez ilhas" passou a dizer o número que
+   vem de `PLANO_DE_UNIDADES.length`, ou a uma formulação que não envelhece ("cada ilha"). Foi o lote
+   que mostrou o custo de escrever o número à mão: um teste que contava ilhas com o literal 10, o painel
+   do projeto com quatro textos "10 unidades", e um teste de nome "as dez ilhas têm dez tons" reprovando
+   com 12.
+
+**O defeito que a medida achou, e a lição.** O teste que confere `alturaTotal` contra a malha reprovou no
+primeiro marco novo. A sonda que mediu peça por peça achou três erros de referência, todos de sinal ou
+de ponto de partida:
+
+- o **puxador** do arquivo foi feito com `cilindro`, que nasce **em pé a partir da base** — sem girar,
+  virou uma coluna de 1,1 × escala atravessando as três gavetas, com o topo em 3,95 × escala onde a peça
+  mais alta do móvel (a pasta) está em 3,52;
+- a **coluna** da balança recebeu como comprimento a altura do fulcro, e não a diferença até a base: ela
+  terminava 0,34 × escala **acima** da travessa que deveria sustentar;
+- o **`raioOcupado`** da balança dizia 1,95 × escala, e a peça ocupa 2,1064 — declarado **menor** que o
+  real, que é o lado perigoso, porque é esse número que decide onde o marco fica em pé no capim.
+
+O peso da balança estava ainda no prato que **subiu**, contando a história ao contrário: a balança está
+no meio da conferência justamente porque um lado pesa mais.
+
+**A regra que fica:** quando uma peça é construída a partir de outra (um cilindro que precisa ser
+deitado, uma coluna que termina em cima de uma base, um valor que resume a extensão da malha), o ponto
+de partida do construtor faz parte da conta — e a conta se confere **medindo a malha**, nunca lendo o
+número declarado. Sonda temporária, medida, apagada; os três números estão no `TEST_REPORT.md`.
+
+## D-059 — O que o console roda no capítulo 10 e no capítulo 11 (medido, não suposto)
+
+**Contexto.** Duas unidades deste lote dependem do que o console da ilha sabe fazer. A do capítulo 10
+ensina arquivo — e arquivo, num console que não tem disco, era suspeita razoável. A do capítulo 11
+ensina teste — e o livro manda rodar `unittest.main()`, que depende de existir um arquivo `.py`.
+
+**O que foi medido**, executando o Pyodide deste projeto pelo mesmo caminho que o console usa
+(`runPythonAsync` com espaço de nomes novo e `__name__ = "__main__"`):
+
+| O que | Resultado |
+|---|---|
+| `open()`, `write`, `read`, `rstrip`, laço sobre o arquivo | funciona; o arquivo **sobrevive entre execuções** dentro da mesma sessão |
+| `FileNotFoundError` com `try`/`except`/`else` | funciona; o `else` roda quando não houve erro |
+| `json.dump` / `json.load`, `os.path.exists` | funcionam |
+| `unittest.TextTestRunner` com `loadTestsFromTestCase` | `Ran 2 tests` / `OK`; com um teste errado: `AssertionError: 8 != 9` e `FAILED (failures=1)` |
+| `unittest.main(argv=["prog"], exit=False)` | **`Ran 0 tests`** e **`NO TESTS RAN`**, **sem exceção** |
+| `pytest` | ausente no Pyodide; instalar exigiria baixar pacote da internet |
+
+**As decisões que saem daí.**
+
+1. **A unidade 11 não marca nada como `naoRodaNoConsole`.** O sistema de arquivos é de mentira (vive na
+   memória da página), mas funciona: os exercícios de arquivo rodam de verdade. O único aviso é de
+   texto — o que se grava ali some ao recarregar, e para guardar de um dia para o outro o caminho é o
+   Python do computador.
+2. **A unidade 12 ensina `TextTestRunner`, e explica o `unittest.main()`.** O texto mostra o comando que
+   roda **aqui** e diz, com o resultado medido, o que acontece com o comando do livro: `Ran 0 tests`,
+   sem erro nenhum — o pior caso possível, porque o programa termina como se tivesse dado certo.
+3. **`pytest` não é recomendado nem citado como disponível.** O aviso de versão da unidade diz que
+   edições mais novas do livro usam `pytest`, que ele não está instalado aqui e que a razão é a regra do
+   projeto de não baixar pacote da internet sem necessidade.
+
+**O que continua valendo:** `input()` não funciona neste console (D-051) — a unidade 8 tem trechos
+marcados por isso, e a unidade 11 não usa `input()` em lugar nenhum.

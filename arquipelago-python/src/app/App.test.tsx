@@ -132,7 +132,9 @@ describe('painel do projeto', () => {
     // escritas. O Pyodide saiu desta lista na Etapa 9 — e a conferência do
     // exercício, na Etapa 10: recurso pronto não fica na lista de ausentes.
     expect(painel).toContain('Playwright')
-    expect(painel).toContain('unidades 11 em diante')
+    // O número vem do plano: a primeira unidade sem conteúdo muda a cada lote, e
+    // um literal aqui envelheceria junto (D-058).
+    expect(painel).toContain(`unidades ${PLANO_DE_UNIDADES.length + 1} em diante`)
     expect(painel).not.toContain('nada de código roda ainda')
   })
 
@@ -157,7 +159,11 @@ describe('painel do projeto', () => {
     // Esta lista envelheceu uma vez: durante três etapas o painel continuou
     // dizendo "nenhuma ilha, nenhuma ponte, nenhum avatar" e "nada é gravado no
     // navegador". Texto de estado que mente é defeito, e o teste trava o retorno.
-    expect(painel).toMatch(/dez ilhas suspensas/)
+    expect(painel).toMatch(/ilhas suspensas, pontes, céu, mar/)
+    // O número de ilhas vem de `PLANO_DE_UNIDADES`: com duas ilhas novas no lote 4,
+    // um texto que dissesse "dez" seria mentira, e o teste não fixa o número para
+    // não travar o próximo lote.
+    expect(painel).toMatch(new RegExp(`${PLANO_DE_UNIDADES.length} ilhas suspensas`))
     expect(painel).not.toContain('nenhuma ilha, nenhuma ponte')
     expect(painel).not.toContain('nada é gravado no navegador')
     expect(painel).not.toContain('nenhuma pergunta escrita')

@@ -208,6 +208,38 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
     },
     situacao: 'pronta',
   },
+  {
+    id: 'u11-arquivo-das-gavetas',
+    ordem: 11,
+    titulo: 'O Arquivo das Gavetas',
+    tema: 'Gravar e ler arquivos, acrescentar sem apagar, tratar o arquivo que não existe e guardar dados com json.',
+    referencia: {
+      capitulo: 10,
+      tituloCapitulo: 'Files and Exceptions (do original; título em português a confirmar)',
+      recorteProposto:
+        'Ler de um arquivo, escrever em um arquivo, acrescentar, exceções com try/except/else, e guardar dados com json.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
+  {
+    id: 'u12-balanca-dos-testes',
+    ordem: 12,
+    titulo: 'A Balança dos Testes',
+    tema: 'Escrever testes com assert e com unittest, escolher os casos que importam e saber o que um teste não prova.',
+    referencia: {
+      capitulo: 11,
+      tituloCapitulo: 'Testing Your Code (do original; título em português a confirmar)',
+      recorteProposto:
+        'Testar uma função, o que um caso de teste verifica, a classe TestCase com asserções, e o que fazer quando um teste falha.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
 ]
 
 /** Ordem das unidades planejadas, da primeira à última. */

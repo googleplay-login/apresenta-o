@@ -272,6 +272,159 @@ function estante(escala: number): MarcoGerado {
   }
 }
 
+/** Arquivo de gavetas: um armário alto, com três gavetas e puxadores. */
+function arquivo(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  const largura = 3.2 * escala
+  const profundidade = 1.9 * escala
+  const altura = 3.4 * escala
+
+  // O corpo do armário
+  pecas.push(caixa(largura, altura, profundidade, { x: 0, y: altura / 2, z: 0 }))
+
+  // Três gavetas na frente, cada uma com o puxador. A frente fica para o lado
+  // oposto ao das estruturas de estudo: é o mesmo lugar em toda ilha (ver
+  // `LUGARES_NA_ILHA`), então o armário é visto de frente por quem chega.
+  for (let gaveta = 0; gaveta < 3; gaveta += 1) {
+    const centroDaGaveta = (0.75 + gaveta * 1.05) * escala
+    pecas.push(
+      caixa(largura * 0.82, 0.82 * escala, 0.18 * escala, {
+        x: 0,
+        y: centroDaGaveta,
+        z: -profundidade / 2 - 0.05 * escala,
+      }),
+    )
+
+    // Puxador: uma barra deitada no meio da gaveta. O cilindro deste projeto
+    // nasce em pé, a partir da base (ver `cilindro`), então ele é deitado com um
+    // giro em z: sem isso, o "puxador" vira uma coluna que atravessa as três
+    // gavetas e passa por cima do armário — medido em 3,95 de altura onde a peça
+    // mais alta é a pasta, em 3,52 (ver D-058).
+    //
+    // O giro leva a barra para o lado negativo de x (de -1,1 a 0), então o
+    // deslocamento de meia barra a traz para o meio da gaveta: medido, a barra
+    // fica de -0,55 a +0,55 em x, com 0 de centro.
+    const comprimentoDoPuxador = 1.1 * escala
+    pecas.push(
+      deslocarMalha(
+        rotacionarMalha(cilindro(0.07 * escala, comprimentoDoPuxador, 6), {
+          eixo: 'z',
+          angulo: Math.PI / 2,
+        }),
+        {
+          x: comprimentoDoPuxador / 2,
+          y: centroDaGaveta,
+          z: -profundidade / 2 - 0.18 * escala,
+        },
+      ),
+    )
+  }
+
+  // Uma pasta em cima do armário: é o que se guardou ali.
+  pecas.push(
+    caixa(1.5 * escala, 0.12 * escala, 1.1 * escala, {
+      x: -0.5 * escala,
+      y: altura + 0.06 * escala,
+      z: 0.1 * escala,
+    }),
+  )
+
+  return {
+    tipo: 'arquivo',
+    nome: NOMES_DOS_MARCOS.arquivo,
+    fixo: montar(pecas),
+    girantes: [],
+    alturaTotal: altura + 0.12 * escala,
+    raioOcupado: 1.9 * escala,
+  }
+}
+
+/** Balança de dois pratos: o que está previsto de um lado, o que veio do outro. */
+function balanca(escala: number): MarcoGerado {
+  const pecas: Malha[] = []
+
+  const alturaDoFulcro = 2.6 * escala
+  const larguraDaTravessa = 3.6 * escala
+
+  // Base e coluna. A coluna começa em cima da base e vai até o fulcro: como o
+  // cilindro nasce na base, o comprimento é a diferença, e não a altura do
+  // fulcro — com o comprimento errado, a coluna passava da travessa e a peça
+  // ficava 0,34 mais alta do que dizia (medido antes do conserto; ver D-058).
+  const alturaDaBase = 0.34 * escala
+  pecas.push(caixa(2.4 * escala, alturaDaBase, 1.5 * escala, { x: 0, y: alturaDaBase / 2, z: 0 }))
+  pecas.push(cilindro(0.13 * escala, alturaDoFulcro - alturaDaBase, 8, { x: 0, y: alturaDaBase, z: 0 }))
+
+  // A travessa, torta de propósito: um prato está mais baixo que o outro, e a
+  // balança está no meio da conferência — é o desenho de comparar duas coisas.
+  const inclinacao = 0.16
+  const travessa = rotacionarMalha(
+    caixa(larguraDaTravessa, 0.16 * escala, 0.16 * escala, { x: 0, y: 0, z: 0 }),
+    { eixo: 'z', angulo: -inclinacao },
+  )
+  pecas.push(deslocarMalha(travessa, { x: 0, y: alturaDoFulcro, z: 0 }))
+
+  // Um prato em cada ponta, pendurado por dois fios.
+  const alturaDoPrato = (lado: -1 | 1): number =>
+    alturaDoFulcro - Math.tan(inclinacao) * lado * (larguraDaTravessa / 2) + 0.1 * escala
+
+  for (const lado of [-1, 1] as const) {
+    const x = (lado * larguraDaTravessa) / 2 - lado * 0.35 * escala
+    const y = alturaDoPrato(lado)
+
+    for (const deslocamento of [-0.42, 0.42]) {
+      pecas.push(
+        cilindro(0.035 * escala, 0.9 * escala, 5, {
+          x: x + deslocamento * escala,
+          y: y - 0.9 * escala,
+          z: 0,
+        }),
+      )
+    }
+
+    pecas.push(caixa(1.15 * escala, 0.1 * escala, 1.15 * escala, { x, y, z: 0 }))
+    // A borda do prato, para ele não parecer uma tábua.
+    pecas.push(caixa(1.15 * escala, 0.22 * escala, 0.08 * escala, { x, y: y + 0.11 * escala, z: -0.54 * escala }))
+    pecas.push(caixa(1.15 * escala, 0.22 * escala, 0.08 * escala, { x, y: y + 0.11 * escala, z: 0.54 * escala }))
+  }
+
+  // No prato mais **baixo**, o peso que decidiu a conferência. O lado +1 é o que
+  // desce: `alturaDoPrato` soma a inclinação com o sinal trocado, e o peso estava
+  // do lado que sobe — a balança contava a história ao contrário.
+  const ladoDoPeso = 1 as const
+  pecas.push(
+    caixa(0.5 * escala, 0.5 * escala, 0.5 * escala, {
+      x: (ladoDoPeso * larguraDaTravessa) / 2 - ladoDoPeso * 0.35 * escala,
+      y: alturaDoPrato(ladoDoPeso) + 0.3 * escala,
+      z: 0,
+    }),
+  )
+
+  // A peça mais alta é a borda do prato que subiu (o outro prato desceu, e o peso
+  // foi com ele): a altura declarada sai daí, mais a mesma folga de 0,01 das
+  // outras peças. Antes do conserto a peça media 3,54 de altura e dizia 2,76.
+  const alturaTotal =
+    Math.max(
+      alturaDoFulcro,
+      alturaDoPrato(-1) + 0.22 * escala,
+      alturaDoPrato(ladoDoPeso) + 0.55 * escala,
+    ) +
+    0.01 * escala
+
+  return {
+    tipo: 'balanca',
+    nome: NOMES_DOS_MARCOS.balanca,
+    fixo: montar(pecas),
+    girantes: [],
+    alturaTotal,
+    // Medido: o prato da ponta da travessa é a peça que mais se afasta do centro,
+    // em 2,1064 de raio para cada unidade de escala. Declarado 1,95 antes do
+    // conserto — para baixo, que é o lado perigoso: o marco encosta na borda do
+    // capim e o teste de encaixe não teria como perceber (ver D-058).
+    raioOcupado: 2.11 * escala,
+  }
+}
+
 /** Barracas do mercado: três tendas com balcão. */
 function mercado(escala: number): MarcoGerado {
   const pecas: Malha[] = []
@@ -657,6 +810,8 @@ export function gerarMarco(tipo: TipoDeMarco, opcoes: OpcoesDoMarco): MarcoGerad
     estacao,
     engrenagens,
     torre,
+    arquivo,
+    balanca,
   }
 
   const gerado = marcos[tipo](escala)
