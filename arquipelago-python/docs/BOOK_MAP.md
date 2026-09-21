@@ -43,8 +43,8 @@ conferido.
 
 ## As unidades escritas até agora
 
-Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescentou os capítulos 4 e 5,
-um por ilha.
+Decisão D-001: o capítulo 2 foi dividido em dois recortes. A Etapa 11 acrescentou os capítulos 4 e 5
+(lote 1) e os capítulos 6 e 7 (lote 2), um por ilha.
 
 | # | Unidade | Capítulo | Recorte | Página impressa | Página do PDF |
 |---|---|---|---|---|---|
@@ -54,8 +54,10 @@ um por ilha.
 | 4 | As Listas do Mercado | 3 — Introdução às listas | Índice zero, alterar, acrescentar, remover, ordenar, erro de índice | `null` | `null` |
 | 5 | O Moinho das Repetições | 4 — *Working with Lists* (título do original, a confirmar em português) | Percorrer com `for`, recuo, `range()`, estatísticas simples, fatias, cópia de lista, tuplas | `null` | `null` |
 | 6 | A Encruzilhada das Decisões | 5 — *if Statements* (título do original, a confirmar em português) | Testes condicionais, `and`/`or`/`not`, `in` com listas, `if`/`elif`/`else` | `null` | `null` |
+| 7 | O Farol dos Registros | 6 — *Dictionaries* (título do original, a confirmar em português) | Chave e valor, acesso e alteração, `get()` e o erro de chave, as três formas de percorrer, listas dentro de dicionários | `null` | `null` |
+| 8 | A Estação das Perguntas | 7 — *User Input and while Loops* (título do original, a confirmar em português) | `input()`, conversão com `int()`, `while` com contador, `break` e `continue`, `while` com listas, laço infinito | `null` | `null` |
 
-Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 e 5 foram
+Os títulos dos capítulos 1 a 3 vieram do texto da obra que foi fornecido. Os **capítulos 4 a 7 foram
 acrescentados na Etapa 11** sem esse material em mãos: o número do capítulo e o assunto são certos, e o
 título em português está marcado como **a confirmar**. É a mesma regra da página (`null`): campo que não
 pode ser conferido não recebe valor inventado.
@@ -69,9 +71,9 @@ Desde a Etapa 6, cada unidade carrega, além de `parte` (capítulo e seção) e 
 
 | Campo | O que é | Estado |
 |---|---|---|
-| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 6 unidades |
-| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 6 unidades |
-| `pagina` / `paginaPdf` | Número da página | `null` nas 6 — o PDF não está em mãos (D-010) |
+| `oQueObservar` | Quatro pontos para procurar naquela parte da leitura | Preenchido nas 8 unidades |
+| `semOLivro` | Como aprender o mesmo assunto sem o livro em mãos | Preenchido nas 8 unidades |
+| `pagina` / `paginaPdf` | Número da página | `null` nas 8 — o PDF não está em mãos (D-010) |
 
 Nenhum dos dois campos cita o livro: eles dizem o que **procurar** e como seguir sem ele.
 Nem a interface nem o conteúdo copiam trecho, nome de exemplo ou exercício da obra

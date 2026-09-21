@@ -5,6 +5,8 @@ import { u03Strings } from './u03Strings'
 import { u04Listas } from './u04Listas'
 import { u05MoinhoDasRepeticoes } from './u05MoinhoDasRepeticoes'
 import { u06EncruzilhadaDasDecisoes } from './u06EncruzilhadaDasDecisoes'
+import { u07FarolDosRegistros } from './u07FarolDosRegistros'
+import { u08EstacaoDasPerguntas } from './u08EstacaoDasPerguntas'
 
 /**
  * Conteúdo escrito até agora, na ordem do percurso.
@@ -20,6 +22,8 @@ export const CONTEUDO_DAS_UNIDADES: readonly ConteudoDaUnidade[] = [
   u04Listas,
   u05MoinhoDasRepeticoes,
   u06EncruzilhadaDasDecisoes,
+  u07FarolDosRegistros,
+  u08EstacaoDasPerguntas,
 ]
 
 /** Conteúdo de uma unidade, ou `null` se ela ainda não foi escrita. */

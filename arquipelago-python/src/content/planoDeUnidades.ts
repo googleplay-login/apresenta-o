@@ -142,6 +142,40 @@ export const PLANO_DE_UNIDADES: readonly UnidadePlanejada[] = [
     },
     situacao: 'pronta',
   },
+  {
+    id: 'u07-farol-dos-registros',
+    ordem: 7,
+    titulo: 'O Farol dos Registros',
+    tema: 'Guardar valores por chave com dicionários: consultar, acrescentar, percorrer e aninhar estruturas.',
+    referencia: {
+      capitulo: 6,
+      // O sumário em português não foi conferido: o PDF não está em mãos (D-010).
+      tituloCapitulo: 'Dictionaries (do original; título em português a confirmar)',
+      recorteProposto:
+        'O que é um dicionário, acesso e alteração por chave, a consulta segura com get(), o erro de chave inexistente, as três formas de percorrer e o aninhamento de listas dentro de dicionários.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
+  {
+    id: 'u08-estacao-das-perguntas',
+    ordem: 8,
+    titulo: 'A Estação das Perguntas',
+    tema: 'Fazer o programa perguntar com input(), converter o que veio do teclado e repetir com while até a condição mudar.',
+    referencia: {
+      capitulo: 7,
+      // Mesmo caso dos capítulos anteriores: número conferido, título em português não.
+      tituloCapitulo: 'User Input and while Loops (do original; título em português a confirmar)',
+      recorteProposto:
+        'A função input(), a conversão com int() e float(), o laço while com contador, break e continue, o uso de while com listas e o cuidado com o laço infinito.',
+      paginaImpressa: null,
+      paginaPdf: null,
+      status: PENDENTE,
+    },
+    situacao: 'pronta',
+  },
 ]
 
 /** Ordem das unidades planejadas, da primeira à última. */

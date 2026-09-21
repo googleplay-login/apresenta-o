@@ -356,6 +356,17 @@ navegador está no roteiro manual de `docs/TEST_REPORT.md`.
 Lote 1: **capítulos 4 e 5**, nas ilhas 5 e 6 — "O Moinho das Repetições" e "A Encruzilhada das
 Decisões", com 5 perguntas e 3 exercícios cada, todos com correção.
 
+Lote 2: **capítulos 6 e 7**, nas ilhas 7 e 8 — "O Farol dos Registros" (dicionários) e "A Estação das
+Perguntas" (`input()` e laços `while`), com 5 perguntas e 3 exercícios cada, todos com correção.
+
+O lote 2 trouxe uma limitação do projeto para dentro do conteúdo, em vez de escondê-la: o **console da
+ilha não tem teclado**, e o capítulo 7 inteiro é sobre perguntar ao usuário. O capítulo entrou assim
+mesmo — com todo trecho de `input()` marcado como "não roda no console", a alternativa escrita ao lado
+(escrever o valor direto no código) e o exercício da tabuada com a versão adaptada que roda aqui. O
+laço `while`, que é a outra metade do capítulo, roda inteiro: são 5 trechos novos que passam pelo
+interpretador de verdade. Ler `input()` sem poder digitar é limitação declarada, e não promessa
+quebrada — a alternativa está escrita em cada lugar onde ela é necessária (D-051).
+
 O que a etapa provou, além do conteúdo novo:
 
 - **Uma unidade nova agora é dado, não código.** Os dois arquivos de conteúdo entraram, cada um com
@@ -385,8 +396,8 @@ ambiente. O que ele prova está em `docs/TEST_REPORT.md` (jsdom, Node e Pyodide 
 
 O detalhamento de cada uma será feito na autorização da própria etapa.
 
-- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; o lote 1 está acima, e os
-  lotes seguintes continuam pelos capítulos 6 em diante.
+- **11 (em andamento)** — expansão curricular em lotes de 2 a 3 unidades; os lotes 1 e 2 estão acima,
+  e os lotes seguintes continuam pelo capítulo 8 em diante.
 - **12** — recursos complementares.
 - **13** — polimento, acessibilidade e desempenho.
 - **14** — auditoria e entrega.

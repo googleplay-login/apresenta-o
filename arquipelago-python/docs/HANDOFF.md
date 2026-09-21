@@ -1,15 +1,15 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, no **lote 1 da Etapa 11 (expansão curricular: capítulos 4 e 5)**.
+Atualizado em **21/09/2026**, no **lote 2 da Etapa 11 (expansão curricular: capítulos 4 a 7)**.
 
 ## Onde o projeto está
 
 | | |
 |---|---|
-| Etapa atual | 11 em andamento — lote 1 entregue (capítulos 4 e 5, ilhas 5 e 6); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
+| Etapa atual | 11 em andamento — lotes 1 e 2 entregues (capítulos 4 a 7, ilhas 5 a 8); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: seis ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as duas últimas nasceram do conteúdo, sem código novo de posicionamento |
-| Conteúdo pedagógico | **existe** para as 6 primeiras unidades (capítulos 1 a 5): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
+| Mundo 3D | **existe**: oito ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as quatro últimas nasceram do conteúdo, sem código novo de posicionamento |
+| Conteúdo pedagógico | **existe** para as 8 unidades escritas (capítulos 1 a 7): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
 | Correção do exercício | **existe**: conferência por sonda, com o limite declarado na tela; `deuCerto` / `naoConfere` / `naoDeuParaConferir`, e o exercício conferido guardado **sem** aprovar a ilha (Etapa 10) |
@@ -27,7 +27,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 700 testes, em 40 arquivos
+    npm test             # 700 testes, em 40 arquivos (a suíte não cresce com o conteúdo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -71,8 +71,9 @@ que descarta o Worker — a única forma de interromper um laço infinito (D-041
 
 - Projeto Vite + React + TypeScript, dependências **exatas** e lockfile versionado.
 - `src/ui/theme/tokens.ts`: fonte única das cores, com teste de contraste WCAG AA.
-- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 6 primeiras — capítulos 1 a 5) e a
-  regra de referência ao livro, com página `null` + `referencia-pendente`.
+- `src/content/`: o conteúdo tipado das unidades escritas (hoje, as 8 — capítulos 1 a 7) e a regra de
+  referência ao livro, com página `null` + `referencia-pendente` e o título do capítulo marcado como
+  "a confirmar" quando não foi conferido (D-050).
 - `src/`: esqueleto das pastas, cada uma com `README.md` dizendo sua responsabilidade e limites.
 - `docs/`: os documentos de continuidade.
 
@@ -233,6 +234,26 @@ Verificação:
 - a trava de acentuação reprovou a etapa uma vez por causa de um **nome de classe** lido como prosa
   (`"exercicio__nota exercicio__nao-roda"`); a classe virou um token só, e a trava ficou como estava.
 
+### Etapa 11 — lote 2: capítulos 6 e 7 nas ilhas 7 e 8
+
+- `src/content/unidades/u07FarolDosRegistros.ts`: dicionários — chave e valor, acesso e alteração,
+  `del`, a consulta segura com `.get()`, o `KeyError` do trecho marcado, as três formas de percorrer
+  (`.keys()`, `.values()`, `.items()`) e listas dentro de dicionários. 3 exercícios (todos com
+  correção), 5 perguntas, 1 bloco marcado (o `KeyError` de propósito);
+- `src/content/unidades/u08EstacaoDasPerguntas.ts`: `input()`, a conversão com `int()`, o laço `while`
+  com contador, a condição conferida antes de cada volta, `break` e `continue`, `while` com listas e o
+  laço infinito. 3 exercícios (todos com correção), 5 perguntas, 4 trechos marcados (três com
+  `input()`, um com `ValueError`), 1 aviso de versão sobre `raw_input()`;
+- **o capítulo que precisa de teclado entrou assim mesmo**, e a decisão está registrada: o console da
+  ilha não tem teclado, então todo trecho com `input()` está marcado, com a alternativa escrita ao
+  lado, e o exercício da tabuada traz as duas soluções — a de verdade e a que roda aqui (D-051);
+- **o teste do interpretador de verdade achou um erro no conteúdo do lote**, e o erro era do conteúdo:
+  o exercício das chaves em ordem alfabética pedia a saída em uma linha só, e a conferência procura os
+  textos esperados **um por linha, na ordem**. O exercício passou a pedir uma chave por linha — e a
+  conferência não foi afrouxada para acomodar o texto;
+- o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
+  sozinhas (D-049).
+
 ### Etapa 11 — lote 1: capítulos 4 e 5 nas ilhas 5 e 6
 
 - `src/content/unidades/u05MoinhoDasRepeticoes.ts`: laço `for` (a variável recebe o item, não o índice),
@@ -329,11 +350,16 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 
 ## Próximo passo (em execução, sem parada)
 
-**Etapa 11, lote 2 — os capítulos 6 em diante, em lotes de 2 a 3 unidades.** O lote 1 (capítulos 4 e 5)
-está entregue; o lote 2 segue o mesmo caminho, que agora está medido: escrever o conteúdo, registrar no
-plano e no registro, e deixar que o validador, os testes de conteúdo e o teste do interpretador de
-verdade digam o que está faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal
-de que a Etapa 4 deixou alguma conta escrita à mão, e o conserto é na conta, não no lote.
+**Etapa 11, lote 3 — os capítulos 8 em diante, em lotes de 2 a 3 unidades.** Os lotes 1 e 2 (capítulos 4
+a 7) estão entregues; o caminho está medido: escrever o conteúdo, registrar no plano e no registro, e
+deixar que o validador, os testes de conteúdo e o teste do interpretador de verdade digam o que está
+faltando. Nada de maquinário novo — se um lote exigir código de mundo, é sinal de que a Etapa 4 deixou
+alguma conta escrita à mão, e o conserto é na conta, não no lote.
+
+**Antes do lote 3, uma decisão de produto vale a pena:** o console não sabe ler o teclado, e o capítulo
+7 mostrou o custo disso. Fazer o console receber as respostas do `input()` (uma lista de linhas que o
+programa lê) é o primeiro candidato da Etapa 12 — e, quando existir, os trechos marcados da unidade 8
+são os primeiros a serem reescritos (D-051).
 
 Dependência herdada: o **PDF do livro não está nesta máquina**, então toda página continua `null`, o
 título em português dos capítulos novos fica marcado como "a confirmar" e a leitura recomendada fala em

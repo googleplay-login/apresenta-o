@@ -6,6 +6,72 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — Etapa 11, lote 2 (capítulos 6 e 7: ilhas 7 e 8)
+
+### 1. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com as duas unidades novas (`u07FarolDosRegistros`, `u08EstacaoDasPerguntas`), oito unidades
+no plano e no registro, e o título do capítulo marcado como não conferido (D-050).
+
+### 2. Testes automáticos — EXECUTADO
+
+    npm test
+
+**40 arquivos, 700 testes, todos passando.** O número de testes **não cresceu** com o lote — e isso é
+resultado do lote 1: os testes percorrem o conteúdo real, então cada unidade nova é verificada sem
+teste novo.
+
+| Arquivo | Testes | O que o lote 2 mudou aqui |
+|---|---|---|
+| `src/python/pyodideDeVerdade.test.ts` | 18 | Roda no Pyodide real **54 trechos** que o conteúdo promete que rodam (eram 40) e os **13 marcados** (eram 8) — os três com `input()` entram pela recusa do console, e o do `ValueError` pelo erro do próprio Python |
+| `src/content/conteudo.test.ts` | 42 | Percorre **oito** unidades: forma, correção com `limite`, gabarito em quatro posições por unidade, diagramas e nenhum trecho do livro |
+| `src/content/percursoDoConteudo.test.ts` | 6 | A conta de exercícios saiu do conteúdo: **24 exercícios** (eram 18), todos aceitos pelo domínio |
+| `src/content/planoDeUnidades.test.ts` | 16 | Compara `situacao` com o conteúdo nas duas direções para as oito unidades (D-048) |
+| `src/app/paginas/Mundo.interacao.test.tsx` | 24 | O HUD virou `0 de 8 ilhas aprovadas`, derivado do plano; o percurso de ponta a ponta aprova **oito** ilhas em sequência |
+| `src/world/*.test.ts*` | — | Uma ilha por unidade planejada e uma ponte por par vizinho continuam valendo para as oito, sem alteração no teste |
+
+Números do conteúdo, medidos pelo teste que roda Python de verdade: **8 unidades**, **43 blocos de
+código** de Python na explicação, **24 exercícios** (22 com correção), **54 trechos que rodam** e
+**13 trechos marcados** como "não roda neste console".
+
+### 3. O defeito que o teste achou — e que era do conteúdo
+
+O exercício `e7-3` pedia as chaves do dicionário em ordem alfabética em uma linha (`print(sorted(...))`).
+A conferência procura os textos esperados **um por linha, na ordem** — e a terceira chave estava na
+mesma linha da segunda, então a resposta certa foi reprovada. Quem decidiu foi o teste que roda a
+solução de referência no interpretador real, com a mesma conferência da tela.
+
+O conserto foi no **conteúdo**, não na conferência: o exercício passou a pedir uma chave por linha, com
+um `for`. Afrouxar a conferência para aceitar duas chaves na mesma linha também resolveria o exercício
+— e enfraqueceria a conferência inteira para acomodar um enunciado.
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip |
+|---|---|---|
+| `dist/index.html` | 0,63 kB | 0,40 kB |
+| `dist/assets/index-*.js` | 384,22 kB | 118,33 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB |
+| `dist/assets/Cena-*.js` | 912,10 kB | 242,34 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — |
+
+O pedaço principal cresceu 30,50 kB com as duas unidades (353,72 → 384,22), e o pedaço da cena 3D
+continuou **sem mudar um byte** pelo segundo lote seguido.
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **Nenhum navegador.** As ilhas 7 e 8 nunca foram vistas por ninguém: prova-se o mundo montado em
+  teste (oito ilhas, uma ponte por par vizinho), o conteúdo e a conferência — não a aparência.
+- **O `input()` de verdade** não roda em lugar nenhum daqui: o console recusa, e o teste de verdade
+  confere a **recusa** e a versão adaptada. Ler o teclado continua sendo coisa do computador de quem
+  estuda (D-051).
+- **A travessia a pé até as ilhas 7 e 8**: geometria e mapa caminhável passam em teste; a caminhada de
+  verdade é roteiro manual (item 54, agora cobrindo todas as ilhas escritas depois da quarta).
+
 ## Execução de 21/09/2026 — Etapa 11, lote 1 (capítulos 4 e 5: ilhas 5 e 6)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -60,14 +126,15 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
 
 ### 5. Roteiro manual das ilhas novas (item 54)
 
-54. **As ilhas 5 e 6 existem, com as pontes certas**: abrir o mundo e contar as ilhas suspensas — devem
-    ser **seis**, na mesma curva em S, com uma ponte entre cada par vizinho (5 pontes). Com as ilhas 4
-    e 5 ainda não aprovadas, as duas pontes novas devem aparecer pela metade, como as outras fechadas.
-    Depois aprovar a ilha 4 (responder as perguntas, 4 de 5) e conferir que a ponte 4–5 fica inteira e
-    que a travessia a pé, com `W`, leva o avatar até a ilha 5; entrar nela e conferir que a missão, a
-    leitura (capítulo 4), a explicação, os 3 exercícios e as 5 perguntas aparecem. Repetir da 5 para a
-    6 (capítulo 5). Os itens 51 a 53 valem igualmente para os exercícios novos — inclusive o do capítulo
-    5, em que a conferência exige um valor **booleano** (`True`), não o texto.
+54. **As ilhas escritas depois da quarta existem, com as pontes certas**: abrir o mundo e contar as
+    ilhas suspensas — devem ser **oito**, na mesma curva em S, com uma ponte entre cada par vizinho
+    (7 pontes). Com a quinta ilha ainda não aprovada, a ponte 4–5 deve aparecer pela metade, como as
+    outras fechadas. Aprovar a ilha 4 (responder as perguntas, 4 de 5) e conferir que a ponte 4–5 fica
+    inteira e que a travessia a pé, com `W`, leva o avatar até a ilha 5; entrar nela e conferir missão,
+    leitura (capítulo 4), explicação, os 3 exercícios e as 5 perguntas. Repetir ilha por ilha até a 8
+    (capítulos 5, 6 e 7). Os itens 51 a 53 valem para os exercícios novos — inclusive o do capítulo 5,
+    em que a conferência exige um valor **booleano** (`True`), e o da tabuada, em que ela exige o número
+    inteiro 7 no lugar do que o `input()` teria devolvido.
 
 Resultado esperado, somando as etapas 5 a 11: **54 de 54 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.

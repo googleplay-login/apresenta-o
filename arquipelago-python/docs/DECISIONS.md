@@ -925,3 +925,26 @@ esconderia informação que o mapa do livro existe para dar: que unidade estuda 
 citando **capítulo e assunto**, nunca página, e a pendência herdada do PDF ganhou mais um item na lista
 do que precisa ser conferido quando o livro chegar: os títulos dos capítulos 4 e 5 (e, daí em diante, de
 cada lote novo). Nada disso muda o que o estudante estuda — muda o que o projeto afirma saber.
+
+## D-051 — O capítulo que precisa de teclado entra com a alternativa escrita, e não fica de fora
+**21/09/2026** — decisão de conteúdo e de honestidade, na Etapa 11 (lote 2).
+
+**Decisão:** o capítulo 7 do livro — `input()` e laços `while` — virou unidade mesmo sabendo que o
+console da ilha **não tem teclado**. Todo trecho com `input()` está marcado como "não roda no
+console", com a alternativa ao lado: onde haveria pergunta, o valor entra escrito no código. O
+exercício da tabuada faz o mesmo, e traz as duas versões da solução — a de verdade, com `input()`, e
+a que roda aqui. O `while`, que é a outra metade do capítulo, roda inteiro e é conferido no
+interpretador real.
+
+**Contexto:** a alternativa era pular o capítulo e voltar a ele quando o console soubesse ler o
+teclado. Duas coisas pesaram contra. A primeira é que `input()` não é um detalhe do capítulo: é o
+assunto, e o estudante precisa dele no computador dele — deixar o capítulo de fora por causa do
+console seria deixar o console decidir o currículo. A segunda é que a limitação já está resolvida em
+outro lugar do projeto: a unidade 3 tem dois exercícios com `input()` e a mesma alternativa, e o
+validador cobra que a versão que roda aqui exista e funcione.
+
+**Consequência:** a unidade diz, na explicação e em cada trecho marcado, o que não funciona aqui e o
+que fazer no lugar. E fica registrado o caminho melhor para o futuro: **fazer o console receber as
+respostas do `input()`** — uma lista de linhas que o programa lê, em vez de esperar por um teclado que
+não existe. É candidato ao primeiro item da Etapa 12; quando existir, os trechos marcados desta unidade
+são os primeiros a serem reescritos, e o exercício da tabuada perde a versão adaptada.

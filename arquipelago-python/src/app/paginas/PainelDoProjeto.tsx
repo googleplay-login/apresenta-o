@@ -23,19 +23,19 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
     verificar: 'npm test',
   },
   {
-    item: 'As 6 primeiras unidades mapeadas para o livro, com as páginas marcadas como referência pendente.',
+    item: 'As 8 unidades escritas mapeadas para o livro, com as páginas marcadas como referência pendente.',
     verificar: 'npm test',
   },
   {
-    item: 'O mundo 3D: seis ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
+    item: 'O mundo 3D: oito ilhas suspensas, pontes, céu, mar e uma pessoa que anda pelo capim.',
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O ciclo de estudo das 6 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
+    item: 'O ciclo de estudo das 8 unidades: missão, leitura orientada, explicação, prática, avaliação e resultado.',
     verificar: 'aba "Mundo"',
   },
   {
-    item: 'O conteúdo escrito das 6 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
+    item: 'O conteúdo escrito das 8 unidades: 5 perguntas e 3 exercícios em cada, mais os diagramas da explicação.',
     verificar: 'npm test',
   },
   {
@@ -64,7 +64,7 @@ const CONSTRUIDO: readonly { readonly item: string; readonly verificar: string }
 const AINDA_NAO_EXISTE: readonly string[] = [
   'A animação de caminhada do avatar: a figura anda, as pernas não se mexem.',
   'O som e a narração: nenhum áudio existe, e não há previsão de ligá-lo por padrão.',
-  'As unidades 7 em diante: só as 6 primeiras têm conteúdo escrito.',
+  'As unidades 9 em diante: só as 8 primeiras têm conteúdo escrito.',
   'O teste de navegador automatizado (Playwright): nenhum navegador com WebGL existe neste ambiente.',
   'A conferência do exercício não julga estilo nem impede quem quiser enganar: ela roda no cliente, e a tela diz isso.',
 ]
