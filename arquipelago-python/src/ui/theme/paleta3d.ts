@@ -124,6 +124,49 @@ export function corDaSituacao(situacao: 'bloqueada' | 'disponivel' | 'aprovada')
   }[situacao]
 }
 
+/**
+ * Os tons das ilhas.
+ *
+ * Cada ilha recebe um tom, e o tom aparece no marco dela — a construção que só
+ * aquela ilha tem. São dez misturas de tokens existentes, e não dez valores
+ * novos: a regra do projeto continua valendo (D-005), e o teste refaz cada
+ * mistura a partir dos tokens para provar isso.
+ *
+ * Por que dez e não uma cor por ilha para sempre: quando o arquipélago passar de
+ * dez ilhas, o tom volta ao começo — e mesmo assim duas ilhas não ficam iguais,
+ * porque a silhueta, o marco e a vegetação vêm da semente de cada uma
+ * (`geometria/identidade.ts`).
+ */
+export const CORES_DAS_ILHAS: readonly Cor3D[] = [
+  /** Verde da marca: o tom da primeira ilha, o que o projeto já usava. */
+  misturar(deHex(cores.acento.verde), deHex(cores.acento.verdeClaro), 0.5),
+  /** Âmbar quente, puxado para a madeira clara. */
+  misturar(deHex(cores.acento.ambar), deHex(cores.terreno.madeiraClara), 0.35),
+  /** Turquesa do mar claro com o mar médio. */
+  misturar(deHex(cores.mar.medio), deHex(cores.mar.claro), 0.5),
+  /** Terracota: o vermelho da marca com a madeira. */
+  misturar(deHex(cores.acento.vermelho), deHex(cores.terreno.madeira), 0.45),
+  /** Verde de conífera, um passo mais escuro que o capim. */
+  misturar(deHex(cores.terreno.conifera), deHex(cores.terreno.capim), 0.35),
+  /** Areia clara, tirada do creme da interface. */
+  misturar(deHex(cores.terreno.pale), deHex(cores.ceu.alto), 0.3),
+  /** Azul fundo: o horizonte do céu com o mar fundo. */
+  misturar(deHex(cores.ceu.horizonte), deHex(cores.mar.fundo), 0.4),
+  /** Cinza-esverdeado: pedra clara com o mar médio. */
+  misturar(deHex(cores.terreno.rochaClara), deHex(cores.mar.medio), 0.4),
+  /** Marrom escuro de madeira com a pedra. */
+  misturar(deHex(cores.terreno.madeira), deHex(cores.terreno.rocha), 0.3),
+  /** Rosado de pedra: o vermelho da marca lavado no horizonte do céu. */
+  misturar(deHex(cores.acento.vermelho), deHex(cores.ceu.horizonte), 0.5),
+] as const
+
+/** O tom de uma ilha, pelo índice. Índices fora da lista dão a volta. */
+export function corDaIlha(tom: number): Cor3D {
+  const quantidade = CORES_DAS_ILHAS.length
+  const escolhido = ((Math.trunc(tom) % quantidade) + quantidade) % quantidade
+  return CORES_DAS_ILHAS[escolhido] ?? CORES_DERIVADAS.aprovada
+}
+
 /** Cor do capim conforme a situação da unidade. */
 export function corDoCapim(situacao: 'bloqueada' | 'disponivel' | 'aprovada'): Cor3D {
   return situacao === 'bloqueada' ? CORES_DERIVADAS.capimBloqueado : CORES_DO_MUNDO.capim

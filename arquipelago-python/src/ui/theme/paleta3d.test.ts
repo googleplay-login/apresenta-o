@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CORES_DAS_ILHAS,
   CORES_DERIVADAS,
   CORES_DO_MUNDO,
+  corDaIlha,
   corDaRocha,
   corDaSituacao,
   corDoCapim,
@@ -9,6 +11,7 @@ import {
   paraHex,
 } from './paleta3d'
 import { cores, coresDeEstado } from './tokens'
+import { misturar } from '../../world/geometria/pintura'
 
 /** Todas as cores que o mundo 3D usa, com o nome de onde vieram. */
 function todasAsCores(): readonly { readonly nome: string; readonly cor: number }[] {
@@ -77,6 +80,61 @@ describe('origem das cores do mundo', () => {
       }
       expect(cor, `${nome} ficou preto puro`).not.toBe(0x000000)
       expect(cor, `${nome} ficou branco puro`).not.toBe(0xffffff)
+    }
+  })
+})
+
+describe('os tons das ilhas', () => {
+  it('são dez, todos diferentes, e nenhum é preto ou branco puro', () => {
+    expect(CORES_DAS_ILHAS).toHaveLength(10)
+    const unicos = new Set(CORES_DAS_ILHAS)
+    expect(unicos.size).toBe(CORES_DAS_ILHAS.length)
+
+    for (const cor of CORES_DAS_ILHAS) {
+      expect(cor).not.toBe(0x000000)
+      expect(cor).not.toBe(0xffffff)
+    }
+  })
+
+  it('são misturas de tokens, e não valores escritos à mão', () => {
+    // Se alguém trocar um token, o tom da ilha acompanha sozinho. A conferência
+    // refaz três misturas a partir dos tokens do projeto, uma de cada ponta da
+    // lista.
+    expect(CORES_DAS_ILHAS[0]).toBe(
+      misturar(deHex(cores.acento.verde), deHex(cores.acento.verdeClaro), 0.5),
+    )
+    expect(CORES_DAS_ILHAS[5]).toBe(
+      misturar(deHex(cores.terreno.pale), deHex(cores.ceu.alto), 0.3),
+    )
+    expect(CORES_DAS_ILHAS[9]).toBe(
+      misturar(deHex(cores.acento.vermelho), deHex(cores.ceu.horizonte), 0.5),
+    )
+  })
+
+  it('corDaIlha dá a volta em vez de estourar', () => {
+    expect(corDaIlha(0)).toBe(CORES_DAS_ILHAS[0])
+    expect(corDaIlha(9)).toBe(CORES_DAS_ILHAS[9])
+    expect(corDaIlha(10)).toBe(CORES_DAS_ILHAS[0])
+    expect(corDaIlha(-1)).toBe(CORES_DAS_ILHAS[9])
+  })
+
+  it('dois tons vizinhos são distinguíveis: nenhum par é quase a mesma cor', () => {
+    // Duas ilhas com tons praticamente iguais voltariam a parecer a mesma ilha.
+    // O limiar é medido, e não escolhido a dedo: o par mais próximo dos dez está
+    // a 48,9 de distância em RGB, e o limite de 40 deixa folga para um ajuste de
+    // token sem quebrar o teste por um ponto.
+    const canais = (cor: number): readonly [number, number, number] => [
+      (cor >> 16) & 0xff,
+      (cor >> 8) & 0xff,
+      cor & 0xff,
+    ]
+    for (let um = 0; um < CORES_DAS_ILHAS.length; um += 1) {
+      for (let outro = um + 1; outro < CORES_DAS_ILHAS.length; outro += 1) {
+        const a = canais(CORES_DAS_ILHAS[um] ?? 0)
+        const b = canais(CORES_DAS_ILHAS[outro] ?? 0)
+        const distancia = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+        expect(distancia, `Os tons ${um} e ${outro} ficaram parecidos`).toBeGreaterThan(40)
+      }
     }
   })
 })

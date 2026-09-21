@@ -31,6 +31,12 @@ export type OpcoesDaRocha = {
   readonly altura: number
   /** Irregularidade: 0 seria um cone perfeito. */
   readonly amplitude: number
+  /**
+   * Abertura do perfil. `1.7` é o padrão da primeira ilha; menor deixa a pedra
+   * mais cheia embaixo (ilha atarracada), maior afina rápido (ilha em agulha).
+   * É o número que faz duas ilhas da mesma altura parecerem diferentes.
+   */
+  readonly expoenteDoPerfil?: number
 }
 
 export const ROCHA_PADRAO: OpcoesDaRocha = {
@@ -49,10 +55,13 @@ export const ROCHA_PADRAO: OpcoesDaRocha = {
  * do topo e afina rápido no fim, que é o formato reconhecível de ilha suspensa —
  * uma parede de rocha com ponta, e não um cone de sorvete.
  */
-export function perfilDeRaio(t: number): number {
+export function perfilDeRaio(t: number, expoente: number = EXPOENTE_DO_PERFIL): number {
   const profundidade = Math.min(Math.max(t, 0), 1)
-  return (1 - profundidade) ** 1.7
+  return (1 - profundidade) ** expoente
 }
+
+/** Expoente do perfil da primeira ilha. Cada ilha pode trazer o seu. */
+export const EXPOENTE_DO_PERFIL = 1.7
 
 /**
  * Gera a malha da rocha: anéis empilhados, fechados em uma ponta embaixo.
@@ -62,6 +71,7 @@ export function perfilDeRaio(t: number): number {
  */
 export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): Malha {
   const { segmentosRadiais, aneis, semente, raioDoTopo, altura, amplitude } = opcoes
+  const expoenteDoPerfil = opcoes.expoenteDoPerfil ?? EXPOENTE_DO_PERFIL
 
   if (segmentosRadiais < 3) {
     throw new Error(`São necessários ao menos 3 segmentos radiais, e veio ${segmentosRadiais}`)
@@ -94,7 +104,7 @@ export function gerarRocha(opcoes: OpcoesDaRocha = ROCHA_PADRAO): Malha {
 
   for (let anel = 0; anel <= aneis; anel += 1) {
     const t = anel / aneis
-    const raioDoAnel = Math.max(raioDoTopo * perfilDeRaio(t), raioMinimo)
+    const raioDoAnel = Math.max(raioDoTopo * perfilDeRaio(t, expoenteDoPerfil), raioMinimo)
     const y = -altura * t
 
     for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
@@ -134,6 +144,8 @@ export type OpcoesDoTopo = {
   readonly raio: number
   /** Irregularidade da borda, como no topo da rocha. */
   readonly amplitude: number
+  /** Quanto o capim sobe do centro até a borda. Ver `alturaDoTopo`. */
+  readonly inclinacao?: number
 }
 
 /**
@@ -147,9 +159,13 @@ export type OpcoesDoTopo = {
 export const INCLINACAO_DO_TOPO = 0.06
 
 /** Altura do capim a uma distância do centro da ilha. Fora do raio, fica na borda. */
-export function alturaDoTopo(raio: number, distanciaDoCentro: number): number {
+export function alturaDoTopo(
+  raio: number,
+  distanciaDoCentro: number,
+  inclinacao: number = INCLINACAO_DO_TOPO,
+): number {
   const t = Math.min(Math.max(distanciaDoCentro / raio, 0), 1)
-  return t * t * raio * INCLINACAO_DO_TOPO
+  return t * t * raio * inclinacao
 }
 
 export const TOPO_PADRAO: OpcoesDoTopo = {
@@ -168,6 +184,7 @@ export const TOPO_PADRAO: OpcoesDoTopo = {
  */
 export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
   const { segmentosRadiais, aneis, semente, raio, amplitude } = opcoes
+  const inclinacao = opcoes.inclinacao ?? INCLINACAO_DO_TOPO
 
   if (segmentosRadiais < 3) {
     throw new Error(`São necessários ao menos 3 segmentos radiais, e veio ${segmentosRadiais}`)
@@ -194,7 +211,7 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
     const t = anel / aneis
     const raioDoAnel = raio * t
     // A mesma fórmula que o chão caminhável usa — ver `alturaDoTopo`.
-    const y = alturaDoTopo(raio, raioDoAnel)
+    const y = alturaDoTopo(raio, raioDoAnel, inclinacao)
 
     for (let coluna = 0; coluna <= segmentosRadiais; coluna += 1) {
       const angulo = (coluna / segmentosRadiais) * Math.PI * 2
@@ -225,6 +242,39 @@ export function gerarTopo(opcoes: OpcoesDoTopo = TOPO_PADRAO): Malha {
   }
 
   return { posicoes, indices }
+}
+
+/**
+ * Gira a malha em torno de um eixo que passa pela origem.
+ *
+ * Usada para montar peça torta a partir de peça reta: dente de engrenagem,
+ * pá de moinho, placa apontando para o lado. Rotação não inverte o sentido das
+ * faces, então uma malha conferida como "para fora" continua correta depois de
+ * girada — e `orientacao.test.ts` cobra isso.
+ */
+export function rotacionarMalha(
+  malha: Malha,
+  giro: { readonly eixo: 'x' | 'y' | 'z'; readonly angulo: number },
+): Malha {
+  const cosseno = Math.cos(giro.angulo)
+  const seno = Math.sin(giro.angulo)
+  const posicoes: number[] = []
+
+  for (let indice = 0; indice < malha.posicoes.length; indice += 3) {
+    const x = malha.posicoes[indice] ?? 0
+    const y = malha.posicoes[indice + 1] ?? 0
+    const z = malha.posicoes[indice + 2] ?? 0
+
+    if (giro.eixo === 'x') {
+      posicoes.push(x, y * cosseno - z * seno, y * seno + z * cosseno)
+    } else if (giro.eixo === 'y') {
+      posicoes.push(x * cosseno + z * seno, y, -x * seno + z * cosseno)
+    } else {
+      posicoes.push(x * cosseno - y * seno, x * seno + y * cosseno, z)
+    }
+  }
+
+  return { posicoes, indices: malha.indices }
 }
 
 /** Coloca a malha na posição informada, devolvendo uma malha nova. */

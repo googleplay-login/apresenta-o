@@ -40,6 +40,14 @@ export type ChaoDeIlha = {
   readonly raio: number
   /** Altura do capim no centro da ilha. O topo é um domo em volta deste ponto. */
   readonly altura: number
+  /**
+   * Quanto o capim sobe do centro até a borda desta ilha.
+   *
+   * Cada ilha tem o seu (ver `geometria/identidade.ts`): uma é mais plana, outra
+   * mais abaulada. O chão e a malha do capim usam **o mesmo** número, senão o pé
+   * do avatar flutua ou afunda.
+   */
+  readonly inclinacao: number
 }
 
 /** O tabuleiro de uma ponte inteira, como superfície de caminhada. */
@@ -88,6 +96,7 @@ export function chaoDoMundo(
       z: ilha.centro[2],
       raio: ilha.raio,
       altura: ilha.centro[1],
+      inclinacao: ilha.identidade.formato.inclinacaoDoCapim,
     })),
     pontes: pontes
       .filter((ponte) => ponte.liberada)
@@ -145,7 +154,7 @@ export function chaoEm(chao: ChaoDoMundo, ponto: PontoNoPlano): number | null {
   for (const ilha of chao.ilhas) {
     const distancia = distanciaAoCentro(ilha, ponto)
     if (distancia <= ilha.raio - RAIO_DO_AVATAR + 1e-9) {
-      const altura = ilha.altura + alturaDoTopo(ilha.raio, distancia)
+      const altura = ilha.altura + alturaDoTopo(ilha.raio, distancia, ilha.inclinacao)
       // Duas superfícies podem se sobrepor perto da ponte: vale a mais alta, que
       // é a que sustenta o pé.
       encontrado = encontrado === null ? altura : Math.max(encontrado, altura)

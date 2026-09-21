@@ -27,7 +27,7 @@ Consequências práticas, e o motivo de cada uma:
 | Pasta | Responsabilidade | Estado |
 |---|---|---|
 | `src/app/` | Casca da aplicação, rotas por hash e as três páginas atuais | Existe |
-| `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. **Sem regra de aprovação** | Existe e testado |
+| `src/world/` | Cena 3D: ilhas, pontes, avatar, câmeras, céu, névoa, chão caminhável e a geometria pura que alimenta tudo. `geometria/identidade.ts` diz o que distingue cada ilha (silhueta, marco, vegetação e tom) e `geometria/marcos.ts` constrói os dez marcos. **Sem regra de aprovação** | Existe e testado |
 | `src/learning/` | Regras pedagógicas puras: aprovação, disponibilidade, reprovação e a conferência do exercício (sonda, comparação, veredito) | Existe e testado |
 | `src/content/` | Conteúdo pedagógico como dado tipado, separado dos componentes: missão, leitura orientada, explicação, diagramas, exercícios (com correção declarada) e perguntas. Também o percurso que o domínio enxerga (`percursoDoConteudo.ts`) | Existe para as 10 unidades escritas, com validador e testes que cobram a forma |
 | `src/state/` | Estado em memória da sessão: o redutor é o **único** que chama `registrarResultado` | Existe e testado |
@@ -277,7 +277,7 @@ comentada no arquivo. Se aparecer uma segunda, é sinal de que a fonte única va
 | Aprovação só com 80% reais | `src/learning/avaliacao.test.ts` | Exibição que contradiz a decisão |
 | Nenhum atalho de desbloqueio | `src/learning/percurso.test.ts` | Pular portão por rota, clique ou ordem |
 | Acentuação do português | `qa/acentuacao.test.ts` | Texto sem acento no código e na documentação (D-015) |
-| O mundo desenhado é o mundo prometido | `src/world/ConteudoDaCena.test.tsx` | Ilha sem biblioteca, mesa ou placa; ponte a mais ou a menos (D-025) |
+| O mundo desenhado é o mundo prometido | `src/world/ConteudoDaCena.test.tsx` | Ilha sem biblioteca, mesa ou placa; ponte a mais ou a menos (D-025); ilhas iguais umas às outras (D-053) |
 | Nenhum gabarito viciado em uma posição | `src/content/conteudo.test.ts` | Alternativa correta sempre no mesmo lugar, **por unidade** (D-027) |
 | Só ponte inteira vira chão | `src/world/mapaCaminhavel.test.ts` | Atravessar a pé onde a aprovação não chegou (D-029, D-030) |
 | Ninguém anda para fora do chão | `src/world/avatar/passos.test.ts` | Queda no vazio, travessia por fora do tabuleiro |

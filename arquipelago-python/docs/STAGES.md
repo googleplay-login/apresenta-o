@@ -363,6 +363,12 @@ Lote 3: **capítulos 8 e 9**, nas ilhas 9 e 10 — "A Oficina das Funções" (de
 importar) e "A Torre das Classes" (`__init__`, `self`, atributos, métodos e herança), com 5 perguntas e
 3 exercícios cada, todos com correção.
 
+Depois do lote, e a partir de um relato de quem usa o mundo, veio um conserto de direção visual: **as
+ilhas estavam todas iguais** — mesmo raio, mesma altura, mesmas estruturas, mesma cor. Cada ilha passou
+a ter silhueta, marco, vegetação e tom próprios, derivados da semente da unidade e da posição no
+percurso, com uma verificação nova para o que faltava: dez marcos, dez silhuetas e dez tons
+diferentes (D-053).
+
 Antes de escrever o conteúdo do lote, a **sonda da conferência ficou defensiva**: cada valor medido
 passou a ser avaliado dentro do próprio `try`, e uma medida que não pode ser feita — a função que tem
 outro nome, a chave que não existe — virou uma frase do item ("o programa não tem esse nome quando

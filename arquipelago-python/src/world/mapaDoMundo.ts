@@ -2,6 +2,7 @@ import type { UnidadePlanejada } from '../content/planoDeUnidades'
 import type { Vetor3 } from './camera/movimento'
 import { sementeDeTexto } from './geometria/aleatorio'
 import { alturaDoTopo } from './geometria/ilha'
+import { identidadeDaIlha, type IdentidadeDaIlha } from './geometria/identidade'
 import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
 
 /**
@@ -17,13 +18,27 @@ import { ESPESSURA_DO_TABULEIRO } from './geometria/solidos'
  *    é conferida por teste, comparando com a própria biblioteca `three`.
  */
 
-/** Raio do capim de cada ilha. É o raio usado para encostar a ponte na borda. */
+/**
+ * Raio **nominal** do capim de uma ilha.
+ *
+ * Não é o raio de todas: cada ilha tem o seu, dentro de uma faixa estreita (ver
+ * `geometria/identidade.ts`), e é o raio real que encosta a ponte na borda e
+ * delimita o chão caminhável. Este número serve para **espaçar** as ilhas umas
+ * das outras, de modo que duas bordas nunca se encostem.
+ */
 export const RAIO_DA_ILHA = 6
 
 /** Vão entre duas bordas. É o comprimento da ponte liberada. */
 export const VAO_DA_PONTE = 9
 
-/** Distância entre os centros: duas bordas mais o vão. */
+/**
+ * Distância **nominal** entre dois centros: as duas bordas nominais mais o vão.
+ *
+ * Não é a distância de todo par: cada ilha tem o raio dela, então a distância
+ * entre um par é `raio de uma + raio da outra + vão`, e é assim que o trilho
+ * mantém o **vão constante** e a ponte com o mesmo comprimento — o que muda de
+ * ilha para ilha é o tamanho da pedra, não o caminho entre elas.
+ */
 export const DISTANCIA_ENTRE_CENTROS = RAIO_DA_ILHA * 2 + VAO_DA_PONTE
 
 /** Quanto cada ilha sobe em relação à anterior. A trilha visivelmente ascende. */
@@ -39,15 +54,34 @@ export type IlhaDoMundo = {
   readonly indice: number
   /** Semente da geometria: a mesma ilha tem sempre a mesma pedra. */
   readonly semente: number
+  /**
+   * O que distingue esta ilha de todas as outras: silhueta, marco, vegetação e
+   * tom. Vem da semente (o id) e da posição no percurso, e é a **única** fonte
+   * desses números — a cena lê daqui, e não recalcula nada.
+   */
+  readonly identidade: IdentidadeDaIlha
   /** Ponto no **topo do capim**, no centro da ilha. */
   readonly centro: Vetor3
   readonly raio: number
 }
 
-/** Posição bruta, antes de centralizar o arquipélago na origem. */
-function posicaoBruta(indice: number): Vetor3 {
+/**
+ * Posição bruta, antes de centralizar o arquipélago na origem.
+ *
+ * O avanço em x é **acumulado**, e não uma multiplicação: cada ilha fica a
+ * `raio anterior + raio dela + vão` da anterior. Com raios diferentes, essa é a
+ * única conta que mantém o vão constante — e é o vão que a ponte precisa vencer.
+ */
+function posicaoBruta(indice: number, raios: readonly number[]): Vetor3 {
+  let x = 0
+  for (let passo = 1; passo <= indice; passo += 1) {
+    const anterior = raios[passo - 1] ?? RAIO_DA_ILHA
+    const atual = raios[passo] ?? RAIO_DA_ILHA
+    x += anterior + atual + VAO_DA_PONTE
+  }
+
   return [
-    indice * DISTANCIA_ENTRE_CENTROS,
+    x,
     indice * SOBE_POR_ILHA,
     // Curva em S: as ilhas não ficam alinhadas, e a paisagem ganha profundidade.
     Math.sin(indice * 0.7) * 10,
@@ -62,23 +96,31 @@ function posicaoBruta(indice: number): Vetor3 {
  */
 export function ilhasDoMundo(unidades: readonly UnidadePlanejada[]): readonly IlhaDoMundo[] {
   const ordenadas = [...unidades].sort((uma, outra) => uma.ordem - outra.ordem)
-  const brutas = ordenadas.map((_, indice) => posicaoBruta(indice))
+  const identidades = ordenadas.map((unidade, indice) =>
+    identidadeDaIlha(indice, sementeDeTexto(unidade.id)),
+  )
+  const raios = identidades.map((identidade) => identidade.formato.raioDoTopo)
+  const brutas = ordenadas.map((_, indice) => posicaoBruta(indice, raios))
 
   const mediaX = brutas.reduce((soma, [x]) => soma + x, 0) / Math.max(brutas.length, 1)
   const mediaZ = brutas.reduce((soma, [, , z]) => soma + z, 0) / Math.max(brutas.length, 1)
 
   return ordenadas.map((unidade, indice) => {
     const [x, y, z] = brutas[indice] ?? [0, 0, 0]
+    // Semente estável: muda com a unidade, nunca com a ordem de desenho.
+    const semente = sementeDeTexto(unidade.id)
+    const identidade = identidades[indice] ?? identidadeDaIlha(indice, semente)
     return {
       id: unidade.id,
       ordem: unidade.ordem,
       titulo: unidade.titulo,
       tema: unidade.tema,
       indice,
-      // Semente estável: muda com a unidade, nunca com a ordem de desenho.
-      semente: sementeDeTexto(unidade.id),
+      semente,
+      identidade,
       centro: [x - mediaX, y, z - mediaZ],
-      raio: RAIO_DA_ILHA,
+      // O raio que vale é o desta ilha: é ele que a ponte procura para encostar.
+      raio: identidade.formato.raioDoTopo,
     }
   })
 }
@@ -144,16 +186,29 @@ export function ponteEntre(uma: IlhaDoMundo, outra: IlhaDoMundo): TrechoDePonte 
     throw new Error(`As ilhas ${uma.id} e ${outra.id} estão encostadas; não há vão a vencer`)
   }
 
-  const vertical = y2 - y1
-  const comprimento = Math.hypot(horizontal, vertical)
+  // Altura do capim nas duas bordas, medida pela mesma função que gera a ilha —
+  // com a inclinação de cada uma, porque cada ilha sobe de um jeito. É a
+  // diferença entre as duas bordas que a ponte precisa vencer, e não a diferença
+  // entre os centros: com inclinações diferentes, as duas contas deixam de
+  // coincidir, e a ponte terminaria acima ou abaixo do capim de destino.
+  const alturaNaBordaDeOrigem = alturaDoTopo(
+    uma.raio,
+    uma.raio,
+    uma.identidade.formato.inclinacaoDoCapim,
+  )
+  const alturaNaBordaDeDestino = alturaDoTopo(
+    outra.raio,
+    outra.raio,
+    outra.identidade.formato.inclinacaoDoCapim,
+  )
 
-  // Altura do capim na borda, medida pela mesma função que gera a ilha.
-  const alturaNaBorda = alturaDoTopo(uma.raio, uma.raio)
+  const vertical = y2 + alturaNaBordaDeDestino - (y1 + alturaNaBordaDeOrigem)
+  const comprimento = Math.hypot(horizontal, vertical)
 
   return {
     de: uma.id,
     para: outra.id,
-    posicao: [inicioX, y1 + alturaNaBorda + ALTURA_DO_TABULEIRO, inicioZ],
+    posicao: [inicioX, y1 + alturaNaBordaDeOrigem + ALTURA_DO_TABULEIRO, inicioZ],
     rotacaoY: Math.atan2(-uz, ux),
     rotacaoZ: Math.atan2(vertical, horizontal),
     comprimento,

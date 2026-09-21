@@ -132,6 +132,31 @@ function nomesDentro(no: No): readonly string[] {
 }
 
 /**
+ * O ponto mais fundo (y mínimo) das malhas dentro de um objeto.
+ *
+ * Serve para medir a **silhueta** sem olhar para a tela: a pedra de cada ilha
+ * desce de 0 até a altura dela, então o ponto mais fundo é a altura da ilha —
+ * o número que ficou diferente em cada uma quando as ilhas deixaram de ser
+ * iguais.
+ */
+function pontoMaisFundo(no: No): number {
+  let fundo = 0
+  for (const malha of no.findAll((filho) => filho.instance.type === 'Mesh')) {
+    const geometria = (malha.instance as unknown as {
+      geometry?: { attributes?: { position?: { array: ArrayLike<number> } } }
+    }).geometry
+    const posicoes = geometria?.attributes?.position?.array
+    if (posicoes === undefined) {
+      continue
+    }
+    for (let indice = 1; indice < posicoes.length; indice += 3) {
+      fundo = Math.min(fundo, posicoes[indice] ?? 0)
+    }
+  }
+  return fundo
+}
+
+/**
  * Soma os vértices das malhas dentro de um objeto.
  *
  * Serve para medir o que a cena desenha sem olhar para a tela: uma ponte liberada
@@ -192,6 +217,43 @@ describe('o mundo é feito do que o projeto promete', () => {
 
     const farois = cena.scene.findAll((no) => comNome(no) === 'farol')
     expect(farois).toHaveLength(UNIDADES.length)
+
+    await cena.unmount()
+  })
+
+  it('cada ilha tem um marco próprio, e nenhuma repete o da vizinha', async () => {
+    // O defeito relatado por quem usa o mundo: "as ilhas estão todas iguais". A
+    // árvore 3D prova o contrário agora — cada ilha carrega um marco diferente,
+    // pelo próprio nome.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const marcos = cena.scene
+      .findAll((no) => comNome(no).startsWith('marco:'))
+      .map((no) => comNome(no).replace('marco:', ''))
+
+    expect(marcos).toHaveLength(UNIDADES.length)
+    expect(new Set(marcos).size, `Marcos repetidos: ${marcos.join(', ')}`).toBe(UNIDADES.length)
+
+    await cena.unmount()
+  })
+
+  it('as pedras das ilhas têm tamanhos diferentes: não é a mesma ilha dez vezes', async () => {
+    // A altura da pedra sai da identidade de cada ilha. Medida pela malha que a
+    // cena realmente desenha (o ponto mais fundo de cada ilha), ela não pode ser
+    // a mesma nas dez — era exatamente isso que fazia o mundo parecer repetido.
+    const cena = await ReactThreeTestRenderer.create(
+      <CenaDeTeste progresso={progressoInicial()} aoEscolher={() => {}} aoEscolherPonte={() => {}} />,
+    )
+
+    const profundidades = UNIDADES.map((unidade) => {
+      const ilha = cena.scene.find((no) => comNome(no) === `ilha:${unidade.id}`)
+      return Math.abs(pontoMaisFundo(ilha))
+    })
+
+    expect(new Set(profundidades.map((valor) => valor.toFixed(2))).size).toBe(UNIDADES.length)
+    expect(Math.max(...profundidades) - Math.min(...profundidades)).toBeGreaterThan(1)
 
     await cena.unmount()
   })

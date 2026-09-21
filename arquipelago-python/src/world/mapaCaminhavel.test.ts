@@ -111,10 +111,12 @@ describe('a altura do chão', () => {
       expect(altura ?? 0).toBeGreaterThanOrEqual(anterior)
     }
 
-    // O número da borda sai da mesma função que gerou a malha do capim.
-    const esperadoNaBorda = ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio)
+    // O número da borda sai da mesma função que gerou a malha do capim, com a
+    // inclinação **desta** ilha — cada uma sobe de um jeito.
+    const inclinacao = ilha.identidade.formato.inclinacaoDoCapim
+    const esperadoNaBorda = ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio, inclinacao)
     expect(chaoEm(chao, { x: ilha.centro[0] + ilha.raio - RAIO_DO_AVATAR, z: ilha.centro[2] })).toBeCloseTo(
-      ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio - RAIO_DO_AVATAR),
+      ilha.centro[1] + alturaDoTopo(ilha.raio, ilha.raio - RAIO_DO_AVATAR, inclinacao),
       6,
     )
     // E acima disso não há mais capim: a margem do corpo já foi toda usada.
@@ -140,12 +142,16 @@ describe('a altura do chão', () => {
     ]
 
     // Começo: o capim da borda da ilha de origem. Fim: o da ilha de destino.
+    const inclinacaoDe = (indice: number) =>
+      ilhas[indice]?.identidade.formato.inclinacaoDoCapim ?? 0.06
     expect(chaoEm(chao, entradas[0] as { x: number; z: number })).toBeCloseTo(
-      (ilhas[0]?.centro[1] ?? 0) + alturaDoTopo(ilhas[0]?.raio ?? 6, ilhas[0]?.raio ?? 6),
+      (ilhas[0]?.centro[1] ?? 0) +
+        alturaDoTopo(ilhas[0]?.raio ?? 6, ilhas[0]?.raio ?? 6, inclinacaoDe(0)),
       5,
     )
     expect(chaoEm(chao, entradas[1] as { x: number; z: number })).toBeCloseTo(
-      (ilhas[1]?.centro[1] ?? 0) + alturaDoTopo(ilhas[1]?.raio ?? 6, ilhas[1]?.raio ?? 6),
+      (ilhas[1]?.centro[1] ?? 0) +
+        alturaDoTopo(ilhas[1]?.raio ?? 6, ilhas[1]?.raio ?? 6, inclinacaoDe(1)),
       5,
     )
   })

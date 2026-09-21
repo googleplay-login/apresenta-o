@@ -972,3 +972,58 @@ que roda o conteúdo no interpretador real passou a exigir que o programa **não
 caso: a medida que falha tem de chegar como medida declarada. Duas provas cobrem isso — uma no módulo
 puro (uma medida falha, a outra confere) e outra no Pyodide de verdade (o programa roda até o fim e o
 item diz que o nome não existe).
+
+## D-053 — Cada ilha tem a própria cara: silhueta, marco, vegetação e tom
+**21/09/2026** — correção de um defeito **relatado por quem usa a aplicação**, na Etapa 11.
+
+**O defeito, nas palavras de quem viu na tela:** *"as ilhas estão todas iguais"*.
+E era verdade. As dez ilhas saíam do mesmo raio (6), da mesma altura (9), das mesmas três
+estruturas no mesmo lugar e da mesma cor; a única coisa que a semente do id mudava era um tremor
+pequeno na pedra. De longe — que é como se olha o arquipélago ao chegar —, o mundo parecia **o mesmo
+lugar repetido dez vezes**, e não havia como saber onde se estava sem ler o nome da ilha.
+
+Nenhum teste pegava isso, e vale registrar por quê: os testes conferiam que existia **uma ilha por
+unidade**, com as estruturas certas, na posição certa. Nenhum perguntava se duas ilhas eram
+diferentes. O defeito era invisível para a suíte e óbvio para quem olha.
+
+**Decisão:** cada ilha passa a ter identidade própria, derivada de dois números que já existiam:
+
+- da **semente** da unidade (o id), que é estável: raio do topo, altura, número de lados, número de
+  anéis, irregularidade da pedra, abertura do perfil, inclinação do capim, quantidade de árvores e
+  de pedras e onde elas ficam;
+- da **posição no percurso**, que decide o **marco** (a construção que só aquela ilha tem) e o
+  **tom** — porque com dez ilhas e dez marcos a lista fecha sem repetir, e com dez luzes nenhuma
+  ilha repete a cor da outra.
+
+Os marcos foram escolhidos para dizer o que a ilha ensina: portal de pedra na praia do primeiro
+programa, bancada na oficina das variáveis, estante alta na ilha das palavras, barracas no mercado
+das listas, moinho de pás nas repetições, placas na encruzilhada das decisões, farol nos registros,
+estação nas perguntas, par de engrenagens nas funções e torre de anéis nas classes.
+
+**Três consequências que mexeram em contas de mundo:**
+
+1. **O espaçamento passou a ser acumulado.** Com raios diferentes, a distância entre dois centros
+   deixou de ser um múltiplo (`índice × 21`) e passou a ser `raio + raio + vão` — é a única conta que
+   mantém o vão constante, e é o vão que a ponte precisa vencer. As ilhas continuam separadas, e as
+   pontes continuam com o mesmo comprimento.
+2. **A ponte sobe de borda a borda**, e não de centro a centro. Com inclinações de capim diferentes,
+   a diferença de altura entre as duas bordas deixou de coincidir com a diferença entre os centros —
+   antes a ponte terminaria acima ou abaixo do capim de destino.
+3. **O chão caminhável conhece a inclinação da ilha.** Cada ilha é mais plana ou mais abaulada, e o
+   chão do pé e a malha do capim leem o mesmo número (senão o avatar flutua ou afunda).
+
+**O que continua valendo:** a cor de estado não foi tocada. Quem diz "esta ilha ainda não abriu"
+continua sendo o capim, a rocha, a placa de missão e o farol de estado; o tom da ilha aparece no
+marco e no alto do capim, e nenhum dos dez tons é um valor escrito à mão — todos são misturas de
+tokens existentes, e o teste refaz três delas a partir dos tokens (D-005).
+
+**O que o teste passou a cobrar** (era o que faltava): as dez ilhas têm dez marcos, dez silhuetas e
+dez tons diferentes; nenhum par de tons fica a menos de 40 de distância em RGB; o marco cabe no capim
+da ilha onde ele fica em pé; o volume assinado das malhas dos marcos é positivo (face virada para
+dentro é o defeito que o descarte de face traseira esconde); a parte animada de cada marco gira no
+eixo certo; e, na árvore 3D de verdade, as dez ilhas têm marcos distintos e **profundidades de pedra
+distintas**.
+
+**O que este conserto não faz:** não prova que ficou bonito. Os pixels continuam sem verificação
+automática neste ambiente — quem confere a aparência é quem usa, e foi assim que este defeito
+apareceu (ver `TEST_REPORT.md`, roteiro manual, item 55).

@@ -6,6 +6,61 @@ código.
 
 ---
 
+## Execução de 21/09/2026 — identidade visual das ilhas (defeito relatado por quem usa)
+
+### 1. O defeito, e por que a suíte não o via
+
+Relato de quem abriu a aplicação no navegador: **"as ilhas estão todas iguais"**. Era verdade. As dez
+ilhas usavam o mesmo raio, a mesma altura, as mesmas estruturas e a mesma cor; a semente só tremia a
+pedra um pouco. A suíte aprovava porque cobrava **uma ilha por unidade**, com as estruturas certas e
+as pontes certas — e nunca perguntou se duas ilhas eram diferentes. Defeito invisível para o teste,
+óbvio para o olho. A correção está registrada em **D-053**.
+
+### 2. Checagem de tipos — EXECUTADO, passou
+
+    npx tsc --noEmit
+
+Sem erro, com `geometria/identidade.ts`, `geometria/marcos.ts` e os testes novos.
+
+### 3. Testes automáticos — EXECUTADO
+
+    npm test
+
+**42 arquivos, 733 testes, todos passando** (eram 40 arquivos e 702 testes no lote 3).
+
+| Arquivo | Testes | O que o conserto acrescentou |
+|---|---|---|
+| `src/world/geometria/identidade.test.ts` | 11 | **Novo.** As dez ilhas têm dez marcos, dez silhuetas e dez tons diferentes; a identidade é determinística; tudo cabe nas faixas; o marco cabe no capim |
+| `src/world/geometria/marcos.test.ts` | 14 | **Novo.** Os dez marcos existem, são diferentes entre si, o volume assinado é positivo (face virada para dentro é o defeito que o descarte de face traseira esconde), girar não inverte faces, e cada marco gira no eixo certo |
+| `src/world/ConteudoDaCena.test.tsx` | 22 | Dois casos novos na árvore 3D: dez marcos distintos entre as dez ilhas e **profundidades de pedra distintas** — a prova de que não é a mesma ilha repetida (eram 20) |
+| `src/ui/theme/paleta3d.test.ts` | 13 | Os dez tons: todos diferentes, nenhum par a menos de 40 de distância em RGB, e três misturas refeitas a partir dos tokens (eram 9) |
+| `src/world/mapaDoMundo.test.ts` | 16 | O vão entre bordas agora é constante com raios diferentes, e o avanço em x é `raio + raio + vão` (era `índice × distância`) |
+| `src/world/mapaCaminhavel.test.ts` | 15 | A inclinação do capim é a **daquela** ilha, e não uma constante do projeto |
+
+### 4. Build de produção — EXECUTADO, passou
+
+    npm run build
+
+| Arquivo | Tamanho | Gzip | Antes do conserto |
+|---|---|---|---|
+| `dist/index.html` | 0,63 kB | 0,40 kB | igual |
+| `dist/assets/index-*.js` | 420,23 kB | 128,50 kB | 417,14 kB |
+| `dist/assets/index-*.css` | 25,11 kB | 4,06 kB | igual |
+| `dist/assets/Cena-*.js` | 919,08 kB | 244,72 kB | 912,10 kB |
+| `dist/assets/trabalhadorDoPython-*.js` | 2,60 kB | — | igual |
+
+Os marcos e a identidade custaram 6,98 kB no pedaço da cena e 3,09 kB no principal.
+
+### 5. O que NÃO foi executado — e não está marcado como aprovado
+
+- **A aparência continua sem verificação automática.** Não há navegador com WebGL neste ambiente. O
+  que se prova aqui é a geometria (medição) e a árvore 3D (composição) — **não** os pixels. Este
+  defeito foi encontrado por quem usa, e a conferência visual da correção também é de quem usa:
+  roteiro manual, **item 55**.
+- **O enquadramento dos marcos grandes** (`mercado`, `estação`, `engrenagens`, `farol`) é próximo da
+  borda do capim: o teste garante 2% de folga sobre o raio, mas se na tela algum deles parecer
+  apertado, o conserto é o número em `LUGARES_NA_ILHA` (ver D-053).
+
 ## Execução de 21/09/2026 — Etapa 11, lote 3 (capítulos 8 e 9: ilhas 9 e 10)
 
 ### 1. Checagem de tipos — EXECUTADO, passou
@@ -209,7 +264,16 @@ existia (D-049), e nenhum código de mundo foi escrito para elas.
     em que ela chama a **função** e o **método** escritos por quem estuda — e mostra a frase "o programa
     não tem esse nome quando termina" quando o nome combinado no enunciado não existe (D-052).
 
-Resultado esperado, somando as etapas 5 a 11: **54 de 54 itens conferidos**. Qualquer item que falhe
+55. **As ilhas não são todas iguais**: entrar no mundo e olhar o arquipélago de longe. Cada ilha deve
+    ter **forma própria** (raio entre ~5,2 e ~6,9; altura da pedra entre ~7,7 e ~10,9; algumas de 10
+    lados, outras de 18), **marco próprio** e **tom próprio** — portal na primeira, bancada na
+    segunda, estante na terceira, barracas na quarta, moinho na quinta, placas na sexta, farol na
+    sétima, estação na oitava, engrenagens na nona e torre na décima. Conferir também que as partes
+    animadas giram: pás do moinho, feixe do farol, cata-vento, volante da bancada, ponteiro da
+    estação, bandeira da torre e o par de engrenagens em sentidos opostos. Nenhuma ilha deve parecer
+    a mesma ilha com outro nome. Se alguma parecer, registrar aqui qual e em que ponto.
+
+Resultado esperado, somando as etapas 5 a 11: **55 de 55 itens conferidos**. Qualquer item que falhe
 deve ser registrado aqui.
 
 ## Execução de 21/09/2026 — Etapa 10 (exercícios com correção automática)

@@ -118,6 +118,37 @@ O repositório é **público**, então as imagens de referência **não** são v
 `referencias-locais/`, no `.gitignore` e fora de `public/`, para nunca serem copiadas para `dist/`
 nem publicadas.
 
+## O marco e o tom de cada ilha (D-053)
+
+Cada ilha tem uma construção que só ela tem, e um tom próprio. Os dois saem da posição no percurso;
+a forma da pedra e a vegetação saem da semente da unidade. Os números abaixo foram **medidos** a
+partir do conteúdo real, e não escritos à mão.
+
+| # | Ilha | Marco | Raio do capim | Altura da pedra | Lados | Tom |
+|---|---|---|---|---|---|---|
+| 1 | A Praia do Primeiro Programa | Portal de pedra | 6,67 | 8,01 | 14 | `#106553` |
+| 2 | A Oficina das Variáveis | Bancada de oficina | 6,83 | 8,43 | 16 | `#ad8551` |
+| 3 | A Ilha das Palavras | Estante alta | 5,23 | 9,72 | 10 | `#6fbdc0` |
+| 4 | As Listas do Mercado | Barracas do mercado | 5,33 | 8,96 | 18 | `#91412e` |
+| 5 | O Moinho das Repetições | Moinho de pás | 5,77 | 9,29 | 12 | `#3a673a` |
+| 6 | A Encruzilhada das Decisões | Placas da encruzilhada | 5,28 | 7,73 | 10 | `#e2e5e8` |
+| 7 | O Farol dos Registros | Farol alto | 5,24 | 8,53 | 10 | `#a7c9d0` |
+| 8 | A Estação das Perguntas | Estação de perguntas | 6,88 | 8,88 | 12 | `#799796` |
+| 9 | A Oficina das Funções | Par de engrenagens | 6,02 | 9,98 | 12 | `#5c4430` |
+| 10 | A Torre das Classes | Torre de anéis | 5,62 | 10,93 | 12 | `#cf9693` |
+
+Regras que valem para as dez:
+
+- **nenhum tom é valor novo**: todos são misturas de tokens de `tokens.ts`, e o teste
+  `paleta3d.test.ts` refaz três delas a partir dos tokens (D-005);
+- **a cor de estado manda no que é do estado**: capim, rocha, placa de missão e farol de estado
+  continuam contando se a unidade está bloqueada, disponível ou aprovada. O tom da ilha aparece no
+  marco e no alto do capim — onde não compete com a leitura do estado;
+- **o marco nunca passa da borda**: ele fica a 40% do raio, e o teste cobra que caiba com 2% de folga
+  em todas as ilhas;
+- **o marco fica do lado oposto às estruturas do estudo**, para não tapar a biblioteca, a mesa e a
+  placa de missão.
+
 ## Estilo 3D previsto
 
 - Geometria própria e materiais simples no início. Sem asset externo.

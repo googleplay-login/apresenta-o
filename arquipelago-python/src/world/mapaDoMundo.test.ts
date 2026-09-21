@@ -31,9 +31,11 @@ describe('posição das ilhas', () => {
     expect(ilhasDoMundo(embaralhadas)).toEqual(ILHAS)
   })
 
-  it('mantém as ilhas separadas: nenhuma encosta na outra', () => {
-    // A curva em S afasta um pouco mais os centros: a distância em x é sempre a
-    // distância entre centros, e a distância real no plano é maior ou igual.
+  it('mantém as ilhas separadas, com o vão constante entre as bordas', () => {
+    // Cada ilha tem o raio dela, então o avanço em x é `raio + raio + vão`: o
+    // que muda de uma ilha para outra é o tamanho da pedra, e não o caminho. Se
+    // as ilhas encostassem, a ponte teria comprimento negativo — e o vão do
+    // meio do percurso seria diferente do vão das pontas.
     for (let indice = 0; indice < ILHAS.length - 1; indice += 1) {
       const uma = ILHAS[indice]!
       const outra = ILHAS[indice + 1]!
@@ -41,12 +43,18 @@ describe('posição das ilhas', () => {
         outra.centro[0] - uma.centro[0],
         outra.centro[2] - uma.centro[2],
       )
-      expect(distancia).toBeGreaterThanOrEqual(DISTANCIA_ENTRE_CENTROS)
-      expect(outra.centro[0] - uma.centro[0]).toBeCloseTo(DISTANCIA_ENTRE_CENTROS, 6)
-      // O vão entre as bordas nunca é menor que o previsto: se fosse, as ilhas
-      // se sobreporiam e a ponte teria comprimento negativo.
-      expect(distancia - uma.raio - outra.raio).toBeGreaterThanOrEqual(VAO_DA_PONTE)
+      expect(outra.centro[0] - uma.centro[0]).toBeCloseTo(
+        uma.raio + outra.raio + VAO_DA_PONTE,
+        6,
+      )
+      // A curva em S só afasta mais as bordas: no plano, o vão nunca é menor
+      // que o previsto.
+      expect(distancia - uma.raio - outra.raio).toBeGreaterThanOrEqual(VAO_DA_PONTE - 1e-9)
     }
+
+    // E o vão é o mesmo em todo o percurso, embora os raios não sejam.
+    const raios = new Set(ILHAS.map((ilha) => ilha.raio.toFixed(3)))
+    expect(raios.size).toBeGreaterThan(1)
   })
 
   it('sobe uma ilha em relação à anterior', () => {
@@ -123,7 +131,8 @@ describe('ponte entre duas ilhas', () => {
 
       expect(fim.x).toBeCloseTo(bordaEsperada.x, 5)
       expect(fim.y + ESPESSURA_DO_TABULEIRO / 2).toBeCloseTo(
-        bordaEsperada.y + alturaDoTopo(outra.raio, outra.raio),
+        bordaEsperada.y +
+          alturaDoTopo(outra.raio, outra.raio, outra.identidade.formato.inclinacaoDoCapim),
         5,
       )
       expect(fim.z).toBeCloseTo(bordaEsperada.z, 5)

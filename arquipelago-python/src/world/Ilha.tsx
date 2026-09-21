@@ -2,7 +2,9 @@ import { useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import type { Group } from 'three'
 import { ROCHA_PADRAO, TOPO_PADRAO, gerarRocha, gerarTopo } from './geometria/ilha'
-import { pintarPorAltura } from './geometria/pintura'
+import { pintarPorAltura, misturar } from './geometria/pintura'
+import { gerarMarco } from './geometria/marcos'
+import { LUGARES_NA_ILHA, posicaoNoCapim } from './geometria/identidade'
 import {
   gerarArvore,
   gerarBiblioteca,
@@ -16,21 +18,32 @@ import { criarSorteador, entre } from './geometria/aleatorio'
 import {
   CORES_DERIVADAS,
   CORES_DO_MUNDO,
+  corDaIlha,
   corDaRocha,
   corDaSituacao,
   corDoCapim,
 } from '../ui/theme/paleta3d'
 
 /**
- * Uma ilha do arquipélago: a pedra, o capim, as estruturas e o farol de estado.
+ * Uma ilha do arquipélago: a pedra, o capim, o marco, as estruturas do estudo e
+ * o farol de estado.
  *
- * A ilha é montada uma única vez por semente (`useMemo`) e depois só é
- * posicionada no mundo. A cor de cada peça vem da paleta 3D, que por sua vez
- * vem dos tokens: aqui não existe valor de cor escrito à mão.
+ * **Cada ilha é diferente das outras**, e de propósito. A silhueta (raio,
+ * altura, número de lados, abertura do perfil), o marco, a vegetação e o tom
+ * vêm de `geometria/identidade.ts`, que os deriva da semente da unidade e da
+ * posição dela no percurso. Antes disso, o arquipélago era a mesma ilha repetida
+ * dez vezes: dava para andar sem saber onde se estava.
  *
- * O que a ilha **não** decide: se ela está liberada. Isso chega pronto em
- * `situacao`, calculado pelo domínio em `mundoVisivel.ts`. Se a regra de
- * aprovação mudar, ela muda em um lugar só.
+ * A ilha é montada uma vez por identidade (`useMemo`) e depois só é posicionada.
+ * A cor de cada peça vem da paleta 3D, que por sua vez vem dos tokens: aqui não
+ * existe valor de cor escrito à mão.
+ *
+ * Duas coisas que a ilha **não** decide:
+ *
+ *  - se ela está liberada: isso chega pronto em `situacao` e `acessivel`,
+ *    calculados pelo domínio em `mundoVisivel.ts`;
+ *  - onde ela fica: isso vem em `centro`, calculado por `mapaDoMundo.ts`,
+ *    que também é quem usa o raio real da ilha para encostar a ponte.
  */
 
 type Props = {
@@ -43,79 +56,136 @@ type Props = {
 /** Nome do grupo que recebe o clique. Usado pelo teste da árvore 3D. */
 const CORPO_DO_MUNDO = 'corpo'
 
-/** Posições das estruturas no capim. Fixas, para toda ilha parecer habitada do mesmo jeito. */
-const ESTRUTURAS = {
-  biblioteca: { x: -2.7, z: -1.5, giro: Math.PI },
-  mesa: { x: 1.7, z: 1.1, giro: Math.PI },
-  placa: { x: 3.6, z: 2.3, giro: Math.PI * 0.75 },
-} as const
-
 export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
   const [sobre, setSobre] = useState(false)
   const farol = useRef<Group>(null)
+  const girando = useRef<(Group | null)[]>([])
+
+  const identidade = ilha.identidade
 
   const pecas = useMemo(() => {
-    const semente = ilha.semente
-    const rocha = pintarPorAltura(gerarRocha({ ...ROCHA_PADRAO, semente }), {
-      de: -ROCHA_PADRAO.altura,
-      para: 0,
-      corDe: CORES_DERIVADAS.rochaDoFundo,
-      corPara: CORES_DERIVADAS.rochaDoAlto,
-      degraus: 6,
-    })
-    const capim = pintarPorAltura(gerarTopo({ ...TOPO_PADRAO, semente }), {
-      de: 0,
-      para: 0.4,
-      corDe: corDoCapim(ilha.situacao),
-      corPara: CORES_DERIVADAS.capimClaro,
-      degraus: 3,
+    const { semente } = ilha
+    const formato = identidade.formato
+    const tom = corDaIlha(identidade.tom)
+
+    const rocha = pintarPorAltura(
+      gerarRocha({
+        ...ROCHA_PADRAO,
+        semente,
+        raioDoTopo: formato.raioDoTopo,
+        altura: formato.altura,
+        segmentosRadiais: formato.segmentosRadiais,
+        aneis: formato.aneis,
+        amplitude: formato.amplitude,
+        expoenteDoPerfil: formato.expoenteDoPerfil,
+      }),
+      {
+        de: -formato.altura,
+        para: 0,
+        corDe: CORES_DERIVADAS.rochaDoFundo,
+        corPara: CORES_DERIVADAS.rochaDoAlto,
+        degraus: 6,
+      },
+    )
+
+    const capim = pintarPorAltura(
+      gerarTopo({
+        ...TOPO_PADRAO,
+        semente,
+        raio: formato.raioDoTopo,
+        segmentosRadiais: formato.segmentosRadiais,
+        amplitude: formato.amplitudeDaBorda,
+        inclinacao: formato.inclinacaoDoCapim,
+      }),
+      {
+        de: 0,
+        para: 0.4,
+        corDe: corDoCapim(ilha.situacao),
+        // O alto do capim recebe um pouco do tom da ilha: é onde o tom aparece
+        // na maior área da tela sem competir com a cor de estado, que fica na
+        // base — a parte que diz "esta ilha ainda não abriu".
+        corPara: misturar(CORES_DERIVADAS.capimClaro, tom, 0.45),
+        degraus: 3,
+      },
+    )
+
+    const marco = gerarMarco(identidade.marco, {
+      raioDaIlha: formato.raioDoTopo,
+      alturaDaIlha: formato.altura,
+      semente,
     })
 
     // Enfeite determinístico: a mesma ilha tem sempre as mesmas árvores, e
-    // ilhas diferentes têm enfeites diferentes. Nada de posição sorteada a cada
-    // renderização, o que faria a paisagem tremer.
+    // ilhas diferentes têm enfeites diferentes — em quantidade e em lugar. Nada
+    // de posição sorteada a cada renderização, o que faria a paisagem tremer.
     const sortear = criarSorteador(semente + 101)
-    const enfeites = Array.from({ length: 3 }, () => {
+    const { arvores, pedras, distanciaMinima, distanciaMaxima } = identidade.vegetacao
+
+    const enfeites = Array.from({ length: arvores }, () => {
       const angulo = entre(sortear, 0, Math.PI * 2)
-      const distancia = entre(sortear, 3.4, 4.8)
+      const distancia = entre(sortear, distanciaMinima, distanciaMaxima) * formato.raioDoTopo
       return {
         x: Math.cos(angulo) * distancia,
         z: Math.sin(angulo) * distancia,
-        altura: entre(sortear, 2.6, 3.8),
-        raio: entre(sortear, 0.7, 1.0),
+        altura: entre(sortear, 2.5, 4.1) * (formato.raioDoTopo / 6),
+        raio: entre(sortear, 0.6, 1.05) * (formato.raioDoTopo / 6),
       }
     })
 
-    const pedras = Array.from({ length: 4 }, (_, indice) => {
+    const pedrasSoltas = Array.from({ length: pedras }, (_, indice) => {
       const angulo = entre(sortear, 0, Math.PI * 2)
-      const distancia = entre(sortear, 4.2, 5.4)
+      const distancia = entre(sortear, distanciaMinima * 1.12, Math.min(distanciaMaxima + 0.06, 0.95)) * formato.raioDoTopo
       return {
         x: Math.cos(angulo) * distancia,
         z: Math.sin(angulo) * distancia,
-        raio: entre(sortear, 0.18, 0.34) * (indice % 2 === 0 ? 1 : 0.8),
+        raio: entre(sortear, 0.16, 0.34) * (indice % 2 === 0 ? 1 : 0.8),
       }
     })
+
+    const escala = formato.raioDoTopo / 6
 
     return {
       rocha,
       capim,
-      biblioteca: gerarBiblioteca({ largura: 2.1, altura: 1.7, profundidade: 1.6 }),
-      mesa: gerarMesa({ largura: 2.2, altura: 1.0 }),
-      placa: gerarPlaca({ altura: 2.2, largura: 1.5 }),
-      arvores: enfeites.map((enfeite) =>
-        gerarArvore({ altura: enfeite.altura, raio: enfeite.raio }),
-      ),
-      pedras: pedras.map((pedra) => ({ ...pedra, malha: gerarPedra({ raio: pedra.raio }) })),
+      marco,
+      tom,
+      posicoes: {
+        biblioteca: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.biblioteca),
+        mesa: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.mesa),
+        placa: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.placa),
+        marco: posicaoNoCapim(formato.raioDoTopo, LUGARES_NA_ILHA.marco),
+      },
+      biblioteca: gerarBiblioteca({ largura: 2.1 * escala, altura: 1.7 * escala, profundidade: 1.6 * escala }),
+      mesa: gerarMesa({ largura: 2.2 * escala, altura: 1.0 * escala }),
+      placa: gerarPlaca({ altura: 2.2 * escala, largura: 1.5 * escala }),
+      arvores: enfeites.map((enfeite) => gerarArvore({ altura: enfeite.altura, raio: enfeite.raio })),
+      pedras: pedrasSoltas.map((pedra) => ({ ...pedra, malha: gerarPedra({ raio: pedra.raio }) })),
       enfeites,
     }
-  }, [ilha.semente, ilha.situacao])
+    // As dependências são **números**, e não o objeto da identidade: a identidade
+    // é função pura de (índice, semente), e um objeto novo a cada renderização do
+    // mundo faria a ilha inteira ser remontada sem necessidade.
+  }, [ilha.semente, ilha.situacao, identidade.indice])
 
   const corDaEstrutura = corDaSituacao(ilha.situacao)
+  // O marco mantém o tom da ilha; o que muda quando a unidade ainda não abriu é
+  // ele ficar mais perto da névoa, como o capim e a rocha daquela ilha.
+  const corDoMarco =
+    ilha.situacao === 'bloqueada'
+      ? misturar(pecas.tom, CORES_DO_MUNDO.nevoa, 0.4)
+      : pecas.tom
 
   useFrame((_, delta) => {
     if (farol.current !== null) {
       farol.current.rotation.y += delta * 0.6
     }
+
+    pecas.marco.girantes.forEach((parte, indice) => {
+      const grupo = girando.current[indice]
+      if (grupo !== null && grupo !== undefined) {
+        grupo.rotation[parte.eixo] += delta * parte.voltasPorSegundo * Math.PI * 2
+      }
+    })
   })
 
   const interativo = ilha.acessivel
@@ -154,15 +224,36 @@ export function Ilha({ ilha, destacada, aoEscolher, aoPassarPorCima }: Props) {
           />
         ) : null}
 
-        <group name="biblioteca" position={[ESTRUTURAS.biblioteca.x, 0, ESTRUTURAS.biblioteca.z]} rotation={[0, ESTRUTURAS.biblioteca.giro, 0]}>
+        {/* O marco: a construção que só esta ilha tem. Nome com o tipo, para o
+            teste da árvore 3D conseguir cobrar que nenhuma ilha repete a do
+            vizinho. */}
+        <group
+          name={`marco:${pecas.marco.tipo}`}
+          position={[pecas.posicoes.marco.x, 0, pecas.posicoes.marco.z]}
+        >
+          <Malha3D malha={pecas.marco.fixo} cor={corDoMarco} />
+          {pecas.marco.girantes.map((parte, indice) => (
+            <group key={`giro-${indice}`} position={[parte.posicao[0], parte.posicao[1], parte.posicao[2]]}>
+              <group
+                ref={(no) => {
+                  girando.current[indice] = no
+                }}
+              >
+                <Malha3D malha={parte.malha} cor={corDoMarco} />
+              </group>
+            </group>
+          ))}
+        </group>
+
+        <group name="biblioteca" position={[pecas.posicoes.biblioteca.x, 0, pecas.posicoes.biblioteca.z]}>
           <Malha3D malha={pecas.biblioteca} cor={CORES_DERIVADAS.parede} />
         </group>
 
-        <group name="mesa" position={[ESTRUTURAS.mesa.x, 0, ESTRUTURAS.mesa.z]} rotation={[0, ESTRUTURAS.mesa.giro, 0]}>
+        <group name="mesa" position={[pecas.posicoes.mesa.x, 0, pecas.posicoes.mesa.z]}>
           <Malha3D malha={pecas.mesa} cor={CORES_DERIVADAS.poste} />
         </group>
 
-        <group name="placa" position={[ESTRUTURAS.placa.x, 0, ESTRUTURAS.placa.z]} rotation={[0, ESTRUTURAS.placa.giro, 0]}>
+        <group name="placa" position={[pecas.posicoes.placa.x, 0, pecas.posicoes.placa.z]}>
           <Malha3D malha={pecas.placa} cor={corDaEstrutura} />
         </group>
 

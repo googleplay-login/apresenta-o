@@ -1,6 +1,7 @@
 # HANDOFF — estado atual
 
-Atualizado em **21/09/2026**, no **lote 3 da Etapa 11 (expansão curricular: capítulos 4 a 9)**.
+Atualizado em **21/09/2026**, no **lote 3 da Etapa 11 (capítulos 4 a 9)** — e no conserto da
+identidade visual das ilhas, depois de um relato de quem usa o mundo (D-053).
 
 ## Onde o projeto está
 
@@ -8,7 +9,7 @@ Atualizado em **21/09/2026**, no **lote 3 da Etapa 11 (expansão curricular: cap
 |---|---|
 | Etapa atual | 11 em andamento — lotes 1, 2 e 3 entregues (capítulos 4 a 9, ilhas 5 a 10); 12 a 14 em sequência, sem parada entre etapas (instrução do usuário) |
 | Código de aplicação | mundo 3D com avatar, ciclo de estudo completo e persistência local |
-| Mundo 3D | **existe**: dez ilhas suspensas, pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as seis últimas nasceram do conteúdo, sem código novo de posicionamento |
+| Mundo 3D | **existe**: dez ilhas suspensas **cada uma com forma, marco, vegetação e tom próprios** (D-053), pontes, céu, mar, avatar que anda e câmera de terceira pessoa — as seis últimas nasceram do conteúdo, sem código novo de posicionamento |
 | Conteúdo pedagógico | **existe** para as 10 unidades escritas (capítulos 1 a 9): missão, leitura (com o que observar), explicação, diagramas, 3 exercícios e 5 perguntas cada |
 | Telas do ciclo de estudo | **existem**: missão, estudo (leitura + entendimento), prática, avaliação e resultado — com revisão explicada e placar de tentativas |
 | Persistência | **existe**: `localStorage`, versão **3**, com migração das duas versões anteriores, aviso honesto de falha e ordem de gravação corrigida (Etapa 8) |
@@ -27,7 +28,7 @@ desenho, porque não há navegador aqui.**
     cd arquipelago-python
     npm install
     npm run dev          # servidor de desenvolvimento, escuta em 0.0.0.0:5173
-    npm test             # 702 testes, em 40 arquivos (a suíte não cresce com o conteúdo: os testes percorrem o conteúdo real)
+    npm test             # 733 testes, em 42 arquivos (o conteúdo não pede teste novo: os testes percorrem o conteúdo real)
     npm run build        # checagem de tipos + build de produção
     npm run typecheck    # apenas a checagem de tipos
 
@@ -254,6 +255,30 @@ Verificação:
 - o mundo ganhou as ilhas 7 e 8 sem uma linha nova de posicionamento, e as pontes 6–7 e 7–8 fecharam
   sozinhas (D-049).
 
+### Conserto depois do lote 3: as ilhas estavam todas iguais (D-053)
+
+- **o defeito foi relatado por quem usa o mundo**, e não por um teste: *"as ilhas estão todas
+  iguais"*. Era verdade — mesmo raio, mesma altura, mesmas estruturas, mesma cor; só a pedra tremia
+  diferente. A suíte aprovava porque cobrava uma ilha por unidade, e nunca perguntou se duas ilhas
+  eram diferentes;
+- `src/world/geometria/identidade.ts`: o que distingue cada ilha — silhueta (raio 5,2 a 6,9; altura
+  7,7 a 10,9; 10 a 18 lados; abertura do perfil), marco, vegetação (2 a 5 árvores, 3 a 6 pedras) e
+  tom (dez misturas de tokens, nenhuma cor escrita à mão);
+- `src/world/geometria/marcos.ts`: os dez marcos, um por ilha, escolhidos para dizer o que a ilha
+  ensina — portal, bancada, estante, barracas, moinho de pás, placas, farol, estação, engrenagens e
+  torre. Sete deles têm parte animada (pás, feixe, cata-vento, volante, ponteiro, bandeira e o par de
+  engrenagens, que gira em sentidos opostos);
+- **três contas de mundo mudaram por causa dos raios diferentes**: o espaçamento entre ilhas passou a
+  ser acumulado (`raio + raio + vão`, para o vão continuar constante); a ponte subiu de **borda a
+  borda** (com inclinações diferentes, a diferença entre centros deixaria a ponte acima ou abaixo do
+  capim de destino); e o chão caminhável passou a ler a inclinação daquela ilha;
+- **o que o teste passou a cobrar**: dez marcos, dez silhuetas e dez tons diferentes; nenhum par de
+  tons a menos de 40 de distância em RGB; marco dentro do capim com 2% de folga; volume assinado
+  positivo (face virada para dentro); eixo de giro certo por marco; e, na árvore 3D, dez marcos
+  distintos e **profundidades de pedra distintas**;
+- **o que continua sem prova**: a aparência. Não há navegador com WebGL aqui — a conferência visual
+  do conserto é o **item 55** do roteiro manual, e quem olha é quem usa.
+
 ### Etapa 11 — lote 3: capítulos 8 e 9 nas ilhas 9 e 10
 
 - **a sonda da conferência ficou defensiva antes do conteúdo (D-052)**: cada valor medido roda no
@@ -365,7 +390,7 @@ Três mudanças, todas nascidas de revisão e não de pedido novo:
 |---|---|---|
 | PDF do livro ausente | Toda página continua `null`; a leitura indica capítulo e seção, nunca página | Conferir página nas etapas de conteúdo |
 | Imagens de referência ausentes no disco | Cor é estimativa visual, não medida | Refinar o 3D a partir delas |
-| Nenhum navegador no ambiente | Sem teste de navegador automatizado, e o desenho 3D **não foi visto por ninguém** — nem as ilhas 5 a 10 | Registrado em `TEST_REPORT.md`, com roteiro manual de 54 itens |
+| Nenhum navegador no ambiente | Sem teste de navegador automatizado. O desenho 3D só foi visto por quem usa — e foi assim que apareceu o defeito "as ilhas estão todas iguais" (D-053) | Registrado em `TEST_REPORT.md`, com roteiro manual de 55 itens |
 | WebGL ausente | A aparência, a luz e o desempenho da cena continuam sem verificação automática | Só o roteiro manual cobre isso |
 | Web Worker nunca rodou em navegador | A fiação do console com a página é roteiro manual (itens 46 a 50), não teste | Nada bloqueia; a Etapa 10 usa o mesmo caminho |
 | `public/pyodide/` fora do Git | Quem clonar sem `npm ci` não tem o interpretador | `npm run preparar-pyodide`, chamado pelos ganchos de `dev`, `build` e `test` |
